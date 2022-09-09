@@ -2096,8 +2096,6 @@ bool CTransCoder::enableTcae(const char* tcaeLogPath)
         else
         {
             m_tcaeEnabled = true;
-            if (tcaeLogPath)
-                m_tcaeLogPath = m_tcaeLogPath;
         }
     }
     return m_tcaeEnabled;
