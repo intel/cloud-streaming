@@ -396,7 +396,6 @@ private:
 #ifdef ENABLE_TCAE
     CTcaeWrapper *m_tcae = nullptr;
     bool m_tcaeEnabled = false;
-    const char* m_tcaeLogPath = nullptr;
 #endif
 };
 

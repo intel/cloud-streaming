@@ -14,29 +14,116 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+#include <ctime>
 #include "CTcaeWrapper.h"
 
-CTcaeWrapper::CTcaeWrapper()
+using std::chrono::duration_cast;
+using std::chrono::microseconds;
+using std::chrono::system_clock;
+
+// ------ TcaeLogger class -------
+
+TcaeLogger::TcaeLogger():
+    m_enabled(false),
+    m_logFilePtr(nullptr),
+    m_EncFrameNumber(0),
+    m_FeedbackFrameNumber(0),
+    m_startTime(0)
 {
 }
 
-CTcaeWrapper::~CTcaeWrapper()
+TcaeLogger::~TcaeLogger()
 {
     if (m_logFilePtr)
         fclose(m_logFilePtr);
 }
 
-void CTcaeWrapper::makeLogEntry()
+void TcaeLogger::InitLog(const char* logPath)
 {
-    if(m_tcaeLogPath == nullptr) //Logging disabled
+    if (logPath == nullptr)
         return;
 
-    if (m_logFilePtr == nullptr) //Check logfile is open
+    m_logFilePtr = fopen(logPath, "w");
+    if (!m_logFilePtr)
+    {
+        printf("Could not open file to write TCAE logs: %s\n", logPath);
+        printf("Disabling CTcaeWrapper logs\n");
+        m_enabled = false;
+    }
+    else
+    {
+        m_enabled = true;
+
+        //Write Headers
+        fprintf(m_logFilePtr, "FrameDelay,FrameSize,EncSize,PredSize,Feedback_FrameNumber,EncoderThread_FrameNumber,RelativeTimeStamp,Function\n");
+        fflush(m_logFilePtr);
+    }
+}
+
+void TcaeLogger::UpdateClientFeedback(uint32_t delay, uint32_t size)
+{
+    if (!LogEnabled())
         return;
 
-    fprintf(m_logFilePtr, "%d, %d, %d, %d\n", m_log_delay, m_log_size, m_log_encSize, m_log_targetSize);
+    //This is the last data point for a given frame in its life-cycle
+    //This is accessed from the feedback thread.
+
+    FrameData_t frameData;
+    frameData.delayInUs = delay;
+    frameData.clientPacketSize = size;
+    frameData.targetSize = 0;
+    frameData.encodedSize = 0;
+
+    makeLogEntry(frameData, __FUNCTION__);
+
+    m_FeedbackFrameNumber++;
+}
+
+void TcaeLogger::UpdateEncodedSize(uint32_t encodedSize)
+{
+    if (!LogEnabled())
+        return;
+
+    m_encData.encodedSize = encodedSize;
+    makeLogEntry(m_encData, __FUNCTION__);
+
+    //We are now ready to bump the EncFrameNumber counter
+    m_EncFrameNumber++;
+}
+
+void TcaeLogger::GetTargetSize(uint32_t targetSize)
+{
+    if (!LogEnabled())
+        return;
+
+    //Logging. This is the first data point logged for a given frame.
+    //Accessed from the Encode thread
+    memset(&m_encData, 0, sizeof(FrameData_t));
+    m_encData.targetSize = targetSize;
+    makeLogEntry(m_encData, __FUNCTION__);
+}
+
+void TcaeLogger::makeLogEntry(const FrameData_t& data, const char* str)
+{
+    if (!LogEnabled())
+        return;
+
+    long long int timestamp = duration_cast<microseconds>(system_clock::now().time_since_epoch()).count();
+
+    if (m_startTime == 0)
+        m_startTime = timestamp;
+
+    {
+        std::lock_guard<std::mutex> guard(m_mutex);
+        fprintf(m_logFilePtr, "%d, %d, %d, %d, %d, %d, %lld, %s\n",
+                data.delayInUs, data.clientPacketSize, data.encodedSize, data.targetSize,
+                m_FeedbackFrameNumber, m_EncFrameNumber, (timestamp - m_startTime), str);
+    }
+
     fflush(m_logFilePtr);
 }
+
+// ------ CTcaeWrapper class -------
 
 int CTcaeWrapper::Initialize(uint32_t targetDelay, uint32_t maxFrameSize)
 {
@@ -67,27 +154,7 @@ int CTcaeWrapper::Initialize(uint32_t targetDelay, uint32_t maxFrameSize)
         printf("################TCAE starts success!################\n");
     }
 
-    if(m_tcaeLogPath)
-    {
-        //Additional Manual logs from this class
-        m_logFilePtr = fopen(m_tcaeLogPath, "w");
-        if (!m_logFilePtr)
-        {
-            printf("Could not open file to write TCAE logs: %s\n", m_tcaeLogPath);
-            printf("Disabling CTcaeWrapper logs\n");
-
-            //Disable Attempts for logging
-            m_tcaeLogPath = nullptr;
-        }
-        else
-        {
-            m_log_delay = m_log_size = m_log_encSize = m_log_targetSize = 0;
-
-            //Write Headers
-            fprintf(m_logFilePtr, "FrameDelay,FrameSize,EncSize,PredSize\n");
-            fflush(m_logFilePtr);
-        }
-    }
+    m_logger.InitLog(m_tcaeLogPath);
 
     return 0;
 }
@@ -110,8 +177,8 @@ int CTcaeWrapper::UpdateClientFeedback(uint32_t delay, uint32_t size)
         return sts;
     }
 
-    m_log_delay = delay;
-    m_log_size  = size;
+    m_logger.UpdateClientFeedback(delay, size);
+
     return 0;
 }
 
@@ -132,7 +199,7 @@ int CTcaeWrapper::UpdateEncodedSize(uint32_t encodedSize)
         return sts;
     }
 
-    m_log_encSize = encodedSize;
+    m_logger.UpdateEncodedSize(encodedSize);
 
     return 0;
 }
@@ -152,8 +219,8 @@ uint32_t CTcaeWrapper::GetTargetSize()
     }
 
     uint32_t targetSize = settings.frameSizeInBytes;
-    m_log_targetSize = targetSize;
-    makeLogEntry();
+
+    m_logger.GetTargetSize(targetSize);
 
     return targetSize;
 }
