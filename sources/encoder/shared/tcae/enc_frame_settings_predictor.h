@@ -147,7 +147,6 @@ private:
     bool m_validFeedback = false;
 
     //last proposed enc settings
-    uint32_t m_lastTargetFS;
     uint32_t m_frameDropsCount;
     uint32_t m_lastKnownDelayInMs;
     uint32_t m_lastTransmittedSize;

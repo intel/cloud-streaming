@@ -27,7 +27,6 @@ PredictorTcaeImpl::PredictorTcaeImpl() :
     m_minDropFramesDist(),
     m_maxFrameSizeInBytes(),
     m_idrRequested(),
-    m_lastTargetFS(),
     m_frameDropsCount(),
     m_lastKnownDelayInMs(),
     m_lastTransmittedSize(),
@@ -162,7 +161,6 @@ tcaeStatus PredictorTcaeImpl::Stop()
     m_cachedBitstreamSize.clear();
     m_cachedNetworkStats.clear();
     m_idrRequested = false;
-    m_lastTargetFS = 0;
     m_frameDropsCount = 0;
     m_lastKnownDelayInMs = 0;
     m_lastTransmittedSize = 0;
@@ -335,13 +333,6 @@ tcaeStatus PredictorTcaeImpl::PredictEncSettingsImpl(FrameSettings_t* encSetting
 
     //get netPred result if exists
     uint32_t predictedFrameSize = m_NetworkPredictor->GetNextFrameSize();
-    if (predictedFrameSize == 0)
-    {
-        predictedFrameSize = m_lastTargetFS; //may be also 0 -> encoder will work with initial bitrate
-    }
-
-    // limit minimum frame size to half of previous, to avoid video quality drops too fast
-    predictedFrameSize = std::max(predictedFrameSize, m_lastTargetFS >> 1);
 
     //make a decision about IDR insertion
     if (insertIDR)
