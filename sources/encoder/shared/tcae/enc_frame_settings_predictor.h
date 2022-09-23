@@ -144,6 +144,7 @@ private:
     std::deque<uint32_t> m_cachedBitstreamSize;
     std::deque < std::pair<uint32_t /*transmitted size*/, uint32_t /*delay in ms*/> > m_cachedNetworkStats;
     bool m_idrRequested;
+    bool m_validFeedback = false;
 
     //last proposed enc settings
     uint32_t m_lastTargetFS;

@@ -211,8 +211,9 @@ tcaeStatus PredictorTcaeImpl::UpdateNetworkStateImpl(PerFrameNetworkData_t* data
         if (!delayInUs || !transmittedDataSize)
             return ERR_INVALID_ARG;
 
-        uint32_t delayInMs = uint32_t(ceil(double(delayInUs) / 1000.0));
+        m_validFeedback = true;
 
+        uint32_t delayInMs = uint32_t(ceil(double(delayInUs) / 1000.0));
         std::lock_guard<std::mutex> guard(m_inputMutex);
         m_cachedNetworkStats.push_back(std::pair<uint32_t, uint32_t>(transmittedDataSize, delayInMs));
     }
@@ -293,41 +294,43 @@ tcaeStatus PredictorTcaeImpl::PredictEncSettingsImpl(FrameSettings_t* encSetting
     uint32_t bitstreamSize = 0, transmittedSize = 0, delayInMs = 0;
     {
         std::lock_guard<std::mutex> guard(m_inputMutex);
-        size_t count = std::min(m_cachedBitstreamSize.size(), m_cachedNetworkStats.size());
+        size_t count = m_cachedNetworkStats.size();
         while (count-- > 0)
         {
-            bitstreamSize = m_cachedBitstreamSize.front();
+            bitstreamSize = 0;
+            if (m_cachedBitstreamSize.size() > 0) {
+                bitstreamSize = m_cachedBitstreamSize.front();
+                m_cachedBitstreamSize.pop_front();
+            }
+
             transmittedSize = m_cachedNetworkStats.front().first;
             delayInMs = m_cachedNetworkStats.front().second;
+            m_cachedNetworkStats.pop_front();
 
             m_NetworkPredictor->UpdateSizeAndDelay(transmittedSize, bitstreamSize, delayInMs);
-
-            m_cachedBitstreamSize.pop_front();
-            m_cachedNetworkStats.pop_front();
         }
-        insertIDR = m_idrRequested;
-        m_idrRequested = false;
 
-        if (m_cachedNetworkStats.size())
-        {
-            m_lastKnownDelayInMs = m_cachedNetworkStats.back().second;
-            m_lastTransmittedSize = m_cachedNetworkStats.back().first;
-
-            m_cachedNetworkStats.clear();
-        }
-        else if (delayInMs != 0)
+        if (delayInMs != 0)
         {
             m_lastKnownDelayInMs = delayInMs;
             m_lastTransmittedSize = transmittedSize;
         }
 
-        while (m_lastKnownDelayInMs && (m_cachedBitstreamSize.size() > m_cachedNetworkStats.size()))
+        while (m_cachedBitstreamSize.size() > 0)
         {
-            bitstreamSize = m_cachedBitstreamSize.front();
-            m_NetworkPredictor->UpdateSizeAndDelay(m_lastTransmittedSize, bitstreamSize, -1);
+            // Update model with encoded bitstream data only if valid feedback from client exists.
+            // Else the model produces a min frame size that corresponds to 0.1x Target Bitrate.
+            // This is not desired with clients that are not capable of TCAE feedback (even if the
+            // feature is signaled to be enabled)
 
+            bitstreamSize = m_cachedBitstreamSize.front();
+            if (m_validFeedback)
+                m_NetworkPredictor->UpdateSizeAndDelay(m_lastTransmittedSize, bitstreamSize, -1);
             m_cachedBitstreamSize.pop_front();
         }
+
+        insertIDR = m_idrRequested;
+        m_idrRequested = false;
     }
 
     //get netPred result if exists
