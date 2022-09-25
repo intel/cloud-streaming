@@ -44,15 +44,13 @@ public:
 
     void SetFPS(double fps);
 
-    void SetNetworkEmulatorHint(bool hint = true);
-
     // factor 0.0 ~ 1.0. 0.0 means reacting fastest, but may has spikes. 1.0 means reacting slowest, but most smoothing. 0.5 by default
     void SetOutputFilterFactor(double factor);
 protected:
     int CurrentState();
     void UpdateModel();
 
-    void HandleNetworkLimitor(uint32_t encoded_size, double delay_in_ms);
+    void CheckNewSteadyState(uint32_t encoded_size, double delay_in_ms);
     void AdjustTarget(double delay_in_ms);
 
     void UpdateModelNormal(std::deque<double>& m_delays, std::deque<double>& m_sizes);
@@ -62,6 +60,10 @@ protected:
     double WeightedMean(std::deque<double>& data);
 
     bool SanityCheck();
+    bool IsSpikeOn();
+    bool OscillationDetected();
+    bool UpdateSteadyState();
+    bool ManageRecoveryAttempt();
 
     double m_targetDelay;
     int m_recordedLen;
@@ -84,23 +86,19 @@ protected:
 
     bool m_dumpflag;
     std::ofstream m_dumpfile;
+    std::ofstream m_dumpPoints;
 
     double m_maxTargetSize;
     double m_minTargetSize;
 
-    // extra handling for the net emulator
+    // Settings for spike-checking
     double m_fps;
     double m_estimatedThresholdSize;
-    uint32_t m_timeout; // seconds that threshold timeout
-    uint32_t m_timeToExplore; // seconds that tries to reaching out
-    uint32_t m_estimateCounts;
+    uint32_t m_timeout;       // seconds to consider if behaviour is steady.
+    uint32_t m_timeToExplore; // seconds before attempting recovery. Initialized to m_timeout
     double m_estimateAcc;
-    bool m_limitorUsed;
     uint32_t m_observeCounter;
     uint32_t m_observeCounterThreshold;
-    bool m_startEstimate;
-
-    bool m_networkEmulatorHint;
 
     // output filter, IIR
     double m_filteredTargetSize;
@@ -109,8 +107,18 @@ protected:
     // Limit excessively high estimate of bandwidth
     // Below corresponds to 400Mbps
     const double MinReverseBandwidth = 0.02;
+    const double SubstantialChangeThreshold = 0.1;
 
     double m_previousTargetSize = 0;
+
+    // Spike-checking and recovery state
+    bool m_enableSteadyStateCheck;
+    int  m_framesSinceLastSpike;
+    int  m_encFramesForThreshold;
+    bool m_newState;
+    int  m_spikes;
+    bool m_recoveryAttempt;
+    int  m_recoveryFrames;
 };
 
 #endif
