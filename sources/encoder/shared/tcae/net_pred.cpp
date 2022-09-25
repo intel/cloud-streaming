@@ -42,29 +42,44 @@ NetPred::NetPred():
     m_minTargetSize(5.0),
     m_fps(30.0),
     m_estimatedThresholdSize(0.0),
-    m_timeout(30),
-    m_timeToExplore(10),
-    m_estimateCounts(0),
+    m_timeout(10),
+    m_timeToExplore(m_timeout),
     m_estimateAcc(0.0),
-    m_limitorUsed(false),
     m_observeCounter(0),
     m_observeCounterThreshold(5),
-    m_startEstimate(false),
-    m_networkEmulatorHint(false),
     m_filteredTargetSize(0.0),
-    m_filterFactor(0.5)
+    m_filterFactor(0.5),
+    m_enableSteadyStateCheck(true),
+    m_framesSinceLastSpike(0),
+    m_encFramesForThreshold(0),
+    m_newState(false),
+    m_spikes(0),
+    m_recoveryAttempt(false),
+    m_recoveryFrames(0)
 {
 
     m_forgotRatio = pow(0.01, 1.0 / 2 /m_recordedLen);
 
-    if (m_dumpflag)
-    {
-        m_dumpfile.open("netpred2.0_dump.csv");
+    //Enable steady state check
+    char* envStr = nullptr;
+
+    envStr = getenv("TCAE_STEADY_STATE_CHECK");
+    if (envStr){
+        m_enableSteadyStateCheck = (atoi(envStr) ? true: false);
+    }
+
+    envStr = getenv("TCAE_NETPRED_DUMPS");
+    if (envStr){
+        m_dumpflag = (atoi(envStr) ? true: false);
     }
 
     if (m_dumpflag)
     {
-        m_dumpfile << "sizeInK, delay_in_ms, m_reverseBandWidth, m_propagotionDelay, standardError, propagotionDelay, m_targetDelay, m_nextTargetSize, m_networklimitor, reverseBandwidth" << std::endl;
+        m_dumpfile.open("/tmp/netpred2.0_dump.csv");
+        m_dumpPoints.open("/tmp/netpred2.0_points.log");
+        if (m_dumpfile.good()) {
+            m_dumpfile << "encoded_size, m_observeCounter, m_framesSinceLastSpike, m_encFramesSinceLastSpike, m_newState, m_spikes, m_recoveryAttempt, m_recoveryFrames, m_estimatedAcc, m_estimatedThresholdSize, m_timeToExplore, sizeInK, delay_in_ms, m_reverseBandWidth, m_propagotionDelay, standardError, propagotionDelay, m_targetDelay, m_nextTargetSize, m_networklimitor, reverseBandwidth" << std::endl;
+        }
     }
 }
 
@@ -74,6 +89,7 @@ NetPred::~NetPred()
     if (m_dumpflag)
     {
         m_dumpfile.close();
+        m_dumpPoints.close();
     }
 }
 
@@ -87,7 +103,13 @@ void NetPred::Clear()
 void NetPred::UpdateSizeAndDelay(uint32_t size, uint32_t encoded_size, double delay_in_ms)
 {
 
-    HandleNetworkLimitor(encoded_size, delay_in_ms);
+    CheckNewSteadyState(encoded_size, delay_in_ms);
+
+    if (m_dumpfile.good())
+    {
+        m_dumpfile << encoded_size << "," <<  m_observeCounter << "," <<  m_framesSinceLastSpike << "," << m_encFramesForThreshold << "," <<  m_newState << "," << m_spikes << "," << m_recoveryAttempt << "," << m_recoveryFrames << "," << m_estimateAcc << "," <<  m_estimatedThresholdSize << "," << m_timeToExplore << ",";
+    }
+
     bool inputValid = true;
     if (delay_in_ms < 0)
     {
@@ -108,6 +130,12 @@ void NetPred::UpdateSizeAndDelay(uint32_t size, uint32_t encoded_size, double de
                 << m_targetDelay << ", " << m_nextTargetSize << ", " << m_estimatedThresholdSize << ", " << m_reverseBandWidth << std::endl;
         }
         return;
+    }
+
+    if (m_dumpPoints.good())
+    {
+        m_dumpPoints << "NewFrame ---------------------------------" << std::endl;
+        m_dumpPoints << "Size, Delay" << std::endl;
     }
 
     double sizeInK = (double)size / 1000.0;
@@ -176,11 +204,18 @@ void NetPred::UpdateSizeAndDelay(uint32_t size, uint32_t encoded_size, double de
                     propagotionDelay = 0.5 * propagotionDelay + 0.5 * m_propagotionDelay;
                     reverseBandWidth = (delay_in_ms - propagotionDelay) / sizeInK;
                 }
+
+                if (m_dumpPoints.good()) {
+                    m_dumpPoints << "adj_reverseBandwidth = " << reverseBandWidth << std::endl;
+                    m_dumpPoints << "adj_propagotionDelay = " << propagotionDelay << std::endl;
+                }
+
             }
         }
     }
 
     m_previousTargetSize = m_nextTargetSize;
+
     m_nextTargetSize = (0.9 * m_targetDelay - propagotionDelay) / reverseBandWidth;
 
     AdjustTarget(delay_in_ms);
@@ -256,11 +291,15 @@ void NetPred::UpdateModel()
     UpdateModelNormal(delays, sizes);
     if (!SanityCheck())
     {
+        if (m_dumpPoints.good())
+            m_dumpPoints << "UpdateModelSafe ......" << std::endl;
         UpdateModelSafe(delays, sizes);
     }
 
     if (!SanityCheck())
     {
+        if (m_dumpPoints.good())
+            m_dumpPoints << "UpdateModelSmall ......" << std::endl;
         UpdateModelSmall(delays, sizes);
     }
 
@@ -272,11 +311,16 @@ void NetPred::UpdateModelNormal(std::deque<double>& delays, std::deque<double>& 
 
     if (delays.size() < 0.2 * m_recordedLen)
     {
+        if (m_dumpPoints.good())
+            m_dumpPoints << "UpdateModelSmall ......" << std::endl;
         return UpdateModelSmall(delays, sizes);
     }
 
     double meanDelay = WeightedMean(delays);
     double meanSize = WeightedMean(sizes);
+
+    if (m_dumpPoints.good())
+        m_dumpPoints << "MeanSize, MeanDelay: " << meanSize << "," << meanDelay << std::endl;
 
     double accD = 0.0;
     double accN = 0.0;
@@ -294,10 +338,16 @@ void NetPred::UpdateModelNormal(std::deque<double>& delays, std::deque<double>& 
         }
 
         weight *= m_forgotRatio;
+
+        if (m_dumpPoints.good())
+            m_dumpPoints << sizes[i] << "," << delays[i] << std::endl;
     }
 
     if (accN < 1e-6)
     {
+        if (m_dumpPoints.good())
+            m_dumpPoints << "UpdateModelSmall ......" << std::endl;
+
         return UpdateModelSmall(delays, sizes);
     }
     else
@@ -305,6 +355,12 @@ void NetPred::UpdateModelNormal(std::deque<double>& delays, std::deque<double>& 
         m_reverseBandWidth = accD / accN;
         m_propagotionDelay = meanDelay - m_reverseBandWidth * meanSize;
     }
+
+    if (m_dumpPoints.good()) {
+        m_dumpPoints << "m_reverseBandwidth = " << m_reverseBandWidth << std::endl;
+        m_dumpPoints << "m_propagotionDelay = " << m_propagotionDelay << std::endl;
+    }
+
 }
 
 void NetPred::UpdateModelSmall(std::deque<double>& delays, std::deque<double>& sizes)
@@ -312,6 +368,9 @@ void NetPred::UpdateModelSmall(std::deque<double>& delays, std::deque<double>& s
 
     double meanDelay = WeightedMean(delays);
     double meanSize = WeightedMean(sizes);
+
+    if (m_dumpPoints.good())
+        m_dumpPoints << "MeanSize, MeanDelay: " << meanSize << "," << meanDelay << std::endl;
 
     if (meanSize < 1e-6 || meanDelay < 1e-6)
     {
@@ -321,6 +380,11 @@ void NetPred::UpdateModelSmall(std::deque<double>& delays, std::deque<double>& s
 
     m_reverseBandWidth = meanDelay / meanSize;
     m_propagotionDelay = 0.1;
+
+    if (m_dumpPoints.good()) {
+        m_dumpPoints << "m_reverseBandwidth = " << m_reverseBandWidth << std::endl;
+        m_dumpPoints << "m_propagotionDelay = " << m_propagotionDelay << std::endl;
+    }
 }
 
 void NetPred::UpdateModelSafe(std::deque<double>& delays, std::deque<double>& sizes)
@@ -371,58 +435,107 @@ double NetPred::WeightedMean(std::deque<double>& data)
 
 }
 
-void NetPred::HandleNetworkLimitor(uint32_t encoded_size, double delay_in_ms)
+bool NetPred::OscillationDetected()
 {
+    //Multiple Spikes identified in short duration (m_spikes > 1)
+    //Hints at oscillation pattern around a different steady state
+    return ((m_framesSinceLastSpike < m_timeout * m_fps) && m_spikes >= 2);
+}
 
-    if (!m_networkEmulatorHint)
+bool NetPred::UpdateSteadyState()
+{
+    //Checks if the frame size corresponding to the estimated "steady state"
+    //bitrate needs to be updated and acts on it. Returns if this value has
+    //been updated.
+
+    // Update average framesize taking into account accumulated frame sizes over
+    // all spikes in current evaluation period
+
+    bool updateThreshold = false;
+    if (m_newState && m_encFramesForThreshold > 0 && m_spikes >= 2)
     {
-        return;
+        double newThresholdSize = m_estimateAcc / m_encFramesForThreshold / 1000.0;
+
+        double lowLimit  = (1 - SubstantialChangeThreshold) * m_estimatedThresholdSize;
+        double highLimit = (1 + SubstantialChangeThreshold) * m_estimatedThresholdSize;
+
+        updateThreshold = (newThresholdSize < lowLimit) || (newThresholdSize > highLimit);
+        if (updateThreshold)
+            m_estimatedThresholdSize = newThresholdSize;
     }
+
+    return updateThreshold;
+}
+
+void NetPred::CheckNewSteadyState(uint32_t encoded_size, double delay_in_ms)
+{
+    if (!m_enableSteadyStateCheck)
+        return;
+
     bool spikeEnds = false;
-    if (delay_in_ms > m_targetDelay || delay_in_ms < 0.0)
+
+    bool HighDelayInRecovery = m_recoveryAttempt && (delay_in_ms > m_targetDelay/2);
+
+    if (delay_in_ms > m_targetDelay || delay_in_ms < 0.0 || HighDelayInRecovery)
     {
         ++m_observeCounter;
     }
     else
     {
-        if (m_observeCounter >= m_observeCounterThreshold)
-        {
+        if (IsSpikeOn())
             spikeEnds = true;
-        }
+
         m_observeCounter = 0;
     }
 
+    // Reset avg frame size estimation at end of spike
     if (spikeEnds)
     {
-        m_startEstimate = true;
-        if (m_estimateCounts > 0)
+        //Book-keeping
+        m_spikes++;
+        if (OscillationDetected())
+            m_newState = true;
+        m_framesSinceLastSpike = 0;
+
+        // Check and update Steady State Frame Size
+        bool updateThreshold = UpdateSteadyState();
+
+        // If 2 spikes occur during recovery, it is deemed failed to recover to original bitrate
+        // Reset Recovery state for next attempt
+        // If there is a change in the threshold value, reset recovery trigger time to original
+        // Else increase recovery trigger time by 2x
+        if (m_recoveryAttempt && m_spikes >= 2)
         {
-            m_estimatedThresholdSize = m_estimateAcc / m_estimateCounts;
-            m_limitorUsed = true;
+            m_recoveryAttempt = false;
+            m_recoveryFrames = 0;
+            if (updateThreshold)
+                m_timeToExplore = m_timeout;
+            else
+                m_timeToExplore *= 2;
         }
-        m_estimateAcc = 0.0;
-        m_estimateCounts = 0;
     }
 
-    if (m_startEstimate)
+    // Track bitstream size if there is an ongoing spike in window for checking
+    // oscillatory behaviour or if we are in a recovery attempt
+    if (IsSpikeOn() || m_recoveryAttempt)
     {
-        ++ m_estimateCounts;
-        m_estimateAcc += (double)encoded_size / 1000.0;
+        m_estimateAcc += encoded_size;
+        if (encoded_size != 0) {
+            //Valid new frame encoded
+            m_encFramesForThreshold++;
+        }
     }
 
-    if (m_estimateCounts > m_timeToExplore* m_fps)
-    {
-        m_estimatedThresholdSize *= 1.05;
-    }
+    //Increment frame counter since last spike
+    m_framesSinceLastSpike++;
 
-    if (m_estimateCounts > m_timeout* m_fps)
-    {
-        m_estimateAcc = 0.0;
-        m_estimateCounts = 0;
-        m_limitorUsed = false;
-        m_estimatedThresholdSize = 0.0;
-        m_startEstimate = false;
-    }
+    //Manage recovery attempt to see if we can return to original settings
+    ManageRecoveryAttempt();
+
+    //Reset spike counter after timeout
+    //m_newState is left unchanged till a successful recovery
+    if (m_framesSinceLastSpike >= m_timeout * m_fps)
+        m_spikes = 0;
 }
 
 void NetPred::AdjustTarget(double delay_in_ms)
@@ -435,11 +548,11 @@ void NetPred::AdjustTarget(double delay_in_ms)
         m_nextTargetSize = m_previousTargetSize * 0.9;
     }
 
-    if (!m_networkEmulatorHint)
-    {
+    if (!m_enableSteadyStateCheck || m_recoveryAttempt)
         return;
-    }
-    if (m_limitorUsed && m_estimatedThresholdSize > 1e-6)
+
+    //Cap to value below estimated steady state threshold size
+    if (m_newState && m_estimatedThresholdSize > 0)
     {
         if (m_nextTargetSize > 0.95 * m_estimatedThresholdSize)
         {
@@ -495,11 +608,6 @@ void NetPred::SetFPS(double fps)
     m_fps = fps;
 }
 
-void NetPred::SetNetworkEmulatorHint(bool hint)
-{
-    m_networkEmulatorHint = hint;
-}
-
 inline int NetPred::CurrentState()
 {
     return 0;
@@ -508,4 +616,56 @@ inline int NetPred::CurrentState()
 inline bool NetPred::SanityCheck()
 {
     return m_reverseBandWidth > MinReverseBandwidth && m_propagotionDelay >= 0.0;
+}
+
+inline  bool NetPred::IsSpikeOn()
+{
+    return (m_observeCounter >= m_observeCounterThreshold);
+}
+
+inline bool NetPred::ManageRecoveryAttempt()
+{
+    // This function manages recovery attempt after detecting an oscillation
+    // Returns bool variable indicating if recovery is in progress
+
+    bool isAttemptOngoing = m_recoveryAttempt && (m_recoveryFrames <= m_fps * m_timeout);
+
+    bool initRecoveryCondition = (m_newState && !m_recoveryAttempt && !IsSpikeOn() &&
+                                 (m_framesSinceLastSpike == m_timeToExplore* m_fps));
+
+    // Return if no active attempt and no new attempt at recovery
+    if (!initRecoveryCondition && !isAttemptOngoing) {
+        m_recoveryAttempt = false;
+        return false;
+    }
+
+    // Start recovery attempt if condition is met
+    if (initRecoveryCondition) {
+        m_recoveryAttempt = true;
+        m_recoveryFrames = 0;
+    }
+
+    // If ongoing attempt, check for result & maintain state
+    if (isAttemptOngoing)
+    {
+        m_recoveryFrames++;
+
+        // If there is no latency spike for enough time, recovery is considered successful
+        // Reset recovery state and remove flag indicating new state
+        if (m_recoveryFrames == m_timeout * m_fps)
+        {
+            m_recoveryAttempt = false;
+            m_recoveryFrames = 0;
+            m_timeToExplore = m_timeout;
+
+            m_newState = false;
+            m_estimateAcc = 0.0;
+            m_framesSinceLastSpike = 0;
+            m_encFramesForThreshold = 0;
+            m_estimatedThresholdSize = 0.0;
+            m_spikes = 0;
+        }
+    }
+
+    return m_recoveryAttempt;
 }
