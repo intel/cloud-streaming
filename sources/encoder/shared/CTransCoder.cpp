@@ -2062,7 +2062,7 @@ bool CTransCoder::enableTcae(const char* tcaeLogPath)
         float framerate = 0.0;
         if (pVal)
             framerate = atof(pVal);
-        if (maxBitrate > 0 && framerate > 1e-6)
+        if (maxBitrate > 0 && framerate > 0)
         {
             maxSize = maxBitrate / 8 / framerate;
         }
@@ -2087,6 +2087,9 @@ bool CTransCoder::enableTcae(const char* tcaeLogPath)
             setOutputProp("low_delay_brc", 1);
             setOutputProp("hrd_compliance", FF_COMPLIANCE_UNOFFICIAL);
             m_Log->Info("CTransCoder::enableTcae: set low_delay_brc and strict_std_compliance=UNOFFICIAL\n");
+
+            if (framerate > 0)
+                m_tcae->SetFps(framerate);
         }
     }
     return m_tcaeEnabled;

@@ -106,6 +106,8 @@ public:
     ~PredictorTcaeImpl();
 
     tcaeStatus Start(TcaeInitParams_t* params);
+    tcaeStatus SetFps(double fps);
+
     tcaeStatus UpdateNetworkState(PerFrameNetworkData_t* data);
     tcaeStatus BitstreamSent(EncodedFrameFeedback_t* bts);
     tcaeStatus PredictEncSettings(FrameSettings_t* perFrameSettings);

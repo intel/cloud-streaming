@@ -243,3 +243,11 @@ uint32_t CTcaeWrapper::GetTargetSize()
 
     return targetSize;
 }
+
+int CTcaeWrapper::SetFps(double fps)
+{
+    if (m_tcae == nullptr)
+        return ERR_NULL_PTR;
+
+    return m_tcae->SetFps(fps);
+}
