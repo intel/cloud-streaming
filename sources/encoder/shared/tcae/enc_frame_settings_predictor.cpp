@@ -187,6 +187,17 @@ tcaeStatus PredictorTcaeImpl::UpdateNetworkState(PerFrameNetworkData_t* data)
     return sts;
 }
 
+tcaeStatus PredictorTcaeImpl::SetFps(double fps)
+{
+    CHECK_POINTER(m_NetworkPredictor, ERR_NOT_INITIALIZED);
+
+    if (fps <= 0)
+        return ERR_INVALID_ARG;
+
+    m_NetworkPredictor->SetFPS(fps);
+
+    return ERR_NONE;
+}
 
 tcaeStatus PredictorTcaeImpl::UpdateNetworkStateImpl(PerFrameNetworkData_t* data, StateLogger* log)
 {

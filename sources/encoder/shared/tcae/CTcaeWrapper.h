@@ -85,6 +85,8 @@ public:
 
     void setTcaeLogPath(const char* path) { m_tcaeLogPath = path; };
 
+    int SetFps(double fps);
+
 protected:
     std::unique_ptr<PredictorTcaeImpl> m_tcae;
 
