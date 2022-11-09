@@ -7,7 +7,6 @@
 #include <vector>
 #include <string>
 #include "owt/base/commontypes.h"
-#include "owt/base/export.h"
 
 namespace owt {
 namespace base {
@@ -25,6 +24,10 @@ class OWT_EXPORT DeviceUtils {
       const std::string& id);
   /// Get the camera device index by its device id.
   static int GetVideoCaptureDeviceIndex(const std::string& id);
+  /// Get camera device's user friendly name by index.
+  static std::string GetDeviceNameByIndex(int index);
+  static std::vector<VideoTrackCapabilities> VideoCapturerSupportedCapabilities(
+      const std::string& id);
 };
 }
 }

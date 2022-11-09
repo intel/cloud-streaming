@@ -1,18 +1,20 @@
 // Copyright (C) <2018> Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
+
 #ifndef OWT_BASE_PUBLICATION_H_
 #define OWT_BASE_PUBLICATION_H_
 
+#include <functional>
 #include "owt/base/commontypes.h"
-#include "owt/base/exception.h"
-#include "owt/base/export.h"
 #include "owt/base/connectionstats.h"
+#include "owt/base/exception.h"
+#include "owt/base/macros.h"
 
 namespace owt {
 namespace base {
 /// Observer that receives event from publication.
-class PublicationObserver {
+class OWT_EXPORT PublicationObserver {
  public:
   /// Triggered when publication is ended.
   virtual void OnEnded() = 0;
@@ -23,8 +25,7 @@ class PublicationObserver {
   /// Triggered when an error occured on the publication.
   virtual void OnError(std::unique_ptr<Exception> failure) = 0;
 };
-
-class Publication {
+class OWT_EXPORT Publication {
  public:
   /// Pause current publication's audio or/and video basing on |track_kind| provided.
   virtual void Mute(TrackKind track_kind,
@@ -34,6 +35,10 @@ class Publication {
   virtual void Unmute(TrackKind track_kind,
                       std::function<void()> on_success,
                       std::function<void(std::unique_ptr<Exception>)> on_failure) = 0;
+  /// Deprecated. Get conneciton stats of current publication
+  OWT_DEPRECATED virtual void GetStats(
+      std::function<void(std::shared_ptr<ConnectionStats>)> on_success,
+      std::function<void(std::unique_ptr<Exception>)> on_failure) = 0;
   /// Get conneciton stats of current publication
   virtual void GetStats(
       std::function<void(std::shared_ptr<RTCStatsReport>)> on_success,

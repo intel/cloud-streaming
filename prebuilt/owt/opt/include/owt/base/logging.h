@@ -8,7 +8,7 @@
 
 namespace owt {
 namespace base {
-enum class OWT_EXPORT LoggingSeverity : int {
+enum class LoggingSeverity : int {
   /// Information which should only be logged with the consent of the user, due to privacy concerns.
   kSensitive = 1,
   /// This level is for data which we do not want to appear in the normal debug log, but should appear in diagnostic logs.

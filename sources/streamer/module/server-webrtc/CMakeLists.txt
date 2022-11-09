@@ -57,7 +57,8 @@ target_compile_definitions(server-webrtc
   PRIVATE
     GA_MODULE
     WEBRTC_LINUX
-    WEBRTC_POSIX)
+    WEBRTC_POSIX
+    OWT_CLOUD_GAMING)
 
 target_include_directories(server-webrtc
   PRIVATE

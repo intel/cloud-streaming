@@ -15,10 +15,10 @@ namespace owt {
 namespace base {
 
 /// A Wrapper of webrtc::Clock.
-class Clock {
+class OWT_EXPORT Clock {
  public:
-  OWT_EXPORT Clock();
-  OWT_EXPORT int64_t TimeInMilliseconds();
+  explicit Clock();
+  int64_t TimeInMilliseconds();
 
  private:
    webrtc::Clock* clock_;

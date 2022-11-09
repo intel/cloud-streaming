@@ -10,7 +10,7 @@
 namespace owt {
 namespace base{
 // TODO: The following exceptions need to sync with other SDKs
-enum class OWT_EXPORT ExceptionType : int {
+enum class ExceptionType : int {
   kUnknown = 1000, // General exception
   // kLocal* for local stream exceptions
   kLocalUnknown = 1100,

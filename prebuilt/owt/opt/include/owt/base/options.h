@@ -7,9 +7,7 @@
 #include <string>
 #include <vector>
 #include "owt/base/commontypes.h"
-#include "owt/base/export.h"
 #include "owt/base/mediaconstraints.h"
-
 namespace owt {
 namespace base {
 /// Audio subscription capabilities. Empty means not setting corresponding
@@ -41,10 +39,22 @@ struct OWT_EXPORT VideoPublicationSettings {
   unsigned long bitrate;
   unsigned long keyframe_interval;
   std::string rid;
+  std::string track_id;
 };
+
+#ifdef OWT_ENABLE_QUIC
+struct OWT_EXPORT TransportSettings {
+  explicit TransportSettings() : transport_type(TransportType::kWebRTC) {}
+  TransportType transport_type;
+};
+#endif
+
 struct OWT_EXPORT PublicationSettings {
   std::vector<AudioPublicationSettings> audio;
   std::vector<VideoPublicationSettings> video;
+#ifdef OWT_ENABLE_QUIC
+  TransportSettings transport;
+#endif
 };
 /**
  @brief Publish options describing encoding settings.
@@ -53,6 +63,9 @@ struct OWT_EXPORT PublicationSettings {
 struct OWT_EXPORT PublishOptions {
   std::vector<AudioEncodingParameters> audio;
   std::vector<VideoEncodingParameters> video;
+#ifdef OWT_ENABLE_QUIC
+  TransportConstraints transport;
+#endif
 };
 
 }  // namespace base

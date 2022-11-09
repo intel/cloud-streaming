@@ -3,10 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #ifndef OWT_BASE_MEDIA_CONSTRAINTS_H_
 #define OWT_BASE_MEDIA_CONSTRAINTS_H_
-
 #include "owt/base/commontypes.h"
-#include "owt/base/export.h"
-
 namespace owt {
 namespace base {
 struct OWT_EXPORT MediaStreamTrackAudioConstraints {
