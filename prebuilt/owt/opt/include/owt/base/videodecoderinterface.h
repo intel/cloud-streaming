@@ -24,7 +24,7 @@ struct OWT_EXPORT VideoEncodedFrame {
  @brief Video decoder interface
  @details Encoded frames will be passed for further customized decoding
 */
-class VideoDecoderInterface {
+class OWT_EXPORT VideoDecoderInterface {
  public:
   /**
    @brief Destructor

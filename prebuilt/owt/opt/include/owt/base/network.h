@@ -18,7 +18,7 @@ struct OWT_EXPORT IceServer {
   std::string password;
 };
 /// Defines ICE candidate types.
-enum class OWT_EXPORT IceCandidateType : int {
+enum class IceCandidateType : int {
   /// Host candidate.
   kHost = 1,
   /// Server reflexive candidate.
@@ -31,7 +31,7 @@ enum class OWT_EXPORT IceCandidateType : int {
   kUnknown = 99,
 };
 /// Defines transport protocol.
-enum class OWT_EXPORT TransportProtocolType : int {
+enum class TransportProtocolType : int {
   /// TCP.
   kTcp = 1,
   /// UDP.

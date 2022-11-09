@@ -1,3 +1,7 @@
+// Copyright (C) <2022> Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
+
 #ifndef OWT_BASE_EXPORT_H_
 #define OWT_BASE_EXPORT_H_
 
@@ -29,4 +33,3 @@
 #endif
 
 #endif  // OWT_BASE_EXPORT_H_
-

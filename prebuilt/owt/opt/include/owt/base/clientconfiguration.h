@@ -7,8 +7,8 @@
 #include <vector>
 #include <string>
 #include "owt/base/commontypes.h"
-#include "owt/base/export.h"
 #include "owt/base/network.h"
+#include "owt/base/export.h"
 
 namespace owt {
 namespace base{

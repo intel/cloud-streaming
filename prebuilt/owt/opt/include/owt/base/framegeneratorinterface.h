@@ -14,9 +14,8 @@ namespace base {
  @details Sample rate and channel numbers cannot be changed once the generator is
  created. Currently, only 16 bit little-endian PCM is supported.
 */
-class AudioFrameGeneratorInterface {
+class OWT_EXPORT AudioFrameGeneratorInterface {
  public:
-  AudioFrameGeneratorInterface() {}
   /**
    @brief Generate frames for next 10ms.
    @param buffer Points to the start address for frame data. The memory is
@@ -38,7 +37,7 @@ class AudioFrameGeneratorInterface {
  @brief frame generator interface for users to generates frame.
  FrameGeneratorInterface is the virtual class to implement its own frame generator.
 */
-class VideoFrameGeneratorInterface {
+class OWT_EXPORT VideoFrameGeneratorInterface {
  public:
   enum VideoFrameCodec {
     I420,
@@ -78,6 +77,11 @@ class VideoFrameGeneratorInterface {
    @brief This function gets the video frame type of video frame generator.
    */
   virtual VideoFrameCodec GetType() = 0;
+  /**
+   @brief This function can perform any cleanup that must be done on the same thread as
+   GenerateNextFrame(). Default implementation provided for backwards compatibility.
+   */
+  virtual void Cleanup() {}
 };
 } // namespace base
 } // namespace owt

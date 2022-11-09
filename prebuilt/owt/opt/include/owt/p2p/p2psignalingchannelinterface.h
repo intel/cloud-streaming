@@ -4,13 +4,10 @@
 
 #ifndef OWT_P2P_SIGNALINGCHANNELINTERFACE_H_
 #define OWT_P2P_SIGNALINGCHANNELINTERFACE_H_
-
 #include <functional>
 #include <memory>
 #include <string>
 #include "owt/base/exception.h"
-#include "owt/base/export.h"
-
 namespace owt {
 namespace p2p {
 using namespace owt::base;
@@ -19,6 +16,7 @@ using namespace owt::base;
  */
 class OWT_EXPORT P2PSignalingChannelObserver {
  public:
+  virtual ~P2PSignalingChannelObserver() = default;
   /**
    @brief This function will be triggered when new message arrives.
    @param message Message received from signaling server.
@@ -37,6 +35,7 @@ class OWT_EXPORT P2PSignalingChannelObserver {
  */
 class OWT_EXPORT P2PSignalingChannelInterface {
  public:
+  virtual ~P2PSignalingChannelInterface() = default;
   /**
    @brief Add an observer for P2PSignalingChannel
    @param observer An observer instance.

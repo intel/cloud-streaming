@@ -3,13 +3,10 @@
 // SPDX-License-Identifier: Apache-2.0
 #ifndef OWT_P2P_SIGNALINGSENDERINTERFACE_H_
 #define OWT_P2P_SIGNALINGSENDERINTERFACE_H_
-
 #include <functional>
 #include <memory>
 #include <string>
 #include "owt/base/exception.h"
-#include "owt/base/export.h"
-
 namespace owt {
 namespace p2p {
 /** @cond */

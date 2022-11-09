@@ -9,7 +9,6 @@
 #include <mutex>
 #include <vector>
 #include "owt/base/commontypes.h"
-#include "owt/base/export.h"
 
 namespace owt {
 namespace base {
@@ -160,7 +159,7 @@ struct OWT_EXPORT EncodedImageMetaData {
   size_t cursor_data_length = 0;
 };
 
-class EncodedStreamProviderSink {
+class OWT_EXPORT EncodedStreamProviderSink {
  public:
   // Invoked by EncodedStream
   virtual void OnStreamProviderFrame(const std::vector<uint8_t>& buffer,
@@ -168,7 +167,7 @@ class EncodedStreamProviderSink {
 };
 
 // Registered to EncodedStreamProvider to receive events from encoder.
-class EncoderObserver {
+class OWT_EXPORT EncoderObserver {
  public:
   virtual void OnStarted() = 0;
 
@@ -183,7 +182,7 @@ class EncoderObserver {
 };
 
 // Encoder event callback interface
-class EncoderEventCallback {
+class OWT_EXPORT EncoderEventCallback {
  public:
   virtual void StartStreaming() = 0;
 
@@ -247,7 +246,7 @@ class OWT_EXPORT EncodedStreamProvider final
   @details Internal webrtc encoder will request from this
    interface when it needs one complete encoded frame.
 */
-class VideoEncoderInterface {
+class OWT_EXPORT VideoEncoderInterface {
  public:
   /**
    @brief Destructor
