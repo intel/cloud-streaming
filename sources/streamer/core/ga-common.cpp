@@ -1031,8 +1031,8 @@ pthread_cancel_handler(int s) {
 }
 #endif
 
-EXPORT 
-bool    
+EXPORT
+bool
 ga_is_h264(std::string codec) {
     if (codec == "avc" || codec == "h264")
         return true;
