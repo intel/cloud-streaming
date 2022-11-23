@@ -739,10 +739,8 @@ void ICSP2PClient::InsertFrame(ga_packet_t* packet) {
   if (!side_data)
     return;
 
-#ifndef _WIN32
   if (packet->flags & GA_PKT_FLAG_KEY)
       meta_data.is_keyframe = true;
-#endif
 
 #ifndef DISABLE_TS_FT
   meta_data.picture_id = static_cast<uint16_t>(packet->pts);
@@ -764,6 +762,9 @@ void ICSP2PClient::InsertFrame(ga_packet_t* packet) {
   meta_data.encoding_end = meta_data.capture_timestamp +
       side_data->encode_end_ms -
       side_data->capture_time_ms;
+
+  ga_logger(Severity::DBG, "ics-p2p-client: frameNumber = %d packet->flags = %d\n", frameNumber, packet->flags);
+
 #ifdef E2ELATENCY_TELEMETRY_ENABLED
   //E2ELatency
   meta_data.picture_id = updateFrameNumber();
