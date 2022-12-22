@@ -354,3 +354,6 @@ ENTRYPOINT ["/usr/bin/demo-bash"]
 
 USER user
 WORKDIR /home/user
+
+COPY entry/encoder-entry /
+ENTRYPOINT ["/encoder-entry"]
