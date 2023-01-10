@@ -177,6 +177,10 @@ EXPORT int   ga_window_bounds(int &dw, int &dh, gaPoint &wlt, gaPoint &wrb, gaPo
 EXPORT int    ga_crop_window(struct gaRect *rect, struct gaRect **prect);
 EXPORT void    ga_backtrace();
 
+EXPORT bool    ga_is_h264(std::string codec);
+EXPORT bool    ga_is_h265(std::string codec);
+EXPORT bool    ga_is_av1(std::string codec);
+
 EXPORT void    pthread_cancel_init();
 #ifdef ANDROID
 #include <pthread.h>
