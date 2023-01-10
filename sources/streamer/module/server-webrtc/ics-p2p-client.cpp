@@ -332,12 +332,10 @@ int ICSP2PClient::Init(void *arg) {
   std::string codec = ga_conf_readstr("video-codec");
 
   VideoCodecParameters video_param;
-  if (ga_conf_readbool("enable-hevc-codec", 0) != 0 ||
-      std::string("h265") == codec ||
-      std::string("hevc") == codec) {
+  if (ga_is_h265(codec)) {
     video_param.name = VideoCodec::kH265;
     ga_logger(Severity::INFO, "selected H265 codec\n");
-  } else if (std::string("av1") == codec) {
+  } else if (ga_is_av1(codec)) {
     video_param.name = VideoCodec::kAv1;
     ga_logger(Severity::INFO, "selected AV1 codec\n");
   } else {

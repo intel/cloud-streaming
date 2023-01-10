@@ -1031,6 +1031,30 @@ pthread_cancel_handler(int s) {
 }
 #endif
 
+EXPORT 
+bool    
+ga_is_h264(std::string codec) {
+    if (codec == "avc" || codec == "h264")
+        return true;
+    return false;
+}
+
+EXPORT
+bool
+ga_is_h265(std::string codec) {
+    if (codec == "hevc" || codec == "h265")
+        return true;
+    return false;
+}
+
+EXPORT
+bool
+ga_is_av1(std::string codec) {
+    if (codec == "av1")
+        return true;
+    return false;
+}
+
 /**
  * Initialize the emulated pthread_cancel function.
  *
