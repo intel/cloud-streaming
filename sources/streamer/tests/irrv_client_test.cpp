@@ -165,6 +165,30 @@ TEST_F(IrrvTest, EncodeRun1s)
   irrv_->stop();
 }
 
+TEST_F(IrrvTest, LongEncodeRun1min)
+{
+    // This test is meant for scenarios that need a longer duration test. An example is the
+    // Resolution change scenario (Bypass/Client-Composition switch case), where the test profile
+    // has user-generated events that are triggered well beyond the timespan of existing tests.
+    //
+    // It is recommended to enable this test only for cases that really need it, by means of the
+    // googletest parameter "gtest_filter" on the command line
+
+    irrv_->start();
+    EXPECT_TRUE(irrv_->ready(std::chrono::system_clock::now() + 5s));
+    EXPECT_GT(irrv_->irrv_set_encodestart(), 0);
+    EXPECT_GT(irrv_->irrv_set_keyframe(), 0);
+    usleep(1000*1000*60);
+    SnapshotCounts();
+    EXPECT_LE(bitstream_count, (int)(g_framerate*1.2*60));
+    EXPECT_GE(bitstream_count, (int)(g_framerate*0.8*60));
+    EXPECT_EQ(null_pkts, 0);
+    EXPECT_EQ(zero_pkts, 0);
+    EXPECT_GT(irrv_->irrv_set_encodestop(), 0);
+    irrv_->stop();
+}
+
+
 int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);

@@ -6,6 +6,7 @@ function Usage()
     cat << EOF
 test_irrv.sh /path/to/aic/workdir streaming:latest icr:latest Profile.yml GameResolution
               [-t test-set] [-s SrcWidthxSrcHeight] [-q quality] [-b target-bitrate] [-mb max-bitrate]
+              [-f googletest-filter]
 
 The first five arguments are mandatory:
 -- Profile.yml is expected to be in /path/to/aic/workdir
@@ -21,7 +22,8 @@ Optional Args:
 * -q  | --quality  : TU Setting for Encoder. Any input outside supported set will use default
                      Supported options: 1,4,7. Default Value = 4 (TU4)
 * -b  | --target-bitrate : Target bitrate to use in test (e.g. 3.2M). Default value = 3.3M
-* -mb |--max-bitrate     : Max bitrate to use in test (e.g. 5.4M). Default value = 6.6M
+* -mb | --max-bitrate    : Max bitrate to use in test (e.g. 5.4M). Default value = 6.6M
+* -f  | --gtest_filter   : Custom googletest filter setting. Onus on caller to issue a valid setting
 EOF
 }
 
@@ -49,6 +51,10 @@ function parse_optional_args()
                 ;;
             -mb | --max-bitrate )
                 MAX_BITRATE=$2
+                shift 2
+                ;;
+            -f  | --gtest_filter )
+                GTEST_SETTINGS="--gtest_filter=$2"
                 shift 2
                 ;;
             *)
@@ -94,6 +100,7 @@ SRC_RESOLUTION=$GAME_RESOLUTION
 QUALITY=4
 TARGET_BITRATE=3.3M
 MAX_BITRATE=6.6M
+GTEST_SETTINGS="--gtest_filter=*"
 
 shift 5
 parse_optional_args $@
@@ -204,7 +211,7 @@ for c in "${icr_cases[@]}"; do
   fi
   docker start emu0
   docker start icr0
-  if ! $ESC_DOCKER irrv-client-test --framerate $(get_framerate "$c"); then
+  if ! $ESC_DOCKER irrv-client-test --framerate $(get_framerate "$c") ${GTEST_SETTINGS}; then
     fail=1
   fi
   docker logs icr0 > $AIC_WORKDIR/logs_$count.${PROFILE%.*}.icr0.txt 2>&1
