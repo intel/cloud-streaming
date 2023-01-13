@@ -150,6 +150,8 @@ void CFFEncoder::init(AVDictionary *pDict) {
             h = tag->value;
         if (h && atoi(h) == 1)
             m_pEnc->strict_std_compliance = FF_COMPLIANCE_STRICT;
+        else if (h && atoi(h) == -1)
+            m_pEnc->strict_std_compliance = FF_COMPLIANCE_UNOFFICIAL;
 
         const char *b = nullptr;
         tag = av_dict_get(pDict, "rc_mode", nullptr, 0);
@@ -323,6 +325,16 @@ void CFFEncoder::updateDynamicChangedFramerate(int framerate) {
     m_pEnc->time_base = AV_TIME_BASE_Q;
     m_Info.m_rFrameRate = m_pEnc->framerate;
     m_Info.m_rTimeBase  = m_pEnc->time_base;
+}
+
+void CFFEncoder::setBitrate(int bitrate)
+{
+    m_pEnc->bit_rate = bitrate;
+}
+
+void CFFEncoder::setMaxBitrate(int maxBitrate)
+{
+    m_pEnc->rc_max_rate = maxBitrate;
 }
 
 #ifdef ENABLE_MEMSHARE
