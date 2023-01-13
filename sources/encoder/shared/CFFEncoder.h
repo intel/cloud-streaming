@@ -46,6 +46,8 @@ public:
     int setLatencyStats(int nLatencyStats);
     size_t getEncFrames() { return m_nFrames; }
     void updateDynamicChangedFramerate(int framerate);
+    void setBitrate(int bitrate);
+    void setMaxBitrate(int maxBitrate);
 
 #ifdef ENABLE_MEMSHARE
     //AVBufferRef* createAvBuffer(int size);

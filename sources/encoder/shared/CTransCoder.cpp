@@ -1134,6 +1134,22 @@ void CTransCoder::dynamicSetEncParameters(CEncoder *pEnc, AVFrame *pFrame, AVFra
             (*pFrameEnc)->pict_type = AV_PICTURE_TYPE_P;
     }
 
+#ifdef ENABLE_TCAE
+    // Determine TCBRC target size (if enabled) first, and translate to bitrate
+    // The code that follows uses the target and max bitrates determined here
+    if (m_tcaeEnabled && m_tcae)
+    {
+        uint32_t targetSize = m_tcae->GetTargetSize();
+        if (targetSize > 0 && m_qsvPlugin)
+        {
+            // Convert target frame size to bitrate
+            int tcbrc_target_bitrate = m_frameRate * targetSize * 8;
+            setBitrate(tcbrc_target_bitrate);
+            setMaxBitrate(tcbrc_target_bitrate);
+        }
+    }
+#endif
+
     if(m_setQP) {
         m_Log->Info("set qp at framenum=%d, qp=%d\n", curEncFrames, m_setQP);
 #ifdef FFMPEG_v42
@@ -1152,42 +1168,16 @@ void CTransCoder::dynamicSetEncParameters(CEncoder *pEnc, AVFrame *pFrame, AVFra
 #endif
         m_setQP = 0;
     }
-    if(m_setBitrate) {
-        m_Log->Info("set dynamic bitrate at framenum=%d, bitrate=%d\n", curEncFrames, m_setBitrate);
-#ifdef FFMPEG_v42
-        m_Log->Info("FFMPEG_v42: use ffmpeg version 4.2. Config_br!\n");
-        AVRateControl rc = {static_cast<uint64_t>(m_setBitrate), static_cast<uint32_t>(m_minQP), static_cast<uint32_t>(m_maxQP)};
-        AVFrameSideData *fside = av_frame_get_side_data((*pFrameEnc), AV_FRAME_DATA_CONFIG_BITRATE);
-        if (NULL == fside) {
-            fside = av_frame_new_side_data((*pFrameEnc), AV_FRAME_DATA_CONFIG_BITRATE, sizeof(AVRateControl));
-        }
-        if (fside) {
-            m_Log->Info("FFMPEG_v42 set dynamic bitrate: %d successfully!\n", m_setBitrate);
-            memcpy(fside->data, &rc, sizeof(AVRateControl));
-        } else {
-            m_Log->Warn("Failed to set dynamic bitrate side-data \n");
-        }
-#else
-        m_Log->Warn("Failed to set dynamic bitrate side-data\n");
-#endif
 
+    if(m_setBitrate) {
+        m_Log->Info("set dynamic bitrate at framenum=%d, bitrate=%d\n", curEncFrames, m_bitrate);
+        ((CFFEncoder*)pEnc)->setBitrate(m_bitrate);
         m_setBitrate = 0;
     }
 
     if (m_setMaxBitrate) {
         m_Log->Info("set dynamic max bitrate at framenum=%d, max_bitrate=%d\n", curEncFrames, m_maxBitrate);
-#ifdef FFMPEG_v42
-        AVFrameSideData *fside = av_frame_get_side_data((*pFrameEnc), AV_FRAME_DATA_CONFIG_MAX_BITRATE);
-        if (NULL == fside) {
-            fside = av_frame_new_side_data((*pFrameEnc), AV_FRAME_DATA_CONFIG_MAX_BITRATE, sizeof(int));
-        }
-        if (fside) {
-            m_Log->Info("FFMPEG_v42 set dynamic max bitrate: %d successfully!\n", m_setMaxBitrate);
-            memcpy(fside->data, &m_setMaxBitrate, sizeof(int));
-        }
-#else
-        m_Log->Warn("This FFmepg version doesn't support for setting dynamicly max bitrate.");
-#endif
+        ((CFFEncoder*)pEnc)->setMaxBitrate(m_maxBitrate);
         m_setMaxBitrate = 0;
     }
 
@@ -1406,24 +1396,6 @@ void CTransCoder::dynamicSetEncParameters(CEncoder *pEnc, AVFrame *pFrame, AVFra
         }
         else {
             m_Log->Warn("Failed to set skip frame\n");
-        }
-    }
-#endif
-
-#ifdef ENABLE_TCAE
-    if (m_tcaeEnabled && m_tcae)
-    {
-        uint32_t targetSize = m_tcae->GetTargetSize();
-        //printf("TargetSize get from tcae is %d\n", targetSize);
-        if (targetSize > 0 && m_qsvPlugin)
-        {
-            char value[32];
-            snprintf(value, sizeof(value), "%d", targetSize);
-            int ret = av_dict_set(&((*pFrameEnc)->metadata), "tcbrc_target_size",
-                value, 0);
-            if (ret < 0) {
-                m_Log->Warn("Failed to set dict targetSize, ret=%d\n", ret);
-            }
         }
     }
 #endif
@@ -2096,6 +2068,14 @@ bool CTransCoder::enableTcae(const char* tcaeLogPath)
         else
         {
             m_tcaeEnabled = true;
+
+            // TCBRC needs LowDelayBRC to be On, NAL-HRD conformance to be off
+            // In current design we set TCBRC target size every frame, and thus
+            // these can be set upon init and not changed in the run. Public
+            // ffmpeg infact doesn't update HRD compliance on a per-frame basis.
+            setOutputProp("low_delay_brc", 1);
+            setOutputProp("hrd_compliance", FF_COMPLIANCE_UNOFFICIAL);
+            m_Log->Info("CTransCoder::enableTcae: set low_delay_brc and strict_std_compliance=UNOFFICIAL\n");
         }
     }
     return m_tcaeEnabled;
