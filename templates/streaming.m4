@@ -31,7 +31,7 @@ dnl
 include(begin.m4)
 
 define(`STREAMING_INSTALL_DEPS',`dnl
-  iproute2 pulseaudio dnl
+  iproute2 dnl
   ifelse(
     OS_NAME:OS_VERSION,ubuntu:20.04,libprotobuf17,
     OS_NAME:OS_VERSION,ubuntu:22.04,libprotobuf23) dnl
@@ -59,7 +59,6 @@ ifdef(`DEVEL',`dnl
 RUN usermod -aG sudo user
 RUN sed -i -e "s/%sudo.*/%sudo ALL=(ALL) NOPASSWD:ALL/g" /etc/sudoers'
 )
-RUN echo "default-sample-rate = 48000" >> /etc/pulse/daemon.conf
 
 # Setting up environment common for all samples
 

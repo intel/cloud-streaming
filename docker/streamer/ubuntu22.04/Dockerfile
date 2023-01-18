@@ -151,7 +151,6 @@ RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     openssl \
     iproute2 \
-    pulseaudio \
     libprotobuf23 \
     sudo \
     wget && \
@@ -180,7 +179,6 @@ RUN groupadd -r user && useradd -lrm -s /bin/bash -g user user
 RUN usermod -aG sudo user
 RUN sed -i -e "s/%sudo.*/%sudo ALL=(ALL) NOPASSWD:ALL/g" /etc/sudoers
 
-RUN echo "default-sample-rate = 48000" >> /etc/pulse/daemon.conf
 
 # Setting up environment common for all samples
 
