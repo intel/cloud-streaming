@@ -186,6 +186,7 @@ DWORD __stdcall ProcessThreadClient(LPVOID params)
         ctrlsin.sin_addr.S_un.S_addr = name_resolve(pThreadInfo->conf.servername);
         if (ctrlsin.sin_addr.S_un.S_addr == INADDR_NONE) {
             ga_logger(Severity::ERR, "Name resolution failed: %s\n", pThreadInfo->conf.servername);
+            closesocket(m_sclient);
             return -1;
         }
     }
@@ -250,7 +251,7 @@ restart:
         }
 
         CURSOR_INFO *pCursorInfo = (CURSOR_INFO *)((unsigned char *)(buf  + sizeof(MSG_REP_INFO_S)));
-        if (pCursorInfo->lenOfCursor) {
+        if (pCursorInfo->lenOfCursor && (sizeof(MSG_REP_INFO_S) + sizeof(CURSOR_INFO) + pCursorInfo->lenOfCursor) < 8192) {
             memcpy(gCursorData, (unsigned char *)(buf  + sizeof(MSG_REP_INFO_S) + sizeof(CURSOR_INFO)), pCursorInfo->lenOfCursor);
         }
         cursorX = pCursorInfo->pos_x;

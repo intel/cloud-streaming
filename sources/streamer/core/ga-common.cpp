@@ -51,6 +51,9 @@
 #include <map>
 #include <list>
 #include <limits>
+#include <queue>
+#include <mutex>
+
 using namespace std;
 
 #ifndef NIPQUAD
@@ -126,6 +129,12 @@ ga_usleep(long long interval, struct timeval *ptv) {
     return 0LL;
 }
 
+#if __linux__
+#else
+static std::queue<std::string> ga_msg_backlog;
+static std::mutex ga_msg_backlog_mutex;
+#endif
+
 /**
  * Write message \a s into the log file.
  * This in an internal function only called by \em ga_log function.
@@ -156,9 +165,21 @@ ga_writelog(struct timeval tv, const char *s, Severity level) {
     if (Severity::ERR == level)
         fprintf(stderr, "# [%d] %ld.%06ld ERR : %s", getpid(), tv.tv_sec, tv.tv_usec, s);
 
-    if(ga_logfile == NULL)
+    if(ga_logfile == NULL) {
+        std::lock_guard<std::mutex> msg_backlog_guard(ga_msg_backlog_mutex);
+        char temp_message[4096];
+        sprintf(temp_message, "[%d][%5d] %ld.%06ld %s %s", getpid(), gettid(), tv.tv_sec, tv.tv_usec, sev[level], s);
+        ga_msg_backlog.push(std::string(temp_message));
         return;
+    }
     if((fp = fopen(ga_logfile, "at")) != NULL) {
+        if (ga_msg_backlog.size() > 0) {
+            std::lock_guard<std::mutex> msg_backlog_guard(ga_msg_backlog_mutex);
+            while (ga_msg_backlog.size() > 0) {
+                fprintf(fp, "%s", ga_msg_backlog.front().c_str());
+                ga_msg_backlog.pop();
+            }
+        }
         fprintf(fp, "[%d][%5d] %ld.%06ld %s %s", getpid(), gettid(), tv.tv_sec, tv.tv_usec, sev[level], s);
         fclose(fp);
     }
