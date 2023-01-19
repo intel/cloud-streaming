@@ -130,7 +130,7 @@ DWORD __stdcall ProcessQosThreadClient(LPVOID params)
             //std::cout << "Capture latency: " << pQosInfo->capturetime << " ms\n";
             //std::cout << "Encode latency:  " << pQosInfo->encodetime << " ms\n";
             //std::cout << "frame size:  " << pQosInfo->framesize << " ms\n";
-            //    std::cout << "Event: " << (cln_event_time2.tv_sec << "s "<<  cln_event_time2.tv_usec<< " us\n";
+            //    std::cout << "Event: " << (cln_event_time2.tv_sec << "s " <<  cln_event_time2.tv_usec << " us\n";
             //printf("YYYYYYYYYYYYYYYY report mouse event=%lds, %ldus\r\n", pQosInfo->eventime.tv_sec, pQosInfo->eventime.tv_usec);
             QosInfoFull   qosInfoFull;
             if (!qosclientQueue.empty()) {
@@ -287,7 +287,7 @@ restart:
         //std::cout << "Capture latency: " << pQosInfo->capturetime << " ms\n";
         //std::cout << "Encode latency:  " << pQosInfo->encodetime << " ms\n";
         //std::cout << "frame size:  " << pQosInfo->framesize << " ms\n";
-        //    std::cout << "Event: " << (cln_event_time2.tv_sec << "s "<<  cln_event_time2.tv_usec<< " us\n";
+        //    std::cout << "Event: " << (cln_event_time2.tv_sec << "s "<<  cln_event_time2.tv_usec << " us\n";
         //printf("YYYYYYYYYYYYYYYY report mouse event=%lds, %ldus\r\n", pQosInfo->eventime.tv_sec, pQosInfo->eventime.tv_usec);
         QosInfoFull   qosInfoFull;
         memset(&qosInfoFull, 0, sizeof(QosInfoFull));
@@ -495,6 +495,7 @@ restart:
     if (bind(slisten, (struct sockaddr*) &ctrlsin, sizeof(ctrlsin)) < 0) {
         ga_logger(Severity::ERR, "QOS_SRV: controller server-bind: %s\n", strerror(errno));
         free(pMessage);
+        closesocket(slisten);
         return -1;
     }
     ga_logger(Severity::INFO, "QOS_SRV:  start to receive handshake message from client\n");
