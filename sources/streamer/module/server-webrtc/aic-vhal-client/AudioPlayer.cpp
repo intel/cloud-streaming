@@ -101,7 +101,7 @@ void AudioPlayer::OnData(const void *audio_data, int bits_per_sample,
     const uint16_t *data = reinterpret_cast<const uint16_t *>(audio_data);
 
     const auto sizeInBytes =
-        number_of_frames * number_of_channels * bits_per_sample / 8;
+        number_of_frames * mAudioConfig.channelCount * bits_per_sample / 8;
 
     if (mAudioConfig.channelCount == number_of_channels) {
         ga_logger(Severity::DBG, TAG "Same channelCount, copying Original data\n");
