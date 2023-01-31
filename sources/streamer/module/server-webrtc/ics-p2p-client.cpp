@@ -218,6 +218,7 @@ void ICSP2PClient::HandleLatencyMessage(const std::string &message) {
     gLatencyServerInstance->SetReceivedTime(gpMsg);
 
     currentFrame = getFrameNumber();
+    startMsgs = true;
     if (Severity::DBG == ga_get_loglevel()) {
       gLatencyServerInstance->SetLastProcessedFrameId(gpMsg, currentFrame);
     }
@@ -784,7 +785,7 @@ void ICSP2PClient::InsertFrame(ga_packet_t* packet) {
       unsigned int frameToSend = getFrameNumber();
       bool sendServerStat = false;
 
-      if (pMsg == nullptr || frameToSend != currentFrame + 2) {
+      if (startMsgs && (pMsg == nullptr || frameToSend != currentFrame + 2)) {
           ga_logger(Severity::DBG, "ics-p2p-client: InsertFrame: Creating server statistics msg to send Frame %d (previous latency frame was %d)\n", frameToSend, currentFrame);
           pMsg = gLatencyServerInstance->CreateLatencyMsg();
           gLatencyServerInstance->SetClientInputTime(pMsg, 0);  // 0 tells client this is purely a server statistics msg
@@ -812,7 +813,7 @@ void ICSP2PClient::InsertFrame(ga_packet_t* packet) {
                   if (msgString.size() > 0 && p_latency_message) {
                       memcpy(p_latency_message, msgString.data(), msgString.size());
                   }
-                  ga_logger(Severity::INFO, "ics-p2p-client: InsertFrame: Frame %d: msg_size %d: Latency message sent from server: %s\n",
+                  ga_logger(Severity::DBG, "ics-p2p-client: InsertFrame: Frame %d: msg_size %d: Latency message sent from server: %s\n",
                       frameToSend, latency_message_size, msgString.c_str());
               }
               if (sendServerStat){
