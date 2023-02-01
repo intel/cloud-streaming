@@ -42,15 +42,17 @@ RUN apt-get update && \
     pkg-config \
     wget \
     libx11-dev \
+    libx11-xcb-dev \
+    libxcb-dri3-dev \
     libxext-dev \
     libxfixes-dev \
      && \
   rm -rf /var/lib/apt/lists/*
 # build libva2
-ARG LIBVA2_REPO=https://github.com/intel/libva/archive/2.16.0.tar.gz
+ARG LIBVA2_REPO=https://github.com/intel/libva/archive/2.17.0.tar.gz
 RUN cd /opt/build && \
   wget -O - ${LIBVA2_REPO} | tar xz
-RUN cd /opt/build/libva-2.16.0 && \
+RUN cd /opt/build/libva-2.17.0 && \
   ./autogen.sh --prefix=/opt --libdir=/opt/lib && \
   make -j$(nproc) && \
   make install DESTDIR=/opt/dist && \
@@ -65,10 +67,10 @@ RUN apt-get update && \
   rm -rf /var/lib/apt/lists/*
 
 # build gmmlib
-ARG GMMLIB_REPO=https://github.com/intel/gmmlib/archive/intel-gmmlib-22.3.0.tar.gz
+ARG GMMLIB_REPO=https://github.com/intel/gmmlib/archive/intel-gmmlib-22.3.3.tar.gz
 RUN cd /opt/build && \
   wget -O - ${GMMLIB_REPO} | tar xz
-RUN cd /opt/build/gmmlib-intel-gmmlib-22.3.0 && mkdir build && cd build && \
+RUN cd /opt/build/gmmlib-intel-gmmlib-22.3.3 && mkdir build && cd build && \
   cmake \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/opt \
@@ -88,10 +90,10 @@ RUN apt-get update && \
     wget && \
   rm -rf /var/lib/apt/lists/*
 # build media driver
-ARG MEDIA_DRIVER_REPO=https://github.com/intel/media-driver/archive/intel-media-22.6.1.tar.gz
+ARG MEDIA_DRIVER_REPO=https://github.com/intel/media-driver/archive/intel-media-23.1.0.tar.gz
 RUN cd /opt/build && \
   wget -O - ${MEDIA_DRIVER_REPO} | tar xz
-RUN cd /opt/build/media-driver-intel-media-22.6.1 && mkdir build && cd build && \
+RUN cd /opt/build/media-driver-intel-media-23.1.0 && mkdir build && cd build && \
   cmake \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/opt \
@@ -115,9 +117,9 @@ RUN apt-get update && \
     wget && \
   rm -rf /var/lib/apt/lists/*
 # build libva2-utils
-ARG LIBVA2_UTILS_REPO=https://github.com/intel/libva-utils/archive/2.16.0.tar.gz
+ARG LIBVA2_UTILS_REPO=https://github.com/intel/libva-utils/archive/2.17.1.tar.gz
 RUN cd /opt/build && wget -O - ${LIBVA2_UTILS_REPO} | tar xz
-RUN cd /opt/build/libva-utils-2.16.0 && \
+RUN cd /opt/build/libva-utils-2.17.1 && \
   ./autogen.sh --prefix=/opt --libdir=/opt/lib && \
   make -j$(nproc) && \
   make install DESTDIR=/opt/dist && \
@@ -135,11 +137,11 @@ RUN apt-get update && \
     cmake \
     dh-autoreconf && \
   rm -rf /var/lib/apt/lists/*
-ARG ONEVPL_REPO=https://github.com/oneapi-src/oneVPL/archive/v2023.0.0.tar.gz
+ARG ONEVPL_REPO=https://github.com/oneapi-src/oneVPL/archive/v2023.1.1.tar.gz
 RUN cd /opt/build && \
   wget -O - ${ONEVPL_REPO} | tar xz
 # build oneVPL
-RUN cd /opt/build/oneVPL-2023.0.0 && \
+RUN cd /opt/build/oneVPL-2023.1.1 && \
     mkdir build && cd build && \
     cmake \
       -DCMAKE_BUILD_TYPE=Release \
@@ -160,11 +162,11 @@ RUN apt-get update && \
     cmake \
     make && \
   rm -rf /var/lib/apt/lists/*
-ARG ONEVPLGPU_REPO=https://github.com/oneapi-src/oneVPL-intel-gpu/archive/intel-onevpl-22.6.1.tar.gz
+ARG ONEVPLGPU_REPO=https://github.com/oneapi-src/oneVPL-intel-gpu/archive/intel-onevpl-23.1.0.tar.gz
 RUN cd /opt/build && \
   wget -O - ${ONEVPLGPU_REPO} | tar xz
 # build oneVPL gpu
-RUN cd /opt/build/oneVPL-intel-gpu-intel-onevpl-22.6.1 && \
+RUN cd /opt/build/oneVPL-intel-gpu-intel-onevpl-23.1.0 && \
     mkdir -p _build && cd _build && \
     cmake \
     -DCMAKE_BUILD_TYPE=Release \
@@ -186,10 +188,10 @@ RUN apt-get update && \
     wget && \
   rm -rf /var/lib/apt/lists/*
 # build media sdk
-ARG MSDK_REPO=https://github.com/Intel-Media-SDK/MediaSDK/archive/intel-mediasdk-22.6.1.tar.gz
+ARG MSDK_REPO=https://github.com/Intel-Media-SDK/MediaSDK/archive/intel-mediasdk-23.1.0.tar.gz
 RUN cd /opt/build && \
   wget -O - ${MSDK_REPO} | tar xz
-RUN cd /opt/build/MediaSDK-intel-mediasdk-22.6.1 && \
+RUN cd /opt/build/MediaSDK-intel-mediasdk-23.1.0 && \
   mkdir -p build && cd build && \
   cmake \
     -DCMAKE_BUILD_TYPE=Release \
@@ -300,6 +302,8 @@ RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     libdrm2 \
     libx11-6 \
+    libx11-xcb1 \
+    libxcb-dri3-0 \
     libxext6 \
     libxfixes3 \
     libyaml-cpp0.7 \
