@@ -30,19 +30,19 @@ dnl OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 dnl
 include(begin.m4)
 
-DECLARE(`LIBVA2_VER',2.16.0)
+DECLARE(`LIBVA2_VER',2.17.0)
 DECLARE(`LIBVA2_SRC_REPO',https://github.com/intel/libva/archive/LIBVA2_VER.tar.gz)
 DECLARE(`LIBVA2_X11',true)
 DECLARE(`LIBVA2_WAYLAND',false)
 
 define(`LIBVA2_X11_BUILD',dnl
 ifelse(LIBVA2_X11,true,`ifelse(
-OS_NAME,ubuntu,libx11-dev libxext-dev libxfixes-dev,
+OS_NAME,ubuntu,libx11-dev libx11-xcb-dev libxcb-dri3-dev libxext-dev libxfixes-dev,
 OS_NAME,centos,libX11-devel libXfixes-devel libXext-devel)'))dnl
 
 define(`LIBVA2_X11_INSTALL',dnl
 ifelse(LIBVA2_X11,true,`ifelse(
-OS_NAME,ubuntu,libx11-6 libxext6 libxfixes3,
+OS_NAME,ubuntu,libx11-6 libx11-xcb1 libxcb-dri3-0 libxext6 libxfixes3,
 OS_NAME,centos,libX11 libXfixes libXext)'))dnl
 
 define(`LIBVA2_WAYLAND_BUILD',dnl
