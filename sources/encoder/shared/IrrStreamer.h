@@ -20,7 +20,8 @@
 #include <map>
 #include <inttypes.h>
 #include <stddef.h>
-#include "data_types.h"
+
+#include "api/irrv-internal.h"
 #include "utils/CTransLog.h"
 #include "CCallbackMux.h"
 #include "CIrrVideoDemux.h"
@@ -38,52 +39,6 @@ public:
     static IrrStreamer* get();
     static void Register(int id, int w, int h, float framerate);
     static void Unregister();
-
-    struct IrrStreamInfo {
-        int pix_format;            ///< fmt
-        /* Output-only parameters */
-        int gop_size;              ///< Group Of Picture size, default 120
-        const char *codec;         ///< Encoder codec, e.x. h264_qsv; may be null
-        const char *format;        ///< Mux format, e.x. flv; null as auto
-        const char *url;           ///< Output url.
-        int low_power;             ///< Enable low-power mode, default not.
-        const char *res;           ///< Encoding resolution.
-        const char *framerate;     ///< Encoding framerate
-        const char *exp_vid_param; ///< Extra encoding/muxer parameters passed to libtrans/FFmpeg
-        bool bVASurface;
-        rate_control_info_t rc_params;
-        int quality;               ///< Encoding quality level
-        int max_frame_size;        ///< Encoding max frame size
-        irr_ref_info_t ref_info;
-        irr_roi_info_t roi_info;
-        int slices;                ///< Encoder number of slices, used in parallelized encoding
-        int sei;                   ///< Encoding SEI information
-        int latency_opt;           ///< Encoding latency optimization, set 1 to enable, 0 to disable
-        bool auth;                 ///< Enable Socket authentication
-        int renderfps_enc;         ///< Encoding by rendering fps, set 1 to enable, 0 to disable, default is 0.
-        int minfps_enc;            ///< min encode fps when renderfps_enc is used.
-        const char *profile;       ///< Encoder profile
-        const char *level;         ///< Encoder level
-        int filter_nbthreads;      ///< filter threads number
-        bool low_delay_brc;        ///< enable TCBRC that trictly obey average frame size set by target bitarte
-        bool skip_frame;           ///< enable Skip Frame
-        const char *plugin;        ///< Encoder plugin option
-        bool bQSVSurface;          ///< Is QSV Surface used
-        bool tcaeEnabled;          ///< Is TCAE enabled
-        const char *tcaeLogPath;   ///< TCAE log file path
-
-        struct CallBackTable {     ///< Callback function tables
-            void *opaque;          ///< Used by callback functions
-            void *opaque2;         ///< Used by callback functions
-            int (*cbOpen) (void* opaque, int w, int h, float frame_rate);
-            /* Synchronous write callback*/
-            int (*cbWrite) (void* opaque, uint8_t* data, size_t size, unsigned int flags);
-            int (*cbWrite2) (void* opaque, uint8_t* data, size_t size, int type);
-            void (*cbClose) (void* opaque);
-            int (*cbCheckNewConn) (void* opaque);
-            int (*cbSendMessage)(void* opaque, int msg, unsigned int value);
-        } cb_params;
-    };
 
     IrrStreamer(int id, int w, int h, float framerate);
     ~IrrStreamer();

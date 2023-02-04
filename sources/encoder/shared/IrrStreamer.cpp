@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "stream.h"
 #include "IrrStreamer.h"
 
 #ifdef ENABLE_MEMSHARE

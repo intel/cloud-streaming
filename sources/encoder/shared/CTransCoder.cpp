@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+#include "api/irrv.h"
 #include "utils/CTransLog.h"
 #include "CTransCoder.h"
 #include "CFFDemux.h"

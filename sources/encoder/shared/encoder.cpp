@@ -14,11 +14,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+#include <map>
 #include <memory>
 #include <vector>
 #include <algorithm>
-#include "stream.h"
-#include "encoder.h"
+
+#include <va/va.h>
+#include <va/va_drmcommon.h>
+#include <drm_fourcc.h>
+
+#include "api/irrv-internal.h"
+#include "IrrStreamer.h"
 
 // transcode
 #include "utils/CTransLog.h"
@@ -32,7 +38,9 @@
 
 #include "ProfileLevel.h"
 
-using IrrStreamInfo = IrrStreamer::IrrStreamInfo;
+#define QP_MAX_VALUE 51
+#define QP_DELTA_MAX_VALUE QP_MAX_VALUE
+#define QP_DELTA_MIN_VALUE (-QP_MAX_VALUE)
 
 VADisplay va_dpy = nullptr;
 
@@ -835,7 +843,7 @@ int irr_encoder_start(int id, encoder_info_t *encoder_info) {
     render_port = getenv("render_server_port");
 
     if (encoder_info->streaming){
-        IrrStreamer::IrrStreamInfo info = { 0 };
+        IrrStreamInfo info = { 0 };
         if (encoder_info->framerate)
             info.framerate = encoder_info->framerate;
 

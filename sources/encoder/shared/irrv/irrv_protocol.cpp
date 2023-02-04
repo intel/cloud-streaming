@@ -14,11 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+#include <map>
+
 #include "irrv_impl.h"
 #include "sock_client.h"
 #include "sock_server.h"
 
-#include "../stream.h"
+#include "../api/irrv-internal.h"
 #include "utils/TimeLog.h"
 #include "utils/CTransLog.h"
 

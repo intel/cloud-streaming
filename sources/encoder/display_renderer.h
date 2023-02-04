@@ -17,6 +17,9 @@
 #ifndef _DISPLAY_RENDERER_H_
 #define _DISPLAY_RENDERER_H_
 
+#include <memory>
+#include <libvhal/display-protocol.h>
+
 #include "sock_util.h"
 #include "display_common.h"
 
