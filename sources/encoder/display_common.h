@@ -17,7 +17,8 @@
 #ifndef _DISPLAY_COMMON_H_
 #define _DISPLAY_COMMON_H_
 
-#include "encoder.h"
+#include <stdint.h>
+#include "api/irrv.h"
 
 typedef struct native_handle
 {

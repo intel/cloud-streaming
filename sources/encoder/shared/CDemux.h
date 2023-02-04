@@ -17,8 +17,10 @@
 #ifndef CDEMUX_H
 #define CDEMUX_H
 
-#include "data_types.h"
+#include <memory>
+#include <libvhal/display-protocol.h>
 #include "CStreamInfo.h"
+
 #include <va/va.h>
 
 struct IrrPacket {

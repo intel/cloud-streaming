@@ -15,9 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <memory>
-#include "stream.h"
-
-using IrrStreamInfo = IrrStreamer::IrrStreamInfo;
+#include "api/irrv-internal.h"
+#include "IrrStreamer.h"
 
 int irr_stream_start(IrrStreamInfo *stream_info) {
     IrrStreamer* pStreamer = IrrStreamer::get();

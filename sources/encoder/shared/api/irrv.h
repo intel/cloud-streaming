@@ -14,22 +14,35 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef DATA_TYPES_H
-#define DATA_TYPES_H
+#ifndef __IRRV_H__
+#define __IRRV_H__
 
-#include <va/va.h>
-#include <va/va_drmcommon.h>
-#include <drm_fourcc.h>
+#include <stdint.h>
 #include <memory>
-#include "display-protocol.h"
+#include <libvhal/display-protocol.h>
+#include <va/va.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define QP_MAX_VALUE 51
-#define QP_DELTA_MAX_VALUE QP_MAX_VALUE
-#define QP_DELTA_MIN_VALUE (-QP_MAX_VALUE)
+// As a pure C library, ffmpeg includes must be kept under extern "C"
+// when used from C++ code.
+#include <libavcodec/codec_id.h>
+
+#define RESOLUTION_WIDTH_DEFAULT   576
+#define RESOLUTION_WIDTH_MIN       32
+#define RESOLUTION_WIDTH_MAX       4096
+#define RESOLUTION_HEIGHT_DEFAULT  960
+#define RESOLUTION_HEIGHT_MIN      32
+#define RESOLUTION_HEIGHT_MAX      4096
+
+#define ENCODER_RESOLUTION_WIDTH_DEFAULT   RESOLUTION_WIDTH_DEFAULT
+#define ENCODER_RESOLUTION_WIDTH_MIN       RESOLUTION_WIDTH_MIN
+#define ENCODER_RESOLUTION_WIDTH_MAX       RESOLUTION_WIDTH_MAX
+#define ENCODER_RESOLUTION_HEIGHT_DEFAULT  RESOLUTION_HEIGHT_DEFAULT
+#define ENCODER_RESOLUTION_HEIGHT_MIN      RESOLUTION_HEIGHT_MIN
+#define ENCODER_RESOLUTION_HEIGHT_MAX      RESOLUTION_HEIGHT_MAX
 
 #define MAX_PLANE_NUM 4
 
@@ -54,14 +67,6 @@ enum encode_type {
 };
 
 typedef enum encode_type encode_type_t;
-
-enum output_mux_type {
-    IRRV_MUX = 0,      ///<  irrv output mux
-    LOCAL_MUX = 1,     ///<  local output mux
-    DEFAULT = 2,       ///<  default
-};
-
-typedef enum output_mux_type output_mux_type_t;
 
 typedef struct _rate_control_info_t {
     const char *bitrate;       ///< Encoder bitrate, default 1M
@@ -105,7 +110,7 @@ typedef  struct _irr_surface_info {
 
     unsigned char*  pdata;                ///< This is buff for store the data.
     unsigned int    reserved[6];
-}irr_surface_info_t;
+} irr_surface_info_t;
 
 typedef struct _irr_surface_t {
     irr_surface_info_t info;
@@ -122,13 +127,6 @@ typedef struct _irr_surface_t {
 
     unsigned int reserved[5];
 } irr_surface_t;
-
-typedef struct _irr_rate_ctrl_options_info {
-    bool need_qp;
-    bool need_qfactor;
-    bool need_bitrate;
-    bool need_maxbitrate;
-} irr_rate_ctrl_options_info_t;
 
 typedef struct _irr_encoder_info {
     int nPixfmt;               ///< fmt
@@ -170,8 +168,88 @@ typedef struct _irr_encoder_info {
     int user_id;               ///< indicate the user id in mulit-user scenario
 } encoder_info_t;
 
+/**
+ * @param encoder_info_t encoder information
+ * @desc                check the parameters in encoder_info_t.
+ */
+int irr_check_options(encoder_info_t *encoder_info);
+
+/*
+ * @param encoder_info_t encoder information
+ * @desc                check the rate ctrl parameters in encoder_info_t.
+ */
+int irr_check_rate_ctrl_options (encoder_info_t *encoder_info);
+
+/**
+ * @param encoder_info_t   encoder information
+ * @desc                 Initilize encoder and start the encode process, the parameters are passed into by encode service process
+ * following is the parameter value example
+ * streaming = 1, res = 0x870e00 "720x1280", b = 0x8723f0 "2M", url = 0x870fa0 "irrv:264",
+ *   fr = 0x8710f0 "30", codec = 0x0, lowpower = 1
+ */
+int irr_encoder_start(int id, encoder_info_t *encoder_info);
+
+/**
+ *
+ * @desc                 Close encoder and it will clear all the related instances and close the irr sockets and other resources.
+ */
+void irr_encoder_stop();
+
+/**
+ *
+ * @param AVCodecID             codec_type
+ * @desc                        change the encoder's codec type
+ */
+int irr_encoder_change_codec(AVCodecID codec_type);
+
+/**
+ *
+ * @param irr_surface_info_t*   surface information
+ * @desc                        create the irr_surface according to the surface info
+ */
+irr_surface_t* irr_encoder_create_surface(irr_surface_info_t* surface_info);
+irr_surface_t* irr_encoder_create_blank_surface(irr_surface_info_t* surface_info);
+
+/**
+ *
+ * @param irr_surface_t*        surface
+ * @desc                        add the reference count of VASurface
+ */
+void irr_encoder_ref_surface(irr_surface_t* surface);
+
+/**
+ *
+ * @param irr_surface_t*       surface
+ * @desc                       decrease the reference count of VASurface, if zero reference, destroy the vasurface.
+ */
+void irr_encoder_unref_surface(irr_surface_t* surface);
+
+/**
+ *
+ * @param irr_surface_t*        surface
+ * @desc                        push the surface to encoding list.
+ */
+int irr_encoder_write(irr_surface_t* surface);
+
+void irr_stream_incClient();
+
+/*
+ * @Desc set delay and size from client feedback
+ */
+int irr_stream_set_client_feedback(uint32_t delay, uint32_t size);
+
+void irr_stream_setEncodeFlag(bool bAllowEncode);
+
+void irr_stream_setTransmitFlag(bool bAllowTransmit);
+
+/*
+ * @Desc force key frame
+ */
+int irr_stream_force_keyframe(int force_key_frame);
+
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* DATA_TYPES_H */
+#endif /* __IRRV_H__ */
+

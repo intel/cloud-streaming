@@ -37,13 +37,6 @@ class CDecoder;
 class CFilter;
 class CEncoder;
 
-#define RESOLUTION_WIDTH_DEFAULT   576
-#define RESOLUTION_WIDTH_MIN       32
-#define RESOLUTION_WIDTH_MAX       4096
-#define RESOLUTION_HEIGHT_DEFAULT  960
-#define RESOLUTION_HEIGHT_MIN      32
-#define RESOLUTION_HEIGHT_MAX      4096
-
 #define HW_ERROR_INTERVAL          5000
 #define HW_ERROR_DURATION_MAX      300
 #define HW_ERROR_COUNT_MAX         10

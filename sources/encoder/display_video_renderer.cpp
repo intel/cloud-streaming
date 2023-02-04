@@ -14,6 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+#include <va/va.h>
+
 #include "display_video_renderer.h"
 #include "utils/TimeLog.h"
 

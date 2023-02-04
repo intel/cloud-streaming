@@ -26,7 +26,6 @@
 #include <string.h>
 #include <vector>
 
-#include "encoder.h"
 #include "encoder_comm.h"
 #include "sock_util.h"
 #include "cli.hpp"

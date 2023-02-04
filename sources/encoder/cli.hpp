@@ -17,7 +17,7 @@
 #ifndef _CLI_HPP_
 #define _CLI_HPP_
 
-#include "data_types.h"
+#include "api/irrv.h"
 
 #ifdef __cplusplus
 extern "C" {
