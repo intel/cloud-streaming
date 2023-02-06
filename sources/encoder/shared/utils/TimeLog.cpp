@@ -23,11 +23,38 @@
 #include <stdio.h>
 
 #include "utils/TimeLog.h"
-#include "encoder_comm.h"
 
 #ifndef LOG_TAG
 #define LOG_TAG "IRR_TimeLog"
 #endif
+
+#if BUILD_FOR_HOST
+#include <stdio.h>
+#define ALOGD(...) printf("[DEBUG] "); printf(LOG_TAG); printf(": "); printf(__VA_ARGS__); printf("\n");
+#define ALOGI(...) printf("[INFO] ");  printf(LOG_TAG); printf(": "); printf(__VA_ARGS__); printf("\n");
+#define ALOGW(...) printf("[WARN] ");  printf(LOG_TAG); printf(": "); printf(__VA_ARGS__); printf("\n%s: %d --->\n", __func__, __LINE__);
+#define ALOGE(...) printf("[ERROR] "); printf(LOG_TAG); printf(": "); printf(__VA_ARGS__); printf("\n%s: %d --->\n", __func__, __LINE__);
+#define ALOGF(...) printf("[FATAL] "); printf(LOG_TAG); printf(": "); printf(__VA_ARGS__); printf("\n%s: %d --->\n", __func__, __LINE__);
+#else
+#include <android/log.h>
+
+#ifndef ALOGD
+#define ALOGD(...)  __android_log_print(ANDROID_LOG_DEBUG,LOG_TAG,__VA_ARGS__)
+#endif
+#ifndef ALOGI
+#define ALOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
+#endif
+#ifndef ALOGW
+#define ALOGW(...)  __android_log_print(ANDROID_LOG_WARN,LOG_TAG,__VA_ARGS__)
+#endif
+#ifndef ALOGE
+#define ALOGE(...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
+#endif
+#ifndef ALOGF
+#define ALOGF(...)  __android_log_print(ANDROID_LOG_FATAL,LOG_TAG,__VA_ARGS__)
+#endif
+
+#endif //BUILD_FOR_HOST
 
 // debug.icr.timelog = 0: no print
 // debug.icr.timelog = 1: normal print

@@ -30,10 +30,6 @@ typedef int SOCK_BOOL;
 
 #define UNUSED(expr) do { (void)(expr); } while (0)
 
-#ifndef LOG_TAG
-#define LOG_TAG "sock_util"
-#endif
-
 #if BUILD_FOR_HOST
 #include <stdio.h>
 #include <memory.h>
@@ -42,12 +38,13 @@ typedef int SOCK_BOOL;
 #define SOCK_DISPLAY_DAEMON_PATH "../workdir/ipc/display-sock"
 #define sock_log        printf
 #else
-#include "encoder_comm.h"
+#include <android/log.h>
+
 #define SOCK_UTIL_DEFAULT_PORT  6666
 #define SOCK_UTIL_DEFAULT_PATH  "/ipc/sock-util-default"
 #define SOCK_DISPLAY_DAEMON_PATH "/ipc/display-sock"
 
-#define sock_log        ALOGI
+#define sock_log( ... ) __android_log_print(ANDROID_LOG_INFO, "sock_util", __VA_ARGS__)
 #endif
 
 typedef enum _sock_conn_status{
