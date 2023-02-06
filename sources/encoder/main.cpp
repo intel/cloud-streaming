@@ -29,7 +29,6 @@
 
 #include "cli.hpp"
 #include "display_server.h"
-#include "encoder_comm.h"
 #include "encoder_version.h"
 
 using namespace std;

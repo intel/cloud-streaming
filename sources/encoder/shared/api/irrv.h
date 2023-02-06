@@ -248,8 +248,105 @@ void irr_stream_setTransmitFlag(bool bAllowTransmit);
 int irr_stream_force_keyframe(int force_key_frame);
 
 #ifdef __cplusplus
-}
+} /* extern "C" */
 #endif
+
+#ifdef __cplusplus
+
+class ICRCommProp {
+public:
+    ICRCommProp() {};
+    ~ICRCommProp() {};
+
+    int getSystemProp(const char* property, char* value, int length) {
+        int len = 0;
+        if (property == nullptr || value == nullptr) return len;
+
+#ifndef BUILD_FOR_HOST
+        char prop_value[PROP_VALUE_MAX] = {'\0'};
+
+        len = __system_property_get(property, prop_value);
+        if (len > 0) {
+            if (len > (length - 1)) {
+                len = length - 1;
+            }
+            memset(value, 0, length);
+            memcpy(value, prop_value, len);
+            value[len] = '\0';
+        }
+#endif
+        return len;
+    };
+
+    int getSystemPropInt(const char* property, int* value) {
+        int len = 0;
+        if (property == nullptr || value == nullptr) return len;
+
+#ifndef BUILD_FOR_HOST
+        char prop_value[PROP_VALUE_MAX] = {'\0'};
+
+        len = __system_property_get(property, prop_value);
+        if (len > 0) {
+            *value = atoi(prop_value);
+        }
+#endif
+        return len;
+    };
+
+    bool getSystemPropBool(const char* property, bool default_value) {
+        bool result = default_value;
+        if (property == nullptr) return result;
+
+#ifndef BUILD_FOR_HOST
+        char prop_value[PROP_VALUE_MAX] = {'\0'};
+
+        int len = __system_property_get(property, prop_value);
+        if (len == 1) {
+            char ch = prop_value[0];
+            if (ch == '0' || ch == 'n') {
+                result = false;
+            } else if (ch == '1' || ch == 'y') {
+                result = true;
+            }
+        } else if (len > 1) {
+            if (!strcmp(prop_value, "no") || !strcmp(prop_value, "false") || !strcmp(prop_value, "off")) {
+                result = false;
+            } else if (!strcmp(prop_value, "yes") || !strcmp(prop_value, "true") || !strcmp(prop_value, "on")) {
+                result = true;
+            }
+        }
+#endif
+        return result;
+    };
+
+    int setSystemProp(const char *property, const int value) {
+        int len = 0;
+        if (property == nullptr)
+            return len;
+
+#ifndef BUILD_FOR_HOST
+        char prop_value[PROP_VALUE_MAX] = {'\0'};
+        sprintf(prop_value, "%d", value);
+        len = __system_property_set(property, prop_value);
+#endif
+
+        return len;
+    };
+
+    int setSystemProp(const char *property, const char *value) {
+        int len = 0;
+        if (property == nullptr || value == nullptr)
+            return len;
+
+#ifndef BUILD_FOR_HOST
+        len = __system_property_set(property, value);
+#endif
+
+        return len;
+    };
+};
+
+#endif /* _cplusplus */
 
 #endif /* __IRRV_H__ */
 

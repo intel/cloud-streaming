@@ -26,7 +26,6 @@
 #include <string.h>
 #include <vector>
 
-#include "encoder_comm.h"
 #include "sock_util.h"
 #include "cli.hpp"
 
@@ -35,6 +34,9 @@ const static char *ENV_ICR_NODE = "ICR_RNODE";
 const static char *ENV_RENDER_PORT    = "render_server_port";
 const static char *ENV_ENCODE_UNLIMIT = "encode_unlimit";
 const static char *ENV_AUX_SERVER     = "auxiliary_server";
+
+const int ICR_ENCODER_BITRATE_LOW  = 1500000;
+const int ICR_ENCODER_BITRATE_HIGH = 3000000;
 
 typedef struct _comparator {
     bool operator()(const std::string &s1, const std::string &s2) const
