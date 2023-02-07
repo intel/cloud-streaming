@@ -1036,6 +1036,13 @@ void IrrStreamer::set_output_prop(CTransCoder *m_pTrans, IrrStreamInfo *param) {
         // set the I frames as IDR frames in cloud gaming
         m_pTrans->setOutputProp("forced_idr", "1");
 
+        // For cloud gaming usage, i.e. conference kind usage, we need as low
+        // latency as possible. Thus, default async_depth needs to be 1.
+        // Additionally, FFMPEG as of https://github.com/FFmpeg/FFmpeg/commit/d79c240
+        // has an issue in Reset flow with default async_depth > 1. As a WA, we need to
+        // explicitly set async_depth=1.
+        m_pTrans->setOutputProp("async_depth", "1");
+
         // set the skip frame flag
         if (param->skip_frame)
             m_pTrans->setOutputProp("skip_frame", 3); // support brc mode to align with vaapi-path
