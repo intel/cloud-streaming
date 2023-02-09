@@ -31,10 +31,7 @@
 #include "utils/IOStreamWriter.h"
 #include "utils/TimeLog.h"
 
-#ifdef ENABLE_TCAE
 class CTcaeWrapper;
-#endif
-
 class CTransLog;
 class CDecoder;
 class CFilter;
@@ -242,7 +239,6 @@ public:
 
     void setFrameBufferSize(int widht, int height);
 
-  
     int getEncodeNewWidth();
     int getEncodeNewHeight();
 
@@ -256,10 +252,9 @@ public:
     inline void EnableQsvPlugin() { m_qsvPlugin = true; m_vaapiPlugin = false; }
 
     bool enableTcae(const char* tcaeLogPath = nullptr);
-#ifdef ENABLE_TCAE
+
     /* set size and delay from client feedback */
     int setClientFeedback(unsigned int delay, unsigned int size);
-#endif
 
     void setRenderFpsEncFlag(bool bRenderFpsEnc);
     bool getRenderFpsEncFlag(void);
@@ -393,10 +388,8 @@ private:
     bool m_vaapiPlugin = true;
     bool m_qsvPlugin = false;
 
-#ifdef ENABLE_TCAE
     CTcaeWrapper *m_tcae = nullptr;
     bool m_tcaeEnabled = false;
-#endif
 };
 
 #endif /* CTRANSCODER_H */

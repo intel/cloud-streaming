@@ -21,14 +21,6 @@ endif()
 
 add_definitions(-DLOG_TAG=\"irr_encoder\" -DBUILD_FOR_HOST=1 -D__STDC_CONSTANT_MACROS)
 
-option(ENABLE_TCAE "Enable TCAE" ON)
-if (ENABLE_TCAE)
-    message(STATUS "Enabling TCAE")
-    add_definitions("-DENABLE_TCAE")
-else ()
-    message(STATUS "Disabling TCAE")
-endif()
-
 set(SRCS
   CCallbackMux.cpp
   CFFDecoder.cpp
@@ -50,13 +42,10 @@ set(SRCS
   utils/IOStreamWriter.cpp
   utils/ProfTimer.cpp
   utils/TimeLog.cpp
+  tcae/CTcaeWrapper.cpp
+  tcae/enc_frame_settings_predictor.cpp
+  tcae/net_pred.cpp
   )
-
-if (ENABLE_TCAE)
-    list(APPEND SRCS "tcae/CTcaeWrapper.cpp")
-    list(APPEND SRCS "tcae/enc_frame_settings_predictor.cpp")
-    list(APPEND SRCS "tcae/net_pred.cpp")
-endif()
 
 add_library( irr_encoder SHARED ${SRCS})
 
