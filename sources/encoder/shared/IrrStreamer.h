@@ -117,9 +117,7 @@ public:
     void  set_iostream_writer_params(const char *input_file, const int width, const int height,
                                      const char *output_file, const int output_frame_number);
 
-#ifdef ENABLE_TCAE
     int   set_client_feedback(unsigned int delay, unsigned int size);
-#endif
 
     void setVASurfaceFlag(bool bVASurfaceID);
     bool getVASurfaceFlag();

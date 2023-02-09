@@ -25,9 +25,8 @@
 #ifdef ENABLE_QSV
 #include <vpl/mfxvideo.h>
 #endif
-#ifdef ENABLE_TCAE
+
 #include "tcae/CTcaeWrapper.h"
-#endif
 
 extern "C" {
 #include <libavutil/time.h>
@@ -111,10 +110,9 @@ CTransCoder::~CTransCoder() {
     delete m_DyEncodeTimeLog;
     if (m_MJPEGEncoder)
         delete m_MJPEGEncoder;
-#ifdef ENABLE_TCAE
     if (m_tcae)
         delete m_tcae;
-#endif
+
     av_buffer_unref(&m_phw_frames_ctx);
     delete m_pDemux;
 }
@@ -566,7 +564,7 @@ int CTransCoder::decode(int strIdx) {
         //     }
         // }
 
-        // The crop info are now calculated in CG_Proxy, 
+        // The crop info are now calculated in CG_Proxy,
         // so comment the codes above and directly utilize the values of crop_top/bottom/left/right
         if ((bOrigial_portrait && bClient_portrait && m_crop.client_rect_right > 0) || (!bOrigial_portrait && !bClient_portrait && m_crop.client_rect_right > 0)) {
             if (m_crop.crop_top >= 0 && m_crop.crop_bottom >= 0 && m_crop.crop_left >= 0 && m_crop.crop_right >= 0) {
@@ -653,7 +651,7 @@ int CTransCoder::processInput() {
     bOrigial_portrait = pDecInfo->m_pCodecPars->width < pDecInfo->m_pCodecPars->height ? true : false;
     bClient_portrait = m_crop.client_rect_right < m_crop.client_rect_bottom ? true : false;
     if (m_crop.valid_crop == 1 && ((bOrigial_portrait && bClient_portrait && m_crop.client_rect_right > 0) || (!bOrigial_portrait && !bClient_portrait && m_crop.client_rect_right > 0))) {
-        if ((m_crop.client_rect_right != m_crop.fb_rect_right && m_prev_client_right != m_crop.client_rect_right) || 
+        if ((m_crop.client_rect_right != m_crop.fb_rect_right && m_prev_client_right != m_crop.client_rect_right) ||
             (m_crop.client_rect_bottom != m_crop.fb_rect_bottom && m_prev_client_bottom != m_crop.client_rect_bottom)) {
             changeResolution(m_crop.client_rect_right, m_crop.client_rect_bottom);
             m_prev_client_bottom = m_crop.client_rect_bottom;
@@ -907,9 +905,9 @@ int CTransCoder::doOutput(bool flush) {
         }
 
         bool bPopFrame = false;
-      
+
         pEnc = m_mEncoders[idx];
-        while ((pFrame = pFilt->pop()) != nullptr || flush) {  
+        while ((pFrame = pFilt->pop()) != nullptr || flush) {
             av_init_packet(&pkt);
             if (pFrame) {
                 bPopFrame = true;
@@ -990,10 +988,8 @@ int CTransCoder::doOutput(bool flush) {
                     }
                 }
 
-#ifdef ENABLE_TCAE
                 if (m_tcaeEnabled && m_tcae)
                     m_tcae->UpdateEncodedSize(pkt.size);
-#endif
 
                 pkt.stream_index = idx;
                 ret = m_pMux->write(&pkt);
@@ -1146,7 +1142,6 @@ void CTransCoder::dynamicSetEncParameters(CEncoder *pEnc, AVFrame *pFrame, AVFra
             (*pFrameEnc)->pict_type = AV_PICTURE_TYPE_P;
     }
 
-#ifdef ENABLE_TCAE
     // Determine TCBRC target size (if enabled) first, and translate to bitrate
     // The code that follows uses the target and max bitrates determined here
     if (m_tcaeEnabled && m_tcae)
@@ -1168,7 +1163,6 @@ void CTransCoder::dynamicSetEncParameters(CEncoder *pEnc, AVFrame *pFrame, AVFra
             ((CFFEncoder*)pEnc)->setLowDelayBrc(0);
         }
     }
-#endif
 
     if(m_setQP) {
         m_Log->Info("set qp at framenum=%d, qp=%d\n", curEncFrames, m_setQP);
@@ -2048,7 +2042,6 @@ int CTransCoder::changeEncoderProfileLevel(const int iProfile, const int iLevel)
     return 0;
 }
 
-#ifdef ENABLE_TCAE
 int CTransCoder::setClientFeedback(unsigned int delay, unsigned int size) {
     if (m_tcaeEnabled && m_tcae)
     {
@@ -2056,11 +2049,9 @@ int CTransCoder::setClientFeedback(unsigned int delay, unsigned int size) {
     }
     return 0;
 }
-#endif
 
 bool CTransCoder::enableTcae(const char* tcaeLogPath)
 {
-#ifdef ENABLE_TCAE
     m_tcae = new CTcaeWrapper();
     if (m_tcae)
     {
@@ -2099,9 +2090,6 @@ bool CTransCoder::enableTcae(const char* tcaeLogPath)
         }
     }
     return m_tcaeEnabled;
-#else
-    return false;
-#endif
 }
 
 

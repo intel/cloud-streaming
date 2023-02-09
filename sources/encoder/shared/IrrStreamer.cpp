@@ -873,7 +873,6 @@ void IrrStreamer::set_iostream_writer_params(const char *input_file, const int w
     m_pWriter = writer;
 }
 
-#ifdef ENABLE_TCAE
 int IrrStreamer::set_client_feedback(unsigned int delay, unsigned int size)
 {
     if (m_tcaeEnabled)
@@ -881,7 +880,6 @@ int IrrStreamer::set_client_feedback(unsigned int delay, unsigned int size)
     else
         return 0;
 }
-#endif
 
 void IrrStreamer::set_output_prop(CTransCoder *m_pTrans, IrrStreamInfo *param) {
 
@@ -891,7 +889,7 @@ void IrrStreamer::set_output_prop(CTransCoder *m_pTrans, IrrStreamInfo *param) {
     if (strncmp(param->plugin, "vaapi", strlen("vaapi")) == 0) {
         m_pTrans->EnableVaapiPlugin();
     }
-    
+
     if (strncmp(param->plugin, "qsv", strlen("qsv")) == 0) {
         m_pTrans->EnableQsvPlugin();
     }

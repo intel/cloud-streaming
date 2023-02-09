@@ -418,18 +418,12 @@ int irr_stream_change_profile_level(const int iProfile, const int iLevel) {
 }
 
 int irr_stream_set_client_feedback(uint32_t delay, uint32_t size) {
-#ifdef ENABLE_TCAE
     IrrStreamer* pStreamer = IrrStreamer::get();
     if (!pStreamer)
         return -ENAVAIL;
 
     return pStreamer->set_client_feedback(delay, size);
-#else
-    return 0;
-#endif
 }
-
-
 
 void irr_stream_set_encode_renderfps_flag(bool bRenderFpsEnc) {
     IrrStreamer* pStreamer = IrrStreamer::get();
