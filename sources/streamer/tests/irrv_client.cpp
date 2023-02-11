@@ -43,18 +43,6 @@ namespace {
   static FILE* g_bitstream = NULL;
 }
 
-static enum Severity get_loglevel(const char* level) {
-    if (std::string("error") == level)
-        return Severity::ERR;
-    else if (std::string("warning") == level)
-        return Severity::WARNING;
-    else if (std::string("info") == level)
-        return Severity::INFO;
-    else if (std::string("debug") == level)
-        return Severity::DBG;
-    return Severity::ERR;
-}
-
 std::string ga_conf_readstr(const char *key)
 {
   ga_logger(Severity::DBG, "ga_conf_readstr: %s\n", key);
@@ -172,7 +160,7 @@ int main(int argc, char* argv[])
 
   printf("Starting IRRV server client, press CTRL^C to stop...");
 
-  ga_set_loglevel(get_loglevel(g_loglevel));
+  ga_set_loglevel(ga_get_loglevel_enum(g_loglevel));
 
   std::unique_ptr<CSendRecvMessage> irrv;
 

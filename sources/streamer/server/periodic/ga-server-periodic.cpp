@@ -228,18 +228,6 @@ static void signal_handler(int signal) {
     }
 }
 
-static enum Severity get_loglevel(const char* level) {
-    if (std::string("error") == level)
-        return Severity::ERR;
-    else if (std::string("warning") == level)
-        return Severity::WARNING;
-    else if (std::string("info") == level)
-        return Severity::INFO;
-    else if (std::string("debug") == level)
-        return Severity::DBG;
-    return Severity::ERR;
-}
-
 int
 main(int argc, const char *argv[]) {
     int config_idx = 1;
@@ -410,7 +398,7 @@ main(int argc, const char *argv[]) {
         return -1;
     }
 
-    ga_set_loglevel(get_loglevel(loglevel));
+    ga_set_loglevel(ga_get_loglevel_enum(loglevel));
 
     if(ga_init(argv[config_idx]) < 0)
         return -1;
