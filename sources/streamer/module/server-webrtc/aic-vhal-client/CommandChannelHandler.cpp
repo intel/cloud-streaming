@@ -61,8 +61,8 @@ void CommandChannelHandler::processClientMsg(const std::string &json_message) co
     std::string pkg = event_param["pkg"];
     if (!pkg.empty()) {
       if (ga_conf_readbool("enable-multi-user", 0) != 0) {
-	int userId = ga_conf_readint("user");
-	Send(MsgType::kActivityMonitor, "0:" + pkg + ":" + std::to_string(userId));
+        int userId = ga_conf_readint("user");
+        Send(MsgType::kActivityMonitor, "0:" + pkg + ":" + std::to_string(userId));
       } else {
         Send(MsgType::kActivityMonitor, "0:" + pkg);
       }

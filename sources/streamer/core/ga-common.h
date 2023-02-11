@@ -54,6 +54,7 @@
 #endif
 
 #include "ga-win32.h"
+#include "ga-common-kmd-safe.h"
 #ifdef WIN32
 #include <memory>
 #endif
@@ -65,6 +66,8 @@
 
 /** Unit size size for RGBA pixels, in bytes */
 #define    RGBA_SIZE    4
+
+#include "io-common.h"
 
 struct gaRect {
     int left, top;
@@ -131,14 +134,6 @@ public:
     }
 };
 #endif
-
-enum Severity {
-    ERR,
-    WARNING,
-    INFO,
-    DBG
-};
-
 EXPORT long long tvdiff_us(struct timeval *tv1, struct timeval *tv2);
 EXPORT long long ga_usleep(long long interval, struct timeval *ptv);
 EXPORT int    ga_logger(const Severity sev, const char *fmt, ...);

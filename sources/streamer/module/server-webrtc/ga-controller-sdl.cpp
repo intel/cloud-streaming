@@ -131,7 +131,7 @@ CalcuateMousePosition(
   int32_t mouse_x, int32_t mouse_y,
   uint32_t screen_width, uint32_t screen_height,
   int32_t display_width, int32_t display_height) {
-  
+
   ga::webrtc::Controller::MousePosition p;
 
   if (screen_height == 0 || screen_width == 0) {
@@ -146,7 +146,7 @@ CalcuateMousePosition(
   p.y = (mouse_y * display_height) / screen_height;
 
   ga_logger(Severity::DBG, "[AUTO] Mouse Position from server: mouse_x = %d mouse_y = %d\n", p.x, p.y);
-  
+
   return p;
 }
 
@@ -342,7 +342,7 @@ ga::webrtc::SdlController::ConvertToSdlMessage(const std::string &json_message, 
 }
 
 void ga::webrtc::SdlController::CalculatePaddings() {
-  
+
   gaPoint wlt, wrb, clt, crb;
   int display_width, display_height;
   if (ga_window_bounds(display_width, display_height, wlt, wrb, clt, crb) < 0) {

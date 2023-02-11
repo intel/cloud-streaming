@@ -338,7 +338,6 @@ int CSendRecvMessage::irrv_set_sei(unsigned int sei_type, unsigned int sei_id) {
     return irrv_op(ctrl);
 }
 
-
 int CSendRecvMessage::irrv_set_screen_capture_start(unsigned int capture_interval, unsigned int quality_factor) {
     irrv_vctrl_t ctrl{};
     ctrl.ctrl_type   = IRRV_CTRL_SCREEN_CAPTURE_START;

@@ -51,7 +51,7 @@
 // CG build platform (Win64 or Win32)
 #if defined(_WIN32)
     #if defined(_WIN64)
-        #define CG_PLATFORM	"Win64"
+        #define CG_PLATFORM "Win64"
     #else
         #define CG_PLATFORM "Win32"
     #endif

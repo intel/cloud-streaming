@@ -164,15 +164,46 @@ close(SOCKET fd) {
     return closesocket(fd);
 }
 
+static std::string GetLastErrorString()
+{
+    //Get the error message ID, if any.
+    DWORD errorMessageID = GetLastError();
+    if (errorMessageID == 0)
+    {
+        return std::string(); //No error message has been recorded
+    }
+
+    LPSTR messageBuffer = nullptr;
+
+    //Ask Win32 to give us the string version of that message ID.
+    //The parameters we pass in, tell Win32 to create the buffer that holds the message for us (because we don't yet know how long the message string will be).
+    size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+
+    //Copy the error message into a string.
+    std::string message(messageBuffer, size);
+
+    //Free the Win32's string's buffer.
+    LocalFree(messageBuffer);
+
+    // Remove trailing \r\n
+    message.erase(remove(begin(message), end(message), '\n'), cend(message));
+    message.erase(remove(begin(message), end(message), '\r'), cend(message));
+
+    return message;
+}
+
 /**
  * dlerror() to report error message of dl* functions
  *
- * Not supported on Windows.
+ * This is implemented for windows by calling GetLastError and FormatMessageA.
+ *
+ * @return c_str reference to a static std::string containing last error string.
  */
-char *
+const char *
 dlerror() {
-    static char notsupported[] = "dlerror() on Windows is not supported.";
-    return notsupported;
+    static std::string LastErrorString = GetLastErrorString();
+    return LastErrorString.c_str();
 }
 
 /**
@@ -349,7 +380,7 @@ HWND GetWindowHandleOfCurrentProcess() {
  *
  * @param cmd [in] The command to execute
  * @param result [out] The return result in string
- * 
+ *
  * @return Returns true if success, false otherwise
  */
 bool RunSystemCommand(const std::string& cmdline, std::string& result) {

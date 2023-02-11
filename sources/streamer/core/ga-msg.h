@@ -38,14 +38,14 @@ typedef enum _respID {
 }RESP_ID;
 
 typedef struct msg_req_info {
-    int  magic;      // 0x55AA55AA
-    REQ_ID  msgHdr;     // msgID
+    int  magic;      // MAGIC_IO_CODE
+    REQ_ID  msgHdr;  // msgID
     int  payloadLen; // length of the payload
     unsigned char payload[4096];
 }MSG_REQ_INFO_S;
 
 typedef struct msg_resp_info {
-    int  magic;      // 0x55AA55AA
+    int  magic;      // MAGIC_IO_CODE
     int  msgHdr;     // msgID
     int  payloadLen; // length of the payload
 }MSG_REP_INFO_S;

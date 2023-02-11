@@ -61,7 +61,6 @@ private:
   // Display resolution on server side that the game is rendered on.
   int32_t display_width_;
   int32_t display_height_;
-  
 
   MousePosition current_mouse_position_;
 

@@ -73,7 +73,6 @@ void P2PSocketSignalingChannel::Connect(
     io_->connect(host, query);
 }
 
-
 void P2PSocketSignalingChannel::Disconnect(std::function<void()> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {}
 
