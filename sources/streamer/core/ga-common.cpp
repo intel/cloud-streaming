@@ -343,6 +343,21 @@ ga_get_loglevel() {
         return ga_loglevel;
 }
 
+/**
+ * Convert the provided string value to its corresponding enumerated Severity value.
+ */
+EXPORT
+Severity ga_get_loglevel_enum(const char* level) {
+    if (std::string("error") == level)
+        return Severity::ERR;
+    else if (std::string("warning") == level)
+        return Severity::WARNING;
+    else if (std::string("info") == level)
+        return Severity::INFO;
+    else if (std::string("debug") == level)
+        return Severity::DBG;
+    return Severity::ERR;
+}
 
 EXPORT
 std::string ga_compose_logname(std::string logname)

@@ -152,6 +152,7 @@ EXPORT void    ga_set_logfile(const char* file_name);
 EXPORT std::string ga_compose_logname(std::string logname);
 EXPORT void    ga_set_loglevel(enum Severity level);
 EXPORT enum Severity  ga_get_loglevel();
+EXPORT enum Severity  ga_get_loglevel_enum(const char* level);
 EXPORT void    ga_openlog();
 EXPORT void    ga_closelog();
 // save file feature
