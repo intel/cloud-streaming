@@ -111,7 +111,7 @@ DWORD __stdcall ProcessThreadClient(LPVOID params)
         }
         if (datainBuff > sizeof(MSG_REP_INFO_S)) {
             repInfo = (MSG_REP_INFO_S *)(recvBuffer + offset);
-            if (repInfo->magic == 0x55AA55AA && ((repInfo->payloadLen + sizeof(MSG_REP_INFO_S)) <= datainBuff))
+            if (repInfo->magic == MAGIC_IO_CODE && ((repInfo->payloadLen + sizeof(MSG_REP_INFO_S)) <= datainBuff))
             {
                 //A valid message found
                 goto processMessage;
@@ -194,7 +194,7 @@ DWORD __stdcall ProcessThreadClient(LPVOID params)
 restart:
     buflen = 0;
     MSG_REP_INFO_S handShake;
-    handShake.magic  = 0x55aa55aa;
+    handShake.magic  = MAGIC_IO_CODE;
     handShake.msgHdr = HANDSHAKE;
     handShake.payloadLen = 0;
 
@@ -385,7 +385,7 @@ restart:
         //ga_logger(Severity::INFO, "Get a new frame ...\n");
         CURSOR_INFO *pCursorInfo = (CURSOR_INFO *)(data->pointer);
         repInfo.msgHdr     = HANDSHAKE_RESP;
-        repInfo.magic      = 0x55AA55AA;
+        repInfo.magic      = MAGIC_IO_CODE;
         repInfo.payloadLen = sizeof(CURSOR_INFO) + pCursorInfo->lenOfCursor;// 32 * 32 * 4;
 
         memcpy(pMessage, (unsigned char *)&repInfo, sizeof(repInfo));
@@ -501,7 +501,6 @@ restart:
         }
         ga_logger(Severity::INFO, "CURSOR_SRV: receive an invalid message\n");
 
-
     }
 
     ga_logger(Severity::INFO, "CURSOR_SRV: start to handle cursor message\n");
@@ -526,7 +525,7 @@ restart:
         //ga_logger(Severity::INFO, "Get a new frame ...\n");
         CURSOR_INFO *pCursorInfo = (CURSOR_INFO *)(data->pointer);
         repInfo.msgHdr = HANDSHAKE_RESP;
-        repInfo.magic = 0x55AA55AA;
+        repInfo.magic = MAGIC_IO_CODE;
         repInfo.payloadLen = sizeof(CURSOR_INFO) + pCursorInfo->lenOfCursor;// 32 * 32 * 4;
 
         memcpy(pMessage, (unsigned char*)& repInfo, sizeof(repInfo));

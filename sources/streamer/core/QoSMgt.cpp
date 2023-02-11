@@ -110,7 +110,7 @@ DWORD __stdcall ProcessQosThreadClient(LPVOID params)
         }
         if (datainBuff > sizeof(MSG_REP_INFO_S)) {
             repInfo = (MSG_REP_INFO_S *)(recvBuffer + offset);
-            if (repInfo->magic == 0x55AA55AA && ((repInfo->payloadLen + sizeof(MSG_REP_INFO_S)) <= datainBuff))
+            if (repInfo->magic == MAGIC_IO_CODE && ((repInfo->payloadLen + sizeof(MSG_REP_INFO_S)) <= datainBuff))
             {
                 //A valid message found
                 goto processMessage;
@@ -159,8 +159,6 @@ DWORD __stdcall ProcessQosThreadClient(LPVOID params)
                 memcpy(dstframe,&qosInfoFull, sizeof(QosInfoFull));
                 dpipe_store(pipeQos, data);
             }
-
-
 
         offset += sizeof(MSG_REP_INFO_S) + repInfo->payloadLen;
         datainBuff -= (sizeof(MSG_REP_INFO_S) + repInfo->payloadLen);
@@ -223,10 +221,9 @@ DWORD __stdcall ProcessQosThreadClient(LPVOID params)
 
 restart:
 
-
     buflen = 0;
     MSG_REP_INFO_S handShake;
-    handShake.magic  = 0x55aa55aa;
+    handShake.magic  = MAGIC_IO_CODE;
     handShake.msgHdr = HANDSHAKE;
     handShake.payloadLen = 0;
 
@@ -355,7 +352,6 @@ void queue_qos_client_info(QosClientInfo qosClientInfo)
     qosclientQueue.push(qosClientInfo);
 }
 
-
 #ifdef TCP
 DWORD __stdcall ProcessQosServerThread(LPVOID params)
 {
@@ -425,7 +421,7 @@ DWORD __stdcall ProcessQosServerThread(LPVOID params)
         //ga_logger(Severity::INFO, "Get a new frame ...\n");
         QosInfo *pQosInfo = (QosInfo *)(data->pointer);
         repInfo.msgHdr     = HANDSHAKE_RESP;
-        repInfo.magic      = 0x55AA55AA;
+        repInfo.magic      = MAGIC_IO_CODE;
         repInfo.payloadLen = sizeof(QosInfo) ;// 32 * 32 * 4;
 
         memcpy(pMessage, (unsigned char *)&repInfo, sizeof(repInfo));
@@ -554,7 +550,7 @@ restart:
         //ga_logger(Severity::INFO, "Get a new frame ...\n");
         QosInfo *pQosInfo = (QosInfo *)(data->pointer);
         repInfo.msgHdr     = HANDSHAKE_RESP;
-        repInfo.magic      = 0x55AA55AA;
+        repInfo.magic      = MAGIC_IO_CODE;
         repInfo.payloadLen = sizeof(QosInfo);// 32 * 32 * 4;
 
         memset(pMessage, 0, 1024 * 1024);

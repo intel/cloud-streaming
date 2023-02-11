@@ -25,11 +25,9 @@
 #define __GA_PARAM_SHARED_H__
 
 #include "ga-common.h"
+#include "ga-param-shared-structure.h"
 #include <iostream>
 #include <string>
-
-#define MAX_ARGV_LEN    2048    // Maximum game's argument length
-#define MAX_ID_LEN      32      // Maximum peer/session id token length
 
 /**
  * @brief ga_param_shared class
@@ -44,28 +42,7 @@ public:
   /**
    * @brief param_shared_s data structure which defines parameters to share.
    */
-  struct param_shared_s
-  {
-    char config_pathname[_MAX_PATH] = {}; /**< @brief Configure file pathname */
-    char ga_root_path[_MAX_PATH] = {};    /**< @brief GA root path */
-    char game_dir[_MAX_PATH] = {};        /**< @brief Game path */
-    char game_exe[_MAX_PATH] = {};        /**< @brief Game executable */
-    char game_argv[MAX_ARGV_LEN] = {};    /**< @brief Game arguments */
-    char hook_type[8] = {};               /**< @brief render target hook type */
-    char codec_format[8] = {};            /**< @brief Codec format. "avc", "hevc", etc. */
-    char server_peer_id[MAX_ID_LEN] = {}; /**< @brief server peer id */
-    char client_peer_id[MAX_ID_LEN] = {}; /**< @brief client peer id */
-    char logfile[_MAX_PATH] = {};         /**< @brief Logfile name */
-    char video_bitrate[16] = {};          /**< @brief Video bitrate */
-    Severity loglevel = Severity::INFO;   /**< @brief GA log level severity */
-    LUID luid = {};                       /**< @brief Display adapter's LUID (Locally Unique IDentification) */
-    bool enable_tcae = true;              /**< @brief TCAE enable flag */
-    bool enable_present = false;          /**< @brief Presentation enable flag */
-    int width = 0;                        /**< @brief Resolution width */
-    int height = 0;                       /**< @brief Resolution height */
-    int encode_width = 0;                 /**< @brief Encode width */
-    int encode_height = 0 ;               /**< @brief Encode height */
-  };
+  typedef struct param_shared_s param_shared_s;
 
 public:
   ga_param_shared(uint64_t pid, uint32_t desired_access);

@@ -22,8 +22,8 @@
 #include <string>
 #include <vector>
 
-#define DEFAULT_NUM_OF_CAMERAS_SUPPORTED	1
-#define MAX_NUM_CAMERAS_SUPPORTED 	2
+#define DEFAULT_NUM_OF_CAMERAS_SUPPORTED 1
+#define MAX_NUM_CAMERAS_SUPPORTED        2
 
 class CameraClientHandler {
 private:

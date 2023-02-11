@@ -36,7 +36,6 @@
 typedef unsigned long       UL32;
 typedef long                L32;
 
-
 typedef struct {
     L32  left;
     L32  top;
@@ -76,7 +75,6 @@ typedef struct _cursorpos
     long  pos_x;
     long  pos_y;
 } CURSOR_POS;
-
 
 typedef struct _CursorData {
     CURSOR_INFO    cursorInfo;

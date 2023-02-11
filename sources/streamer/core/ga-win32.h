@@ -84,25 +84,26 @@
 #endif
 // gettid
 #ifndef gettid
-#define    gettid            GetCurrentThreadId
+#define    gettid              GetCurrentThreadId
 #endif
 // gmtimr_r
 #if !defined(MSYS)
 #ifndef gmtime_r
-#define    gmtime_r(pt,ptm)    gmtime_s(ptm,pt)    /**< Mapping gmtime_r() to gmtime_s() */
+#define    gmtime_r(pt,ptm)    gmtime_s(ptm,pt)        /**< Mapping gmtime_r() to gmtime_s() */
 #endif
 #endif
 // dlopen
 #ifndef dlopen
-#define    dlopen(f,opt)        LoadLibrary(f)        /**< Mapping dlopen() to LoadLibrary() */
+#define    dlopen(f,opt)       LoadLibraryEx(f, NULL, LOAD_LIBRARY_SEARCH_DEFAULT_DIRS)
+                                                       /**< Mapping dlopen() to LoadLibraryEx() with LOAD_LIBRARY_SEARCH_DEFAULT_DIRS flag */
 #endif
 // dlsym
 #ifndef dlsym
-#define    dlsym(h,name)        GetProcAddress(h,name)    /**< Mapping dlsym() to GetProcAddress() */
+#define    dlsym(h,name)       GetProcAddress(h,name)  /**< Mapping dlsym() to GetProcAddress() */
 #endif
 // dlclose
 #ifndef dlclose
-#define    dlclose(h)        FreeLibrary(h)        /**< Mapping dlclose() to FreeLibrary() */
+#define    dlclose(h)          FreeLibrary(h)          /**< Mapping dlclose() to FreeLibrary() */
 #endif
 
 #ifndef INET_ADDRSTRLEN
@@ -121,7 +122,7 @@ EXPORT int read(SOCKET fd, void *buf, int count);
 EXPORT int write(SOCKET fd, const void *buf, int count);
 EXPORT int close(SOCKET fd);
 
-EXPORT char *dlerror();
+EXPORT const char *dlerror();
 
 EXPORT void ga_win32_fill_bitmap_info(BITMAPINFO *pinfo, int w, int h, int bitsPerPixel);
 EXPORT long long pcdiff_us(LARGE_INTEGER t1, LARGE_INTEGER t2, LARGE_INTEGER freq);

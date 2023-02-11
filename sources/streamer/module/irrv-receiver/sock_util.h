@@ -41,7 +41,6 @@ typedef enum _sock_conn_status {
     readable    = 1
 } sock_conn_status_t;
 
-
 #define DEBUG_SOCK_SERVER 0
 #define DEBUG_SOCK_CLIENT 0
 

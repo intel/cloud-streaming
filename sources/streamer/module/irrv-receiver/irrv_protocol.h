@@ -40,7 +40,6 @@
 
     7) client send IRRV_EVENT_VCTRL to server to start/pause/stop encoding, or change encoding parameters
 
-
                                      ________                   ________
                                     |        |      VHEAD      |        |
                                     |        |  -------------> |        |

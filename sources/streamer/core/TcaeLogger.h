@@ -105,7 +105,7 @@ void TcaeLogger::InitLog(const char* logBase)
 
     char* tcaeLogEnable = nullptr;
     char* brcOverrideMode = nullptr;
-    
+
     errno_t err = 0;
     err = _dupenv_s(&tcaeLogEnable, NULL,"TCAE_LOG_ENABLE");
 
@@ -205,7 +205,7 @@ void TcaeLogger::SetZeroTargetSize(qcsFrame* perFrameSettings)
 {
     if (!LogEnabled() || !m_runVBRmode)
         return;
-    
+
     qcs::SmartPtr<qcs::Attributes> encSettings;
     qcsStatus sts = perFrameSettings->pvtbl->QueryInterface(perFrameSettings->pthis, QCS_IID_IATTRIBUTES, (void**)&encSettings);
     TCAE_CHECK_RESULT(sts, QCS_ERR_NONE, QCS_ERR_INVALID_ARG);

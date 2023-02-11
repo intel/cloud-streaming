@@ -44,7 +44,6 @@
 #include <syslog.h>
 #endif
 
-
 #include "ga-common.h"
 #include "ga-conf.h"
 #include "rtspconf.h"
@@ -64,7 +63,6 @@ using namespace std;
 
 /** The gloabl log file name */
 static char *ga_logfile = NULL;
-
 
 static Severity ga_loglevel = Severity::INFO;
 
@@ -309,21 +307,19 @@ ga_deinit() {
     return;
 }
 
-
 /**
  * Set log file name
  */
 EXPORT
 void
 ga_set_logfile(const char* file_name) {
-	if (file_name == nullptr) {
-		fprintf(stderr, "Error : log file name is not set\n");
-		exit(-1);
-	}
+    if (file_name == nullptr) {
+        fprintf(stderr, "Error : log file name is not set\n");
+        exit(-1);
+    }
 
-	ga_conf_writev("logfile", file_name);
+    ga_conf_writev("logfile", file_name);
 }
-
 
 /**
  * Set level of messages to be printed
@@ -362,13 +358,12 @@ Severity ga_get_loglevel_enum(const char* level) {
 EXPORT
 std::string ga_compose_logname(std::string logname)
 {
-	std::string name = logname;
-	auto pidPos = name.find("PID");
-	if (pidPos != std::string::npos) // case sensitive
-		name.replace(pidPos, strlen("PID"), std::to_string(getpid()));
-	return name;
+    std::string name = logname;
+    auto pidPos = name.find("PID");
+    if (pidPos != std::string::npos) // case sensitive
+        name.replace(pidPos, strlen("PID"), std::to_string(getpid()));
+    return name;
 }
-
 
 /**
  * Collecting target system information stored in ga_sysinfo.
@@ -895,7 +890,7 @@ ga_window_bounds(int &dw, int &dh, gaPoint &wlt, gaPoint &wrb, gaPoint &clt, gaP
         wrb.x = window.right-1;
         wrb.y = window.bottom-1;
     }
-    
+
     return 1;
 }
 
