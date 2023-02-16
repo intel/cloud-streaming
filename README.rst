@@ -15,8 +15,7 @@ provide:
 
 * **Streaming software**
 
-  * `OWT <https://github.com/open-webrtc-toolkit>`_ based streaming
-    service
+  * `OWT`_ based streaming service
   * Docker configuration for the easy setup
 
 * **Video Encoding software**
@@ -27,8 +26,11 @@ provide:
 
 * **Helper and test scripts and docker configurations**
 
+  * Helper `OWT`_ build docker container
   * P2P service docker configuration
   * Chrome browser test client docker configuration
+
+.. _OWT: https://github.com/open-webrtc-toolkit/owt-client-native.git
 
 Prerequisites
 -------------

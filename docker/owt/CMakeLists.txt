@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2022 Intel Corporation
+# Copyright (C) 2020-2023 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,10 +14,5 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-add_subdirectory(streamer)
-add_subdirectory(encoder)
-add_subdirectory(jstest)
-add_subdirectory(owt)
-add_subdirectory(p2p)
-include(sources_ext.cmake OPTIONAL)
+add_subdirectory(ubuntu22.04)
 

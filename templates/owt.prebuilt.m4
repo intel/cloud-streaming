@@ -1,6 +1,6 @@
 dnl BSD 3-Clause License
 dnl
-dnl Copyright (C) 2020-2022, Intel Corporation
+dnl Copyright (C) 2020-2023, Intel Corporation
 dnl All rights reserved.
 dnl
 dnl Redistribution and use in source and binary forms, with or without
@@ -34,6 +34,11 @@ define(`OWT_GS_BIN_BUILD_DEPS',xz-utils)
 define(`OWT_GS_BIN_INSTALL_DEPS',)
 
 define(`BUILD_OWT_GS_BIN',`dnl
+# We use OWT prebuilt binaries here to save on time and resources required to
+# build OWT from sources. OWT built is disk space and time consuming process since
+# sources weigh ~9GB. So, while its quite possible to build OWT from sources and
+# we provide such a process in dedicated dockerfile, its more convenient to
+# use a prebuilt OWT to build dependent projects.
 COPY prebuilt/owt BUILD_HOME/owt
 RUN cp -rd BUILD_HOME/owt/* BUILD_DESTDIR && \
     cp -rd BUILD_HOME/owt/* /

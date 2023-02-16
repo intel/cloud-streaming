@@ -31,6 +31,11 @@ RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     xz-utils && \
   rm -rf /var/lib/apt/lists/*
+# We use OWT prebuilt binaries here to save on time and resources required to
+# build OWT from sources. OWT built is disk space and time consuming process since
+# sources weigh ~9GB. So, while its quite possible to build OWT from sources and
+# we provide such a process in dedicated dockerfile, its more convenient to
+# use a prebuilt OWT to build dependent projects.
 COPY prebuilt/owt /opt/build/owt
 RUN cp -rd /opt/build/owt/* /opt/dist && \
     cp -rd /opt/build/owt/* /
