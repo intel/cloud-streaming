@@ -16,7 +16,7 @@
 
 include(defs.m4)dnl
 include(begin.m4)
-include(owt-game-streaming.prebuilt.m4)
+include(owt.prebuilt.m4)
 include(libvhal-client.m4)
 include(ga.m4)
 include(streaming.m4)
