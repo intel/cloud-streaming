@@ -17,12 +17,14 @@
 #include "ffmpeg_compat.h"
 #include "CFFEncoder.h"
 #include "ProfileLevel.h"
-#ifdef ENABLE_MEMSHARE
+
 extern "C" {
+#include <libavutil/opt.h>
+#ifdef ENABLE_MEMSHARE
 #include <libavutil/hwcontext.h>
 #include <libavutil/hwcontext_vaapi.h>
-}
 #endif
+}
 
 using namespace std;
 
@@ -335,6 +337,13 @@ void CFFEncoder::setBitrate(int bitrate)
 void CFFEncoder::setMaxBitrate(int maxBitrate)
 {
     m_pEnc->rc_max_rate = maxBitrate;
+}
+
+void CFFEncoder::setLowDelayBrc(int low_delay_brc)
+{
+    int ret = av_opt_set_int(m_pEnc->priv_data, "low_delay_brc", low_delay_brc, 0);
+    if (ret < 0)
+        Error("av_opt_set_int returned %d. arg = %d\n", ret, low_delay_brc);
 }
 
 #ifdef ENABLE_MEMSHARE
