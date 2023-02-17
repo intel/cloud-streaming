@@ -1142,10 +1142,18 @@ void CTransCoder::dynamicSetEncParameters(CEncoder *pEnc, AVFrame *pFrame, AVFra
         uint32_t targetSize = m_tcae->GetTargetSize();
         if (targetSize > 0 && m_qsvPlugin)
         {
+            // Ensure LowDelayBRC is on
+            ((CFFEncoder*)pEnc)->setLowDelayBrc(1);
+
             // Convert target frame size to bitrate
             int tcbrc_target_bitrate = m_frameRate * targetSize * 8;
             setBitrate(tcbrc_target_bitrate);
             setMaxBitrate(tcbrc_target_bitrate);
+        }
+        else
+        {
+            //Disable LowDelayBrc if there is no TCBRC target
+            ((CFFEncoder*)pEnc)->setLowDelayBrc(0);
         }
     }
 #endif

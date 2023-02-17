@@ -48,6 +48,7 @@ public:
     void updateDynamicChangedFramerate(int framerate);
     void setBitrate(int bitrate);
     void setMaxBitrate(int maxBitrate);
+    void setLowDelayBrc(int low_delay_brc);
 
 #ifdef ENABLE_MEMSHARE
     //AVBufferRef* createAvBuffer(int size);
