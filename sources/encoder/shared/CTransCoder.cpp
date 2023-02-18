@@ -52,8 +52,6 @@ using namespace std;
 #define unlikely(x)     (x)
 #endif
 
-#define FFMPEG_VERSION "4.2.2"
-
 enum {
     SEI_IDENTIFIER     = 0x02,
     SEI_TIMESTAMP      = 0x08,
@@ -129,7 +127,21 @@ void CTransCoder::init(int id, AVBufferRef *hw_frames_ctx, AVCodecID codec_type)
     m_DyEncodeTimeLog      = new TimeLog("IRRB_Dynamic_Encode_setting", 1);
     m_Log                  = new CTransLog("CTransCoder");
 
-    m_Log->Info("FFmpeg version: %s\n", FFMPEG_VERSION);
+    m_Log->Info("ffmpeg_version: %s\n", av_version_info());
+
+    auto version = avcodec_version();
+    m_Log->Info("avcodec_version: %d.%d.%d\n",
+      AV_VERSION_MAJOR(version),
+      AV_VERSION_MINOR(version),
+      AV_VERSION_MICRO(version));
+    m_Log->Info("avcodec_configuration: %s\n", avcodec_configuration());
+
+    version = avutil_version();
+    m_Log->Info("avcodec_version: %d.%d.%d\n",
+      AV_VERSION_MAJOR(version),
+      AV_VERSION_MINOR(version),
+      AV_VERSION_MICRO(version));
+    m_Log->Info("avutil_configuration: %s\n", avutil_configuration());
 }
 
 int CTransCoder::start() {
