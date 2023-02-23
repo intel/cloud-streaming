@@ -98,13 +98,17 @@ CameraClientHandler::processClientCameraMsg(const std::string &json_message)
 
     // Set codec type of the camera input that needs to be used for camera frame compression.
     codec_type = ga_conf_readstr("video-codec");
-    if (codec_type == "h265" || codec_type == "hevc") {
+    if (ga_is_h265(codec_type)) {
       camera_info[i].codec_type = vhal::client::VideoSink::VideoCodecType::kH265;
-    } else if (codec_type == "h264" || codec_type == "avc") {
-      camera_info[i].codec_type = vhal::client::VideoSink::VideoCodecType::kH264;
+      ga_logger(Severity::INFO, "selected H265 codec\n");
+    } else if (ga_is_av1(codec_type)) {
+      camera_info[i].codec_type = vhal::client::VideoSink::VideoCodecType::kAV1;
+      ga_logger(Severity::INFO, "selected AV1 codec\n");
     } else {
-      ga_logger(Severity::WARNING, TAG "Unable to read a valid codec_type, "
+      if (!ga_is_h264(codec_type)) {
+        ga_logger(Severity::WARNING, TAG "Unable to read a valid codec_type, "
                 "hence use the default, that is H264\n");
+      }
       camera_info[i].codec_type = vhal::client::VideoSink::VideoCodecType::kH264;
     }
 
