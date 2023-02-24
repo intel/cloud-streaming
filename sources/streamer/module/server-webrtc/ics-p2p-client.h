@@ -118,11 +118,7 @@ protected:
   virtual void OnMessageReceived(const std::string &remote_user_id,
                               const std::string message) override;
   virtual void OnStreamAdded(std::shared_ptr<owt::base::RemoteStream> stream) override;
-#ifdef WIN32
-  virtual void OnStreamStopped(const std::string& remote_user_id) override;
-#else
   virtual void OnPeerConnectionClosed(const std::string& remote_user_id) override;
-#endif
   virtual void OnLossNotification(DependencyNotification notification) override {};
 
 private:

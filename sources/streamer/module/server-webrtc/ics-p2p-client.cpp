@@ -311,12 +311,7 @@ int ICSP2PClient::Init(void *arg) {
   // disable hardware acceleration.
   GlobalConfiguration::SetVideoHardwareAccelerationEnabled(true);
   GlobalConfiguration::SetLowLatencyStreamingEnabled(true);
-#ifdef WIN32 // TODO: remove completely?
-  GlobalConfiguration::SetExternalBweEnabled(true);
-  GlobalConfiguration::SetExternalBweRateLimits(6 * 1024, 512, 24 * 1024);
-#else
   GlobalConfiguration::SetBweRateLimits(6 * 1024, 512, 24 * 1024);
-#endif
 
   // Always enable customized audio input here. `CreateStream` will
   // enable/disable audio track according to conf.
@@ -712,18 +707,12 @@ void ICSP2PClient::InsertFrame(ga_packet_t* packet) {
     p2pclient_->GetConnectionStats(remote_user_id_,
       [&](std::shared_ptr<owt::base::RTCStatsReport> report) {
         for (const auto& stat_rec : *report) {
-          auto type =
-#ifdef WIN32
-            stat_rec.type_;
-#else
-            stat_rec.type;
-#endif
-          if (type == owt::base::RTCStatsType::kOutboundRTP) {
+          if (stat_rec.type == owt::base::RTCStatsType::kOutboundRTP) {
             auto& stat = stat_rec.cast_to<owt::base::RTCOutboundRTPStreamStats>();
             if (stat.kind == "video") {
               bytes_sent_on_last_stat_call_ = stat.bytes_sent;
             }
-          } else if (type == owt::base::RTCStatsType::kCandidatePair) {
+          } else if (stat_rec.type == owt::base::RTCStatsType::kCandidatePair) {
             auto& stat = stat_rec.cast_to<owt::base::RTCIceCandidatePairStats>();
             if (stat.nominated) {
               current_available_bandwidth_ = stat.available_outgoing_bitrate;
@@ -915,11 +904,7 @@ void ICSP2PClient::OnEnded() {
     ga_logger(Severity::INFO, "ended.");
 }
 
-#ifdef WIN32
-void ICSP2PClient::OnStreamStopped(const std::string& remote_user_id) {
-#else
 void ICSP2PClient::OnPeerConnectionClosed(const std::string& remote_user_id) {
-#endif
 #ifdef WIN32
     if (pHookClientStatus == NULL) {
         pHookClientStatus = [](bool status) {
