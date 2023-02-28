@@ -1147,7 +1147,7 @@ void CTransCoder::dynamicSetEncParameters(CEncoder *pEnc, AVFrame *pFrame, AVFra
     if (m_tcaeEnabled && m_tcae)
     {
         uint32_t targetSize = m_tcae->GetTargetSize();
-        if (targetSize > 0 && m_qsvPlugin)
+        if (targetSize > 0 && m_qsvPlugin && !m_tcae->LogsOnlyMode())
         {
             // Ensure LowDelayBRC is on
             ((CFFEncoder*)pEnc)->setLowDelayBrc(1);

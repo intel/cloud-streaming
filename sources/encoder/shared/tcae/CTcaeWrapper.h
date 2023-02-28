@@ -40,7 +40,8 @@ class TcaeLogger
     TcaeLogger();
     ~TcaeLogger();
 
-    inline bool LogEnabled() { return m_enabled; };
+    inline bool LogEnabled()   { return m_enabled;    };
+    inline bool LogsOnlyMode() { return m_runVBRmode; };
 
     void InitLog(const char* logPath);
     void UpdateClientFeedback(uint32_t delay, uint32_t size);
@@ -54,10 +55,13 @@ protected:
     bool m_enabled = false;
     FILE* m_logFilePtr = nullptr;  // File for capturing extra logs in CSV format
 
-
     int m_EncFrameNumber = 0;
     int m_FeedbackFrameNumber = 0;
     long long int m_startTime = 0;
+
+    //Allow mode where TCAE logging structures are enabled, but not actually used for encode
+    //This will allow us to study the delay / size relationship for VBR mode without TCAE/TCBRC
+    bool m_runVBRmode = false;
 
     FrameData_t m_encData;
     std::mutex m_mutex;
@@ -68,6 +72,8 @@ class CTcaeWrapper
 public:
     CTcaeWrapper() { };
     ~CTcaeWrapper(){ };
+
+    bool LogsOnlyMode();
 
     int Initialize(uint32_t targetDelay = 60, uint32_t maxFrameSize = 0);
 

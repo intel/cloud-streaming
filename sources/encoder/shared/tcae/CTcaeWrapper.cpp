@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <ctime>
+#include <stdlib.h>
 #include "CTcaeWrapper.h"
 
 using std::chrono::duration_cast;
@@ -58,6 +59,20 @@ void TcaeLogger::InitLog(const char* logPath)
         fprintf(m_logFilePtr, "FrameDelay,FrameSize,EncSize,PredSize,Feedback_FrameNumber,EncoderThread_FrameNumber,RelativeTimeStamp,Function\n");
         fflush(m_logFilePtr);
     }
+
+    if (!m_enabled)
+        return;
+
+    char* brcOverrideMode = getenv("BRC_OVERRIDE_MODE");
+    if (brcOverrideMode)
+    {
+        if (atoi(brcOverrideMode) == 1)
+        {
+            m_runVBRmode = true;
+            printf("TCAE Logs-Only Override enabled: TCBRC will be off and VBR mode will run with delay + size logs\n");
+        }
+    }
+
 }
 
 void TcaeLogger::UpdateClientFeedback(uint32_t delay, uint32_t size)
@@ -124,6 +139,10 @@ void TcaeLogger::makeLogEntry(const FrameData_t& data, const char* str)
 }
 
 // ------ CTcaeWrapper class -------
+bool CTcaeWrapper::LogsOnlyMode()
+{
+    return m_logger.LogsOnlyMode();
+}
 
 int CTcaeWrapper::Initialize(uint32_t targetDelay, uint32_t maxFrameSize)
 {
