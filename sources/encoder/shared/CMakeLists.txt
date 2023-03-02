@@ -14,10 +14,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-set(ICR_FFMPEG_DIR ffmpeg_cg_n4.2.2)
-set(BUILD_FFMPEG_VERSION 4.2)
-Message(status "  " ICR_FFMPEG_DIR=${ICR_FFMPEG_DIR})
-
 if("$ENV{ICR_ENABLE_MEMSHARE}" STREQUAL "1")
     Message(status "  " enable_memshare)
     add_definitions(-DENABLE_MEMSHARE)
