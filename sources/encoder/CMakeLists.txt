@@ -77,11 +77,6 @@ pkg_check_modules(VA REQUIRED libva IMPORTED_TARGET)
 add_library(libva-deps INTERFACE)
 target_link_libraries(libva-deps INTERFACE PkgConfig::VA)
 
-option(UPSTREAM_FFMPEG "Build against upstream ffmpeg?" ON)
-if (NOT UPSTREAM_FFMPEG)
-  add_definitions(-DFFMPEG_v42)
-endif()
-
 execute_process(
     COMMAND git rev-parse --short HEAD
     OUTPUT_VARIABLE git_commit
