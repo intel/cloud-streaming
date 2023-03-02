@@ -119,9 +119,6 @@ Message(status "  " CI_QUALIFIER_NUM=${CI_QUALIFIER_NUM})
 
 configure_file(${CMAKE_CURRENT_LIST_DIR}/auto_version.h.in ${CMAKE_CURRENT_LIST_DIR}/auto_version.h @ONLY)
 
-set(ICR_FFMPEG_DIR ffmpeg_cg_n4.2.2)
-Message(status "  " ICR_FFMPEG_DIR=${ICR_FFMPEG_DIR})
-
 Message(status "  " build icr_encoder!)
 set (executable "icr_encoder")
 
