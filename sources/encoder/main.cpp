@@ -31,7 +31,6 @@
 #include "display_server.h"
 #include "encoder_comm.h"
 #include "encoder_version.h"
-#include "auto_version.h"
 
 using namespace std;
 
@@ -52,26 +51,9 @@ static void inline encoder_info_init(encoder_info_t &info) {
 }
 
 static void inline show_version() {
-    //for SG1, the version format define as : {ICR/IRR}_{major}.{minor}.{build_number}.{build_date}_{icr_project_stage}_{hardware-platform}_{sha1}
-    //for SG2, the version format define as : {ICR/IRR}_{major}.{minor}.{build_number}.{build_date}[_{qualifier}.{number}]_{hardware-platform}_{sha1}
-    //for qualifier, the values should be alpha/beta/rc(release candidate)..., the qualifier number start from 1.
-    std::stringstream version;
-
-    const string strQualifier = CI_QUALIFIER;
-    const string strQualifier_Num = CI_QUALIFIER_NUM;
-    if (strQualifier != "" && strQualifier_Num != "") {
-        version << ICR_ENCODER << '_' << ICR_VERSION_MAJOR << '.' << ICR_VERSION_MINOR << '.'
-            << CI_BUILD_NUMBER << '.' << BUILD_DATE << '_' << strQualifier << '.' << strQualifier_Num << '_'
-            << COMMIT_ID;
-    }
-    else  {
-        version << ICR_ENCODER << '_' << ICR_VERSION_MAJOR << '.' << ICR_VERSION_MINOR << '.'
-            << CI_BUILD_NUMBER << '.' << BUILD_DATE << '_' << COMMIT_ID;
-    }
-
     sock_log("Hello, this is an intel local renderer! Please see version info below:\n");
     sock_log("======================================================================\n");
-    sock_log(" icr_encoder:\t%s\n", version.str().c_str());
+    sock_log(" icr_encoder:\t%s.%s\n", ICR_VERSION_MAJOR, ICR_VERSION_MINOR);
     sock_log("======================================================================\n");
 }
 

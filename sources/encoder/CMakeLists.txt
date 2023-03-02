@@ -77,43 +77,6 @@ pkg_check_modules(VA REQUIRED libva IMPORTED_TARGET)
 add_library(libva-deps INTERFACE)
 target_link_libraries(libva-deps INTERFACE PkgConfig::VA)
 
-execute_process(
-    COMMAND git rev-parse --short HEAD
-    OUTPUT_VARIABLE git_commit
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-)
-if (NOT ${git_commit} MATCHES "^$")
-    set( git_commit "${git_commit}" PARENT_SCOPE)
-endif()
-
-execute_process(
-    COMMAND echo
-    COMMAND cut -f 1 -d.
-    COMMAND date "+%Y%m%d"
-    OUTPUT_VARIABLE cur_date
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
-if (DEFINED BUILD_NUM)
-    set(build_num ${BUILD_NUM})
-else()
-    set(build_num "localbuild")
-endif()
-Message(status "  " build_num=${build_num})
-
-if (DEFINED QUALIFIER)
-    set(CI_QUALIFIER ${QUALIFIER})
-endif()
-Message(status "  " CI_QUALIFIER=${CI_QUALIFIER})
-
-if (DEFINED QUALIFIER_NUM)
-    set(CI_QUALIFIER_NUM ${QUALIFIER_NUM})
-endif()
-Message(status "  " CI_QUALIFIER_NUM=${CI_QUALIFIER_NUM})
-
-configure_file(${CMAKE_CURRENT_LIST_DIR}/auto_version.h.in ${CMAKE_CURRENT_LIST_DIR}/auto_version.h @ONLY)
-
 Message(status "  " build icr_encoder!)
 set (executable "icr_encoder")
 
