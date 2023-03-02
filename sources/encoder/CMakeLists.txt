@@ -26,8 +26,6 @@ include(GNUInstallDirs)
 
 find_library(M_LIB m)
 
-Message(status "  " CMAKE_CURRENT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR})
-
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -77,10 +75,7 @@ pkg_check_modules(VA REQUIRED libva IMPORTED_TARGET)
 add_library(libva-deps INTERFACE)
 target_link_libraries(libva-deps INTERFACE PkgConfig::VA)
 
-Message(status "  " build icr_encoder!)
 set (executable "icr_encoder")
-
-set (renderer_src display_renderer.cpp display_video_renderer.cpp)
 
 add_definitions(-DBUILD_FOR_HOST=1)
 

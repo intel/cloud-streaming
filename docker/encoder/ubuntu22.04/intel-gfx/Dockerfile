@@ -125,7 +125,6 @@ RUN cd /opt/build/encoder \
   && cmake \
     -DCMAKE_C_FLAGS="-D_FORTIFY_SOURCE=2 -fstack-protector-strong" \
     -DCMAKE_CXX_FLAGS="-D_FORTIFY_SOURCE=2 -fstack-protector-strong" \
-    -DHARDWARE_PLATFROM=sg2 \
     -DCMAKE_INSTALL_PREFIX=/opt \
     -DCMAKE_INSTALL_LIBDIR=/opt/lib \
     .. \
