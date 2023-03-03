@@ -50,7 +50,7 @@ RUN apt-get update && \
 ARG OWT_GS_REPO=https://github.com/open-webrtc-toolkit/owt-client-native.git
 RUN mkdir -p /opt/build/owt-gs && cd /opt/build/owt-gs && \
   git clone $OWT_GS_REPO src && cd src && \
-  git checkout e629093
+  git checkout 9de4b0a
 
 ARG DEPOT_TOOLS_REPO=https://chromium.googlesource.com/chromium/tools/depot_tools.git
 RUN cd /opt/build/owt-gs && \
