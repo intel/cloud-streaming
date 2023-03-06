@@ -291,10 +291,10 @@ void NetPred::UpdateModelNormal(std::deque<double>& delays, std::deque<double>& 
             accD += weight * weight * (delays[i] - meanDelay) * (sizes[i] - meanSize);
             accN += weight * weight * (sizes[i] - meanSize) * (sizes[i] - meanSize);
         }
-        
+
         weight *= m_forgotRatio;
     }
-    
+
     if (accN < 1e-6)
     {
         return UpdateModelSmall(delays, sizes);
@@ -499,5 +499,5 @@ inline int NetPred::CurrentState()
 
 inline bool NetPred::SanityCheck()
 {
-    return m_reverseBandWidth > 0.0 && m_propagotionDelay >= 0.0;
+    return m_reverseBandWidth > MinReverseBandwidth && m_propagotionDelay >= 0.0;
 }
