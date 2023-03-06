@@ -105,6 +105,10 @@ protected:
     // output filter, IIR
     double m_filteredTargetSize;
     double m_filterFactor;
+
+    // Limit excessively high estimate of bandwidth
+    // Below corresponds to 400Mbps
+    const double MinReverseBandwidth = 0.02;
 };
 
 #endif
