@@ -338,13 +338,13 @@ void NetPred::UpdateModelSafe(std::deque<double>& delays, std::deque<double>& si
         double deltaY = sizes[i] - meanSize;
         if (deltaX * deltaY > 0)
         {
-            safeDelays.push_front(delays[i]);
-            safeSizes.push_front(sizes[i]);
+            safeDelays.push_back(delays[i]);
+            safeSizes.push_back(sizes[i]);
         }
         else
         {
-            safeDelays.push_front(0.0);
-            safeSizes.push_front(0.0);
+            safeDelays.push_back(0.0);
+            safeSizes.push_back(0.0);
         }
     }
 
