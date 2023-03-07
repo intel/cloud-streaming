@@ -179,10 +179,11 @@ void NetPred::UpdateSizeAndDelay(uint32_t size, uint32_t encoded_size, double de
             }
         }
     }
-    
+
+    m_previousTargetSize = m_nextTargetSize;
     m_nextTargetSize = (0.9 * m_targetDelay - propagotionDelay) / reverseBandWidth;
 
-    AdjustTarget();
+    AdjustTarget(delay_in_ms);
 
     if ((m_nextTargetSize < m_minTargetSize) || isnan(m_nextTargetSize))
     {
@@ -424,8 +425,15 @@ void NetPred::HandleNetworkLimitor(uint32_t encoded_size, double delay_in_ms)
     }
 }
 
-void NetPred::AdjustTarget()
+void NetPred::AdjustTarget(double delay_in_ms)
 {
+    if (delay_in_ms >= 0.9 * m_targetDelay &&
+        m_nextTargetSize >= m_previousTargetSize)
+    {
+        // High latency is observed, but model is not dropping frame size
+        // This logic is meant to catch this situation
+        m_nextTargetSize = m_previousTargetSize * 0.9;
+    }
 
     if (!m_networkEmulatorHint)
     {
