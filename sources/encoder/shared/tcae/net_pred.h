@@ -53,7 +53,7 @@ protected:
     void UpdateModel();
 
     void HandleNetworkLimitor(uint32_t encoded_size, double delay_in_ms);
-    void AdjustTarget();
+    void AdjustTarget(double delay_in_ms);
 
     void UpdateModelNormal(std::deque<double>& m_delays, std::deque<double>& m_sizes);
     void UpdateModelSmall(std::deque<double>& m_delays, std::deque<double>& m_sizes);
@@ -109,6 +109,8 @@ protected:
     // Limit excessively high estimate of bandwidth
     // Below corresponds to 400Mbps
     const double MinReverseBandwidth = 0.02;
+
+    double m_previousTargetSize = 0;
 };
 
 #endif
