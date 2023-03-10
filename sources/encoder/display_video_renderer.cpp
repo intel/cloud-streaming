@@ -31,7 +31,7 @@ static inline uint64_t getUs() {
 DisplayVideoRenderer::DisplayVideoRenderer()
 :DisplayRenderer()
 {
-	SOCK_LOG_INIT();
+    SOCK_LOG_INIT();
 
     m_width         = ENCODER_RESOLUTION_WIDTH_DEFAULT;
     m_height        = ENCODER_RESOLUTION_HEIGHT_DEFAULT;
@@ -181,10 +181,10 @@ disp_res_t* DisplayVideoRenderer::createDispRes(buffer_handle_t handle, int form
 
 void DisplayVideoRenderer::destroyDispRes(disp_res_t* disp_res)
 {
-	SOCK_LOG(("%s:%d : disp_res = %p\n", __func__, __LINE__, disp_res));
-	if(disp_res) {
+    SOCK_LOG(("%s:%d : disp_res = %p\n", __func__, __LINE__, disp_res));
+    if(disp_res) {
         m_deletedReses.push_back(make_pair(m_frameIdx, disp_res));
-	}
+    }
 }
 
 void DisplayVideoRenderer::drawDispRes(disp_res_t* disp_res, int client_id, int client_count, std::unique_ptr<vhal::client::display_control_t> ctrl)
@@ -263,7 +263,7 @@ void DisplayVideoRenderer::drawBlankRes(int client_id, int client_count)
 
 void DisplayVideoRenderer::beginFrame()
 {
-	//	SOCK_LOG_INIT();
+    //    SOCK_LOG_INIT();
     m_frameIdx++;
 }
 

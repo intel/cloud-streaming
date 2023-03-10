@@ -360,7 +360,7 @@ private:
     int m_nLastPktSize = 0;
     std::map<int, int64_t> m_mPktPts;
 
-	long m_g_transcode_count = 0L;
+    long m_g_transcode_count = 0L;
     int m_id = 0;
     bool m_fpsStats = true;
     uint64_t m_statsStartTimeInMs = 0ULL;

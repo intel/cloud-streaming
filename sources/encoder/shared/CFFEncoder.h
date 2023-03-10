@@ -82,7 +82,7 @@ private:
     std::map<const void*, AVFrame *> m_mHwFrames;
     AVBufferRef *m_hw_frames_ctx_bk;
 #endif
-	long m_g_encode_write_count;
+    long m_g_encode_write_count;
 };
 
 #endif /* CFFENCODER_H */

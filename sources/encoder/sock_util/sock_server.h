@@ -25,15 +25,15 @@
 
 
 typedef struct _t_sock_server{
-	int         type;
-	int			socketfd;
-	char		path[SOCK_MAX_PATH_LEN];
-	int         client_slots[SOCK_MAX_CLIENTS];
-	fd_set      rfds;
+    int         type;
+    int            socketfd;
+    char        path[SOCK_MAX_PATH_LEN];
+    int         client_slots[SOCK_MAX_CLIENTS];
+    fd_set      rfds;
 } sock_server_t;
 
 typedef struct _t_sock_proxy_client{
-	int id;
+    int id;
 }sock_client_proxy_t;
 
 
@@ -42,23 +42,23 @@ typedef struct _t_sock_proxy_client{
 extern "C" {
 #endif
 
-	sock_server_t* sock_server_init(int type, const char *sock_name, const char *id, int port);
-	void sock_server_close (sock_server_t* server);
+    sock_server_t* sock_server_init(int type, const char *sock_name, const char *id, int port);
+    void sock_server_close (sock_server_t* server);
 
-	int sock_server_has_newconn(sock_server_t* server, int timeout_ms);
+    int sock_server_has_newconn(sock_server_t* server, int timeout_ms);
 
-	sock_client_proxy_t* sock_server_create_client (sock_server_t* server);
-	void sock_server_close_client(sock_server_t* server, sock_client_proxy_t* p_client);
+    sock_client_proxy_t* sock_server_create_client (sock_server_t* server);
+    void sock_server_close_client(sock_server_t* server, sock_client_proxy_t* p_client);
 
-	int sock_server_clients_readable(sock_server_t* server, int timeout_ms);
-	sock_conn_status_t sock_server_check_connect(sock_server_t* server, const sock_client_proxy_t* p_client);
+    int sock_server_clients_readable(sock_server_t* server, int timeout_ms);
+    sock_conn_status_t sock_server_check_connect(sock_server_t* server, const sock_client_proxy_t* p_client);
 
-	int sock_server_send(sock_server_t* server, const sock_client_proxy_t* sender,  const void* data, size_t datalen);
-	int sock_server_recv(sock_server_t* server, const sock_client_proxy_t* receiver, void* data, size_t datalen,int one_shot=0);
-	int sock_server_send_fd(sock_server_t* server, const sock_client_proxy_t* sender, int* pfd, size_t fdlen);
-	int sock_server_recv_fd(sock_server_t* server, const sock_client_proxy_t* receiver, int* pfd, size_t fdlen);
+    int sock_server_send(sock_server_t* server, const sock_client_proxy_t* sender,  const void* data, size_t datalen);
+    int sock_server_recv(sock_server_t* server, const sock_client_proxy_t* receiver, void* data, size_t datalen,int one_shot=0);
+    int sock_server_send_fd(sock_server_t* server, const sock_client_proxy_t* sender, int* pfd, size_t fdlen);
+    int sock_server_recv_fd(sock_server_t* server, const sock_client_proxy_t* receiver, int* pfd, size_t fdlen);
 
-	const char* sock_server_get_addr(sock_server_t* server, const char* ifname);
+    const char* sock_server_get_addr(sock_server_t* server, const char* ifname);
 
 #ifdef __cplusplus
 }

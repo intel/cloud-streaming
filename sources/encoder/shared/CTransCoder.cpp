@@ -808,7 +808,7 @@ void CTransCoder::hwErrorCount() {
 
 int CTransCoder::doOutput(bool flush) {
 
-	TimeLog timelog("IRRB_CTransCoder_doOutput");
+    TimeLog timelog("IRRB_CTransCoder_doOutput");
     ATRACE_CALL();
 
     if(m_mFilters.size()>0)

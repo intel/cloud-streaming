@@ -216,23 +216,23 @@ void NetPred::UpdateSizeAndDelay(uint32_t size, uint32_t encoded_size, double de
 void NetPred::UpdateModel()
 {
 
-	std::deque<double> delays;
-	std::deque<double> sizes;
-	delays.clear();
-	sizes.clear();
-	bool validSequence = false;
-	for (size_t i = 0; i < m_sizes.size(); i++)
-	{
-		delays.push_back(m_delays[i]);
-		sizes.push_back(m_sizes[i]);
-		if (m_sizes[i] >= m_effectiveSizeThreshold)
-		{
-			validSequence = true;
-		}
-	}
+    std::deque<double> delays;
+    std::deque<double> sizes;
+    delays.clear();
+    sizes.clear();
+    bool validSequence = false;
+    for (size_t i = 0; i < m_sizes.size(); i++)
+    {
+        delays.push_back(m_delays[i]);
+        sizes.push_back(m_sizes[i]);
+        if (m_sizes[i] >= m_effectiveSizeThreshold)
+        {
+            validSequence = true;
+        }
+    }
 
-	if (!validSequence)
-	{
+    if (!validSequence)
+    {
         // original code fron NetPred.cpp
         //for (int i = m_effectiveSizes.size() - 1; i >= 0; i--)
         //{
@@ -250,7 +250,7 @@ void NetPred::UpdateModel()
             sizes.pop_back();
         }
 
-	}
+    }
 
     UpdateModelNormal(delays, sizes);
     if (!SanityCheck())

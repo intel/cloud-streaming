@@ -32,43 +32,43 @@
 
 class DisplayVideoRenderer : public  DisplayRenderer{
 public :
-	DisplayVideoRenderer();
-	DisplayVideoRenderer(int id): DisplayVideoRenderer() { m_id = id; }
-	virtual ~DisplayVideoRenderer();
+    DisplayVideoRenderer();
+    DisplayVideoRenderer(int id): DisplayVideoRenderer() { m_id = id; }
+    virtual ~DisplayVideoRenderer();
 
-	virtual bool init(char *name, encoder_info_t *info);
-	virtual void deinit();
+    virtual bool init(char *name, encoder_info_t *info);
+    virtual void deinit();
 
     virtual disp_res_t* createDispRes(buffer_handle_t handle, int format, int width, int height, int stride);
     virtual void destroyDispRes(disp_res_t* res);
 
     virtual void drawDispRes(disp_res_t* res, int client_id, int client_count, std::unique_ptr<vhal::client::display_control_t> ctrl);
-	virtual void drawBlankRes(int client_id, int client_count);
+    virtual void drawBlankRes(int client_id, int client_count);
 
     virtual void beginFrame();
     virtual void endFrame();
     virtual void retireFrame();
     virtual void flushDelayDelRes();
 
-	virtual void setVideoMode(int mode_info) {}
+    virtual void setVideoMode(int mode_info) {}
     virtual int getCropFlag() { return 0; }
     virtual void ChangeResolution(int width, int height);
 
 protected :
-	virtual int publishStatusToResourceMonitor(uint32_t id, void * status);
+    virtual int publishStatusToResourceMonitor(uint32_t id, void * status);
 
 private :
-	int m_width;
-	int m_height;
-	bool m_fpsStats = true;
-	int m_statsNumFrames = 0;
-	uint64_t m_statsStartTimeInMs = 0;
+    int m_width;
+    int m_height;
+    bool m_fpsStats = true;
+    int m_statsNumFrames = 0;
+    uint64_t m_statsStartTimeInMs = 0;
 
-	uint64_t m_frameIdx;
-	std::list<std::pair<uint64_t, disp_res_t*>>	m_deletedReses;
+    uint64_t m_frameIdx;
+    std::list<std::pair<uint64_t, disp_res_t*>>    m_deletedReses;
 
-	irr_surface_t*	m_blankSurface;
-	irr_surface_t*	m_curSurface;
+    irr_surface_t*    m_blankSurface;
+    irr_surface_t*    m_curSurface;
 
     encoder_info_t m_currentInfo;
 };
