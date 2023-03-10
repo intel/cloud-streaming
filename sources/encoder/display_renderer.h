@@ -30,20 +30,20 @@
 
 class DisplayRenderer {
 public :
-	virtual ~DisplayRenderer()
-	{
-		
-	}
-	virtual bool init(char *name, encoder_info_t *info)=0;
-	virtual void deinit()=0;
+    virtual ~DisplayRenderer()
+    {
+        
+    }
+    virtual bool init(char *name, encoder_info_t *info)=0;
+    virtual void deinit()=0;
 
-	virtual disp_res_t* createDispRes(buffer_handle_t handle, int format, int width, int height, int stride)=0;
-	virtual void destroyDispRes(disp_res_t* res)=0;
+    virtual disp_res_t* createDispRes(buffer_handle_t handle, int format, int width, int height, int stride)=0;
+    virtual void destroyDispRes(disp_res_t* res)=0;
 
     virtual void drawDispRes(disp_res_t* res, int client_id, int client_count, std::unique_ptr<vhal::client::display_control_t> ctrl)=0;
-	virtual void drawBlankRes(int client_id, int client_count)=0;
+    virtual void drawBlankRes(int client_id, int client_count)=0;
 
-	virtual void setVideoMode(int mode_info)=0;
+    virtual void setVideoMode(int mode_info)=0;
 
     virtual void beginFrame()=0;
     virtual void endFrame()=0;

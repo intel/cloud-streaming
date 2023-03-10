@@ -80,11 +80,11 @@ void CFFEncoder::init(AVDictionary *pDict) {
     tag  = av_dict_get(pDict, "level", nullptr, 0);
     if (tag) {
         l = tag->value;
-		Info("CFFEncoder::init: level=%s\n", tag->value);
-	}
+        Info("CFFEncoder::init: level=%s\n", tag->value);
+    }
     else {
         Info("CFFEncoder::init: level tag=null\n");
-	}
+    }
     switch (m_Info.m_pCodecPars->codec_id) {
         case AV_CODEC_ID_H264:
             // Profile, Level
@@ -202,7 +202,7 @@ int CFFEncoder::write(AVFrame *pFrame) {
     int ret = 0;
 
     ATRACE_INDEX("CFFEncoder::write", (int)m_g_encode_write_count, 0);
-	TimeLog timelog("IRRB_CFFEncoder_write", 0, m_g_encode_write_count++);
+    TimeLog timelog("IRRB_CFFEncoder_write", 0, m_g_encode_write_count++);
 
     if (!m_bInited) {
         if (!pFrame) {

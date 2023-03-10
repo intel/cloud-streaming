@@ -23,23 +23,23 @@
 extern "C" {
 #endif
 
-	typedef struct _t_sock_client{
-		int     type;
+    typedef struct _t_sock_client{
+        int     type;
         pthread_mutex_t mutex;
-		int		socketfd;
-		char	path[SOCK_MAX_PATH_LEN];
-	} sock_client_t;
+        int        socketfd;
+        char    path[SOCK_MAX_PATH_LEN];
+    } sock_client_t;
 
 
-	sock_client_t*  sock_client_init(int type, const char* server_path, int port);
-	void sock_client_close(sock_client_t* client);
+    sock_client_t*  sock_client_init(int type, const char* server_path, int port);
+    void sock_client_close(sock_client_t* client);
 
-	sock_conn_status_t sock_client_check_connect(sock_client_t* client, int timeout_ms);
+    sock_conn_status_t sock_client_check_connect(sock_client_t* client, int timeout_ms);
 
-	int sock_client_send(sock_client_t* client, const void* data, size_t datalen);
-	int sock_client_recv(sock_client_t* client, void* data, size_t datalen);
-	int sock_client_send_fd(sock_client_t* client, int* pfd, size_t fdlen);
-	int sock_client_recv_fd(sock_client_t* client, int* pfd, size_t fdlen);
+    int sock_client_send(sock_client_t* client, const void* data, size_t datalen);
+    int sock_client_recv(sock_client_t* client, void* data, size_t datalen);
+    int sock_client_send_fd(sock_client_t* client, int* pfd, size_t fdlen);
+    int sock_client_recv_fd(sock_client_t* client, int* pfd, size_t fdlen);
 
 
 #ifdef __cplusplus

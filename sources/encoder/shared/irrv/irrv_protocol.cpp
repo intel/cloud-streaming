@@ -22,8 +22,8 @@
 #include "utils/TimeLog.h"
 #include "utils/CTransLog.h"
 
-#define MAX_CLIENTS	 8
-#define MAX_MESSAGE	 128
+#define MAX_CLIENTS     8
+#define MAX_MESSAGE     128
 
 CTransLog IrrvLog("IRRV");
 

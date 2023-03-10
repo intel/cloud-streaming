@@ -37,7 +37,7 @@ protected:
 
     void CommandHandler(vhal::client::CommandType cmd, const vhal::client::frame_info_t* frame);
 
-	int PipeMsgHandler();
+    int PipeMsgHandler();
 
     std::map<vhal::client::cros_gralloc_handle_t, disp_res_t*> m_dispReses;
 

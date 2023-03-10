@@ -23,10 +23,10 @@
 #include <unistd.h>
 
 typedef int SOCK_BOOL;
-#define SOCK_TRUE	1
-#define SOCK_FALSE	0
+#define SOCK_TRUE    1
+#define SOCK_FALSE    0
 
-#define SOCK_MAX_PATH_LEN		128
+#define SOCK_MAX_PATH_LEN        128
 
 #define UNUSED(expr) do { (void)(expr); } while (0)
 
@@ -40,35 +40,35 @@ typedef int SOCK_BOOL;
 #define SOCK_UTIL_DEFAULT_PORT  6666
 #define SOCK_UTIL_DEFAULT_PATH  "../workdir/ipc/sock-util-default"
 #define SOCK_DISPLAY_DAEMON_PATH "../workdir/ipc/display-sock"
-#define sock_log		printf
+#define sock_log        printf
 #else
 #include "encoder_comm.h"
 #define SOCK_UTIL_DEFAULT_PORT  6666
 #define SOCK_UTIL_DEFAULT_PATH  "/ipc/sock-util-default"
 #define SOCK_DISPLAY_DAEMON_PATH "/ipc/display-sock"
 
-#define sock_log		ALOGI
+#define sock_log        ALOGI
 #endif
 
 typedef enum _sock_conn_status{
-	disconnect	=-1,
-	normal		=0,
-	readable	=1
+    disconnect    =-1,
+    normal        =0,
+    readable    =1
 }sock_conn_status_t;
 
 
-#define DEBUG_SOCK_SERVER	0
-#define DEBUG_SOCK_CLIENT	0
+#define DEBUG_SOCK_SERVER    0
+#define DEBUG_SOCK_CLIENT    0
 
 typedef enum _sock_conn_type{
-	SOCK_CONN_TYPE_ABS_SOCK  = 0,
-	SOCK_CONN_TYPE_UNIX_SOCK = 1,
-	SOCK_CONN_TYPE_INET_SOCK = 2,
+    SOCK_CONN_TYPE_ABS_SOCK  = 0,
+    SOCK_CONN_TYPE_UNIX_SOCK = 1,
+    SOCK_CONN_TYPE_INET_SOCK = 2,
 }SOCK_conn_type_t;
 
 
-#define SOCK_USLEEP_TIME  	100      //sleep 100us
-#define SOCK_TIMEOUT_TIME 	10000000 //timeout 10s
+#define SOCK_USLEEP_TIME      100      //sleep 100us
+#define SOCK_TIMEOUT_TIME     10000000 //timeout 10s
 
 
 #ifdef __cplusplus

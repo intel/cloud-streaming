@@ -403,7 +403,7 @@ void encoder_properties_sanity_check(encoder_info_t *info) {
         {ICR_ENCODER_ROI_WIDTH,               (int*)&info->roi_info.width,        UNSET_PROP },
         {ICR_ENCODER_ROI_HEIGHT,              (int*)&info->roi_info.height,       UNSET_PROP },
         {ICR_ENCODER_ROI_VALUE,               (int*)&info->roi_info.roi_value,    UNSET_PROP },
-        {ICR_ENCODER_FILTER_THREADS,          (int*)&info->filter_nbthreads,	       1     },
+        {ICR_ENCODER_FILTER_THREADS,          (int*)&info->filter_nbthreads,           1     },
         {ICR_ENCODER_LOW_DELAY_BRC,           &low_delay_brc,                          0     },
         { ICR_ENCODER_SKIP_FRAME,             &skipFrame,                              0     },
     };

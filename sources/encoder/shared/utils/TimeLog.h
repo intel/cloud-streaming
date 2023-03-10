@@ -26,7 +26,7 @@
 #define IRR_TIME_LOG_DIFF_THRESHOLD_US  (0.5*1000)  // 0.5ms
 
 // Timelog control
-#define IRR_TIME_LOG			1 // timelog on/off
+#define IRR_TIME_LOG            1 // timelog on/off
 
 #if BUILD_FOR_HOST
 #define ATRACE_NAME(...)
@@ -91,73 +91,73 @@ typedef enum{
 
 /*
   *   Usage :
-  *	1)  Simple usage, log on TimeLog object constructor and desctructor, 
+  *    1)  Simple usage, log on TimeLog object constructor and desctructor, 
   *        Set mode = 0,  this is the easist way to get function enter and exit timestamp.
   *        Example :
-  *			void function(...) 
-  *  			{
-  *				TimeLog log("func_name");
+  *            void function(...) 
+  *              {
+  *                TimeLog log("func_name");
   *
-  *				// ...
-  * 			}
+  *                // ...
+  *             }
   *
-  *	2) Advance usages 
+  *    2) Advance usages 
   *        2-1) Set mode = 1,  manually control when to begin and end time log.
   *               Example :
-  *			void function(...) 
-  *  			{
-  *				TimeLog log("func_name", 1);
+  *            void function(...) 
+  *              {
+  *                TimeLog log("func_name", 1);
   *
-  *				// ... other logic ...
-  *								
-  *				log.begin("task_name");
-  *				// ... the task to be measured ...	  			
-  *				log.end();
+  *                // ... other logic ...
+  *                                
+  *                log.begin("task_name");
+  *                // ... the task to be measured ...                  
+  *                log.end();
   *
-  *				// ... other logic ...
-  * 			}
+  *                // ... other logic ...
+  *             }
   *
-  *	    	
+  *            
   *        2-2) Use idx1 and idx2 parameters to pass meaningful info in log, like function call count or task index
   *               Example :
-  *			static long func_call_index = 0;
-  *			void function(...) 
-  *  			{
-  *				TimeLog log("func_name", 0, func_call_index++);
+  *            static long func_call_index = 0;
+  *            void function(...) 
+  *              {
+  *                TimeLog log("func_name", 0, func_call_index++);
   *
-  *				// ...
-  * 			}
+  *                // ...
+  *             }
   *
-  * 	   2-3) Use mask mode for advanced printing:
-  * 	        TIME_IRRF and TIME_IRRB will add IRRB_/IRRF_ prefix to the head of the 1st parameter.
-  * 	        TIME_DIFF will only print the function with time cost larger than IRR_TIME_LOG_DIFF_THRESHOLD_US (0.5ms currently)
-  * 	        TIME_VERB will print more verbose log when property set to be verbose
-  * 	        Example:
-  * 	            TimeLog log(__FUNCTION__, TIME_IRRF|TIME_DIFF);
-  * 	            TimeLog log(__FUNCTION__, TIME_VERB);
+  *        2-3) Use mask mode for advanced printing:
+  *             TIME_IRRF and TIME_IRRB will add IRRB_/IRRF_ prefix to the head of the 1st parameter.
+  *             TIME_DIFF will only print the function with time cost larger than IRR_TIME_LOG_DIFF_THRESHOLD_US (0.5ms currently)
+  *             TIME_VERB will print more verbose log when property set to be verbose
+  *             Example:
+  *                 TimeLog log(__FUNCTION__, TIME_IRRF|TIME_DIFF);
+  *                 TimeLog log(__FUNCTION__, TIME_VERB);
   */
 
 class TimeLog {
 public :
-	TimeLog(const char* name, int mode = 0, unsigned long idx1 = 0,  unsigned long idx2 = 0);
-	~TimeLog();
+    TimeLog(const char* name, int mode = 0, unsigned long idx1 = 0,  unsigned long idx2 = 0);
+    ~TimeLog();
 
-	void begin(const char* name, unsigned long idx1 = 0,  unsigned long idx2 = 0);
-	void end();
+    void begin(const char* name, unsigned long idx1 = 0,  unsigned long idx2 = 0);
+    void end();
 
     void updateProperty();
 
 private :
-	std::string		m_enter_name;
+    std::string        m_enter_name;
     std::string     m_begin_name;
     std::string     m_prefix;
-	int				m_mode;
-	unsigned long 	m_idx1;
-	unsigned long 	m_idx2;
-	struct timeval 	m_enter;
-	struct timeval 	m_begin;
-	struct timeval 	m_end;
-	struct timeval 	m_exit;
+    int                m_mode;
+    unsigned long     m_idx1;
+    unsigned long     m_idx2;
+    struct timeval     m_enter;
+    struct timeval     m_begin;
+    struct timeval     m_end;
+    struct timeval     m_exit;
 
     static int g_timelog_level;
     static bool g_isInitialized;
