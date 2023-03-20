@@ -793,9 +793,18 @@ void ICSP2PClient::InsertFrame(ga_packet_t* packet) {
       }
 
       if (pMsg != nullptr) {
+          uint32 encode_time = (uint32)(meta_data.encoding_end - meta_data.encoding_start);
+
           gLatencyServerInstance->SetProcessingFrameId(pMsg, frameToSend);
           gLatencyServerInstance->SetSendTime(pMsg);
-          gLatencyServerInstance->SetEncodeTime(pMsg, (uint32)(meta_data.encoding_end - meta_data.encoding_start));
+          gLatencyServerInstance->SetEncodeTime(pMsg, encode_time);
+
+          if (gLatencyServerInstance->GetReceivedTime(pMsg)) {
+              uint64 server_send_time_ms = gLatencyServerInstance->GetSendTime(pMsg) / (uint64)1000000;
+              uint64 server_received_time_ms = gLatencyServerInstance->GetReceivedTime(pMsg) / (uint64)1000000;
+              uint64 server_render_time = server_send_time_ms - server_received_time_ms - encode_time;
+              gLatencyServerInstance->SetRenderTime(pMsg, server_render_time);
+          }
 
           int64_t timediff = current_time - prev_time;
           ga_logger(Severity::DBG, "ics-p2p-client: InsertFrame: timediff from prev InsertFrame call: %lld ms\n",
