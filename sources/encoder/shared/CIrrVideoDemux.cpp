@@ -149,8 +149,6 @@ int CIrrVideoDemux::readPacket(IrrPacket *irrpkt) {
             }
         } else if (m_nLastEncodeFrameTs == m_nLastFrameTs) {
             int64_t time_wait_const = 1000000 / getMinFpsEnc();
-            if (m_timeoutCount < 30)
-                time_wait_const = frame_mcs + frame_mcs/10;
             time_to_wait = std::chrono::microseconds(time_wait_const/10);
             for (int i = 0; i < 10; i++) {
                 wait_status = m_cv.wait_for(lock, time_to_wait);
@@ -160,10 +158,6 @@ int CIrrVideoDemux::readPacket(IrrPacket *irrpkt) {
             }
             if (wait_status == std::cv_status::timeout) {
                 m_nLastFrameTs = curr_mcs;
-                m_timeoutCount++;
-            }
-            else {
-                m_timeoutCount = 0;
             }
         }
     }
