@@ -30,7 +30,7 @@ dnl OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 dnl
 include(begin.m4)
 
-DECLARE(`FFMPEG_VER',`d79c240')
+DECLARE(`FFMPEG_VER',`n6.0')
 dnl Using github mirror to avoid pulling from different locations which minimizes
 dnl dnl impact on the CI in case of outages.
 DECLARE(`FFMPEG_REPO_URL',https://github.com/FFmpeg/FFmpeg.git)

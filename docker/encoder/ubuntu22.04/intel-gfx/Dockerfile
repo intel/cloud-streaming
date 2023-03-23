@@ -66,7 +66,14 @@ RUN apt-get update && \
 ARG FFMPEG_REPO=https://github.com/FFmpeg/FFmpeg.git
 RUN git clone $FFMPEG_REPO /opt/build/ffmpeg && \
   cd /opt/build/ffmpeg && \
-  git checkout d79c240
+  git checkout n6.0
+
+COPY patches/ffmpeg /opt/build/ffmpeg
+RUN cd /opt/build/ffmpeg && { set -e; \
+  for patch_file in $(find -iname "*.patch" | sort -n); do \
+    echo "Applying: ${patch_file}"; \
+    patch -p1 < ${patch_file}; \
+  done; }
 
 RUN cd /opt/build/ffmpeg && \
   ./configure \
