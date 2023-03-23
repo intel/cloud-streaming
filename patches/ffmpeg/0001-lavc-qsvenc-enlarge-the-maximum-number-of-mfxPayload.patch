@@ -1,0 +1,30 @@
+From c6d0e620e329512469fd23664da099e2cd059e56 Mon Sep 17 00:00:00 2001
+From: Haihao Xiang <haihao.xiang@intel.com>
+Date: Wed, 16 Mar 2022 12:30:09 +0800
+Subject: [PATCH 1/2] lavc/qsvenc: enlarge the maximum number of mfxPayload on
+ mfxEncodeCtrl
+
+The next commit and other commits in future may support more mfxPayload
+for encoding
+
+Signed-off-by: Haihao Xiang <haihao.xiang@intel.com>
+---
+ libavcodec/qsv_internal.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/libavcodec/qsv_internal.h b/libavcodec/qsv_internal.h
+index 5119ef4..3cc8a1b 100644
+--- a/libavcodec/qsv_internal.h
++++ b/libavcodec/qsv_internal.h
+@@ -50,7 +50,7 @@
+ 
+ #define ASYNC_DEPTH_DEFAULT 4       // internal parallelism
+ 
+-#define QSV_MAX_ENC_PAYLOAD 2       // # of mfxEncodeCtrl payloads supported
++#define QSV_MAX_ENC_PAYLOAD 8       // # of mfxEncodeCtrl payloads supported
+ #define QSV_MAX_ENC_EXTPARAM 8      // # of mfxEncodeCtrl extparam supported
+ 
+ #define QSV_MAX_ROI_NUM 256
+-- 
+1.8.3.1
+

@@ -1,0 +1,155 @@
+From 98c8f0a48eee3eb4b35ab748f3374f825829934d Mon Sep 17 00:00:00 2001
+From: Haihao Xiang <haihao.xiang@intel.com>
+Date: Mon, 17 Oct 2022 13:48:34 +0800
+Subject: [PATCH 2/2] lavc/qsvenc_{h264,hevc}: import user data unregistered
+ SEIs if available
+
+option udu_sei is added, user should set udu_sei to true|on|1 if user
+data unregistered SEI is expected.
+
+Verify user data unregistered SEI with commands below:
+$ ffmpeg -y -f lavfi -i testsrc -vf "format=nv12" -c:v libx264 -frames:v 1
+a.h264
+$ ffmpeg -y -init_hw_device qsv -i a.h264 -c:v hevc_qsv -udu_sei 1 b.h265
+$ ffmpeg -y -init_hw_device qsv -i a.h264 -c:v hevc_qsv -udu_sei 0 c.h265
+
+$ ffmpeg -i b.h265 -vf showinfo -f null -
+$ ffmpeg -i c.h265 -vf showinfo -f null -
+
+Signed-off-by: Haihao Xiang <haihao.xiang@intel.com>
+---
+ doc/encoders.texi        |  6 ++++++
+ libavcodec/qsvenc.c      | 47 +++++++++++++++++++++++++++++++++++++++++++++++
+ libavcodec/qsvenc.h      |  1 +
+ libavcodec/qsvenc_h264.c |  1 +
+ libavcodec/qsvenc_hevc.c |  1 +
+ 5 files changed, 56 insertions(+)
+
+diff --git a/doc/encoders.texi b/doc/encoders.texi
+index b02737b..6e9eaa3 100644
+--- a/doc/encoders.texi
++++ b/doc/encoders.texi
+@@ -3566,6 +3566,9 @@ skip_frame metadata indicates the number of missed frames before the current
+ frame.
+ @end table
+ 
++@item udu_sei @var{boolean}
++Import user data unregistered SEI if available into output. Default is 0 (off).
++
+ @end table
+ 
+ @subsection HEVC Options
+@@ -3771,6 +3774,9 @@ skip_frame metadata indicates the number of missed frames before the current
+ frame.
+ @end table
+ 
++@item udu_sei @var{boolean}
++Import user data unregistered SEI if available into output. Default is 0 (off).
++
+ @end table
+ 
+ @subsection MPEG2 Options
+diff --git a/libavcodec/qsvenc.c b/libavcodec/qsvenc.c
+index fc64a08..9e88fb5 100644
+--- a/libavcodec/qsvenc.c
++++ b/libavcodec/qsvenc.c
+@@ -2051,6 +2051,49 @@ static void set_skip_frame_encode_ctrl(AVCodecContext *avctx, const AVFrame *fra
+     return;
+ }
+ 
++static int set_udu_encode_ctrl(AVCodecContext *avctx,  QSVEncContext *q,
++                               const AVFrame *frame, mfxEncodeCtrl *enc_ctrl)
++{
++    if (!frame || !q->udu_sei)
++        return 0;
++
++    for (int i = 0; i < frame->nb_side_data && enc_ctrl->NumPayload < QSV_MAX_ENC_PAYLOAD; i++) {
++        AVFrameSideData *sd = NULL;
++        mfxPayload *payload = NULL;
++        mfxU8* sei_data;
++        int j;
++
++        sd = frame->side_data[i];
++        if (sd->type != AV_FRAME_DATA_SEI_UNREGISTERED)
++            continue;
++
++        /* SEI type: 1 byte, SEI size: sd->size / 255 + 1 bytes, SEI data: sd->size bytes */
++        payload = av_malloc(sizeof(*payload) + sd->size / 255 + 2 + sd->size);
++        if (!payload)
++            return AVERROR(ENOMEM);
++
++        memset(payload, 0, sizeof(*payload));
++        sei_data = (mfxU8 *)(payload + 1);
++        // SEI header
++        sei_data[0] = 5;
++        for (j = 0; j < sd->size / 255; j++)
++            sei_data[j + 1] = 0xff;
++        sei_data[j + 1] = sd->size % 255;
++        // SEI data
++        memcpy(&sei_data[sd->size / 255 + 2], sd->data, sd->size);
++
++        payload->BufSize = sd->size + sd->size / 255 + 2;
++        payload->NumBit = payload->BufSize * 8;
++        payload->Type = 5;
++        payload->Data = sei_data;
++
++        enc_ctrl->Payload[enc_ctrl->NumPayload] = payload;
++        enc_ctrl->NumPayload++;
++    }
++
++    return 0;
++}
++
+ static int update_qp(AVCodecContext *avctx, QSVEncContext *q)
+ {
+     int updated = 0, new_qp = 0;
+@@ -2369,6 +2412,10 @@ static int encode_frame(AVCodecContext *avctx, QSVEncContext *q,
+         ret = set_roi_encode_ctrl(avctx, frame, enc_ctrl);
+         if (ret < 0)
+             goto free;
++
++        ret = set_udu_encode_ctrl(avctx, q, frame, enc_ctrl);
++        if (ret < 0)
++            goto free;
+     }
+     if ((avctx->codec_id == AV_CODEC_ID_H264 ||
+          avctx->codec_id == AV_CODEC_ID_H265) &&
+diff --git a/libavcodec/qsvenc.h b/libavcodec/qsvenc.h
+index 4a6fa2c..5b66d31 100644
+--- a/libavcodec/qsvenc.h
++++ b/libavcodec/qsvenc.h
+@@ -255,6 +255,7 @@ typedef struct QSVEncContext {
+     int transform_skip;
+ 
+     int a53_cc;
++    int udu_sei;
+ 
+ #if QSV_HAVE_MF
+     int mfmode;
+diff --git a/libavcodec/qsvenc_h264.c b/libavcodec/qsvenc_h264.c
+index 071a9a7..31de8d7 100644
+--- a/libavcodec/qsvenc_h264.c
++++ b/libavcodec/qsvenc_h264.c
+@@ -166,6 +166,7 @@ static const AVOption options[] = {
+ #endif
+ 
+     { "repeat_pps", "repeat pps for every frame", OFFSET(qsv.repeat_pps), AV_OPT_TYPE_BOOL, { .i64 = 0 }, 0, 1, VE },
++    { "udu_sei",    "Use user data unregistered SEI if available", OFFSET(qsv.udu_sei), AV_OPT_TYPE_BOOL,   { .i64 = 0 }, 0, 1, VE },
+ 
+     { NULL },
+ };
+diff --git a/libavcodec/qsvenc_hevc.c b/libavcodec/qsvenc_hevc.c
+index 5e23ca9..5941c33 100644
+--- a/libavcodec/qsvenc_hevc.c
++++ b/libavcodec/qsvenc_hevc.c
+@@ -362,6 +362,7 @@ static const AVOption options[] = {
+     { "int_ref_cycle_size", "Number of frames in the intra refresh cycle",       OFFSET(qsv.int_ref_cycle_size),      AV_OPT_TYPE_INT, { .i64 = -1 },               -1, UINT16_MAX, VE },
+     { "int_ref_qp_delta",   "QP difference for the refresh MBs",                 OFFSET(qsv.int_ref_qp_delta),        AV_OPT_TYPE_INT, { .i64 = INT16_MIN }, INT16_MIN,  INT16_MAX, VE },
+     { "int_ref_cycle_dist",   "Distance between the beginnings of the intra-refresh cycles in frames",  OFFSET(qsv.int_ref_cycle_dist),      AV_OPT_TYPE_INT, { .i64 = -1 }, -1, INT16_MAX, VE },
++    { "udu_sei",    "Use user data unregistered SEI if available", OFFSET(qsv.udu_sei), AV_OPT_TYPE_BOOL,   { .i64 = 0 }, 0, 1, VE },
+ 
+     { NULL },
+ };
+-- 
+1.8.3.1
+
