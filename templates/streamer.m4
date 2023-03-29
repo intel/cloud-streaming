@@ -31,6 +31,13 @@ dnl
 include(begin.m4)
 
 include(sioclient.m4)
+dnl If BUILD_ENCODER is already defined (i.e. encoder component is already
+dnl configured for the build), we will reuse what user has configured
+dnl already. If it's not defined, we will go with our minimal dependency on the
+dnl component which is just irrv protocol without server itself.
+ifdef(`BUILD_ENCODER',,`dnl
+  define(`ENCODER_BUILD_SERVER',OFF)
+  include(encoder.m4)')
 
 define(`STREAMER_BUILD_DEPS',gcc g++ dnl
   libssl-dev libgtest-dev make nlohmann-json3-dev pkg-config libprotobuf-dev protobuf-compiler)

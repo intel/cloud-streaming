@@ -22,7 +22,7 @@
 #include <thread>
 
 #include "sock_client.h"
-#include "irrv_protocol.h"
+#include "irrv/irrv_protocol.h"
 
 enum nal_unit_type_e
 {
@@ -100,7 +100,7 @@ public:
 
     int irrv_op(irrv_vctrl_t& ctrl);
 
-    template<irrv_ctrl_type_t CtrlType>
+    template<irrv_vctrl_type CtrlType>
     inline int irrv_op() {
         irrv_vctrl_t ctrl{};
         ctrl.ctrl_type = CtrlType;
@@ -108,7 +108,7 @@ public:
         return irrv_op(ctrl);
     }
 
-    template<irrv_ctrl_type_t CtrlType>
+    template<irrv_vctrl_type CtrlType>
     inline int irrv_op(unsigned int value) {
         irrv_vctrl_t ctrl{};
         ctrl.ctrl_type = CtrlType;

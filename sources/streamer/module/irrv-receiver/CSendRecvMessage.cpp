@@ -29,7 +29,7 @@
 #include "ga-common.h"
 #include "ga-module.h"
 
-#include "irrv_protocol.h"
+#include "irrv/irrv_protocol.h"
 #include "CSendRecvMessage.h"
 
 #include "encoder-common.h"

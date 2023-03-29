@@ -41,7 +41,7 @@ irrv_uuid_t auth_key = DEFAULT_AUTH_KEY;
 
 unsigned long g_wb_frame_idx = 0;
 
-const std::map<VCtrlType, std::string> VCtrlTypeMap = {
+const std::map<irrv_vctrl_type, std::string> VCtrlTypeMap = {
     { IRRV_CTRL_NONE                 , "IRRV_CTRL_NONE                 " },
     { IRRV_CTRL_KEYFRAME_SETTING     , "IRRV_CTRL_KEYFRAME_SETTING     " },
     { IRRV_CTRL_BITRATE_SETTING      , "IRRV_CTRL_BITRATE_SETTING      " },

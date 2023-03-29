@@ -30,16 +30,25 @@ dnl OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 dnl
 include(begin.m4)
 
-define(`ENCODER_BUILD_DEPS',`dnl
-  cmake gcc g++ libdrm-dev dnl
-  ifdef(`BUILD_ONEVPL',,libvpl-dev) dnl
-  ifdef(`BUILD_LIBVA2',,libva-dev) dnl
-  make patch pkg-config')
+DECLARE(`ENCODER_BUILD_SERVER',ON)
 
-define(`ENCODER_INSTALL_DEPS',`dnl
-  ifdef(`BUILD_ONEVPL',,libvpl2) dnl
-  ifdef(`BUILD_ONEVPLGPU',,libmfxgen1) dnl
-  ifdef(`BUILD_LIBVA2',,libva2 libva-drm2)')
+ifelse(ENCODER_BUILD_SERVER,ON,`dnl
+  define(`ENCODER_BUILD_DEPS',`dnl
+    cmake gcc g++ libdrm-dev dnl
+    ifdef(`BUILD_ONEVPL',,libvpl-dev) dnl
+    ifdef(`BUILD_LIBVA2',,libva-dev) dnl
+    make patch pkg-config')
+
+  define(`ENCODER_INSTALL_DEPS',`dnl
+    ifdef(`BUILD_ONEVPL',,libvpl2) dnl
+    ifdef(`BUILD_ONEVPLGPU',,libmfxgen1) dnl
+    ifdef(`BUILD_LIBVA2',,libva2 libva-drm2)')
+')
+
+ifelse(ENCODER_BUILD_SERVER,OFF,`dnl
+  define(`ENCODER_BUILD_DEPS',`cmake gcc g++ make pkg-config')
+  define(`ENCODER_INSTALL_DEPS',`')
+')
 
 pushdef(`CFLAGS',`-D_FORTIFY_SOURCE=2 -fstack-protector-strong')
 
@@ -49,6 +58,7 @@ COPY sources/encoder /opt/build/encoder
 RUN cd BUILD_HOME/encoder \
   && mkdir _build && cd _build \
   && cmake \
+    -DBUILD_SERVER=ENCODER_BUILD_SERVER \
     -DCMAKE_C_FLAGS="CFLAGS" \
     -DCMAKE_CXX_FLAGS="CFLAGS" \
     -DCMAKE_INSTALL_PREFIX=BUILD_PREFIX \
