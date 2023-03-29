@@ -245,9 +245,9 @@ int CSendRecvMessage::irrv_op(std::vector<irrv_vctrl_event_t>& ctrls) {
 int CSendRecvMessage::irrv_set_rolling_intra_refresh(unsigned int type, unsigned int cycle_size, unsigned int qp_delta) {
     irrv_vctrl_t ctrl{};
     ctrl.ctrl_type   = IRRV_CTRL_RIR_SETTING;
-    ctrl.reserved[0] = type;
-    ctrl.reserved[1] = cycle_size;
-    ctrl.reserved[2] = qp_delta;
+    ctrl.rir.type = type;
+    ctrl.rir.cycle_size = cycle_size;
+    ctrl.rir.qp_delta = qp_delta;
     ga_logger(Severity::INFO, LOG_PREFIX "IRRV_CTRL_RIR_SETTING: type=%d, cycle_size=%d, qp_delta=%d\n",
       type, cycle_size, qp_delta);
     return irrv_op(ctrl);

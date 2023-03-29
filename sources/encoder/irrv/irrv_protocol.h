@@ -176,10 +176,22 @@ typedef enum _irrv_vctrl_type {
     IRRV_CTRL_END
 } irrv_vctrl_type;
 
+typedef struct _irrv_rir_t {
+    uint32_t reserved;
+    uint32_t type;
+    uint32_t cycle_size;
+    uint32_t qp_delta;
+} irrv_rir_t;
+
 typedef struct _irrv_vctrl_t {
     irrv_vctrl_type  ctrl_type;
-    uint32_t         value;
-    uint32_t         reserved[6];
+    union {
+        struct {
+            uint32_t value;
+            uint32_t reserved[6];
+        };
+        irrv_rir_t rir;
+    };
 } irrv_vctrl_t;
 
 typedef struct _irrv_vctrl_event_t {
