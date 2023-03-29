@@ -183,6 +183,19 @@ typedef struct _irrv_rir_t {
     uint32_t qp_delta;
 } irrv_rir_t;
 
+typedef struct _irrv_roi_t {
+    uint32_t roi_num; // TODO: it does not make sense to have it here since
+                      // structure specifies single roi region
+    uint32_t x;
+    uint32_t y;
+    uint32_t width;
+    uint32_t height;
+    uint32_t value; // Specifies ROI delta QP or ROI priority.
+                    // Refer to VAEncMiscParameterBufferROI in libva header file va.h.
+                    // TODO: clarify this definition since value depends on BRC mode and we
+                    // likely miss fields to fully specify it.
+} irrv_roi_t;
+
 typedef struct _irrv_vctrl_t {
     irrv_vctrl_type  ctrl_type;
     union {
@@ -191,6 +204,7 @@ typedef struct _irrv_vctrl_t {
             uint32_t reserved[6];
         };
         irrv_rir_t rir;
+        irrv_roi_t roi;
     };
 } irrv_vctrl_t;
 

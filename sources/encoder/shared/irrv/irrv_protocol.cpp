@@ -430,11 +430,11 @@ int irrv_checknewconn(void *opaque)
                                 roi_num = vctrl.value;
 
                                 do {
-                                    roi_para[roi_index].x         = vctrl.reserved[0];
-                                    roi_para[roi_index].y         = vctrl.reserved[1];
-                                    roi_para[roi_index].width     = vctrl.reserved[2];
-                                    roi_para[roi_index].height    = vctrl.reserved[3];
-                                    roi_para[roi_index].roi_value = vctrl.reserved[4];
+                                    roi_para[roi_index].x         = vctrl.roi.x;
+                                    roi_para[roi_index].y         = vctrl.roi.y;
+                                    roi_para[roi_index].width     = vctrl.roi.width;
+                                    roi_para[roi_index].height    = vctrl.roi.height;
+                                    roi_para[roi_index].roi_value = vctrl.roi.value;
                                     ++roi_index;
 
                                     if(--roi_num) {
