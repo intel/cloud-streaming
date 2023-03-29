@@ -387,7 +387,7 @@ int irrv_checknewconn(void *opaque)
                                 irr_stream_set_rolling_intra_refresh(vctrl.rir.type, vctrl.rir.cycle_size, vctrl.rir.qp_delta);
                                 break;
                             case IRRV_CTRL_MIN_MAX_QP_SETTING:
-                                irr_stream_set_min_max_qp(vctrl.reserved[0], vctrl.reserved[1]);
+                                irr_stream_set_min_max_qp(vctrl.minmax_qp.min_qp, vctrl.minmax_qp.max_qp);
                                 break;
                             case IRRV_CTRL_RESOLUTION:
                                 irr_stream_change_resolution(vctrl.reserved[0], vctrl.reserved[1]);
