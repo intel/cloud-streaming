@@ -196,6 +196,12 @@ typedef struct _irrv_roi_t {
                     // likely miss fields to fully specify it.
 } irrv_roi_t;
 
+typedef struct _irrv_minmax_qp_t {
+    uint32_t reserved;
+    uint32_t min_qp;
+    uint32_t max_qp;
+} irrv_minmax_qp_t;
+
 typedef struct _irrv_vctrl_t {
     irrv_vctrl_type  ctrl_type;
     union {
@@ -205,6 +211,7 @@ typedef struct _irrv_vctrl_t {
         };
         irrv_rir_t rir;
         irrv_roi_t roi;
+        irrv_minmax_qp_t minmax_qp;
     };
 } irrv_vctrl_t;
 

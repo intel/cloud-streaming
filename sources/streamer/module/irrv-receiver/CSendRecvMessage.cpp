@@ -284,8 +284,8 @@ int CSendRecvMessage::irrv_set_region_of_interest(int roi_num, AVRoI2 roi_para[]
 int CSendRecvMessage::irrv_set_min_max_qp(unsigned int min_qp, unsigned int max_qp) {
     irrv_vctrl_t ctrl{};
     ctrl.ctrl_type   = IRRV_CTRL_MIN_MAX_QP_SETTING;
-    ctrl.reserved[0] = min_qp;
-    ctrl.reserved[1] = max_qp;
+    ctrl.minmax_qp.min_qp = min_qp;
+    ctrl.minmax_qp.max_qp = max_qp;
     ga_logger(Severity::INFO, LOG_PREFIX "IRRV_CTRL_MIN_MAX_QP_SETTING: min_qp=%d, max_qp=%d\n", min_qp, max_qp);
     return irrv_op(ctrl);
 }
