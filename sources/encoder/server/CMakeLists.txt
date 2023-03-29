@@ -22,6 +22,7 @@ add_executable(icr_encoder
     display_video_renderer.cpp)
 
 target_link_libraries(icr_encoder
+    irrv-protocol
     irr_encoder
     sock_util
     ${CMAKE_DL_LIBS}

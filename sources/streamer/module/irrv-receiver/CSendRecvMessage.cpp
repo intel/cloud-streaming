@@ -358,21 +358,6 @@ int CSendRecvMessage::irrv_set_client_feedback(unsigned int delay, unsigned int 
     return irrv_op(ctrl);
 }
 
-enum PipeMessageType
-{
-    MESSAGE_TYPE_NONE = 0,
-    MESSAGE_TYPE_TCAE_FEEDBACK = 1,
-    MESSAGE_TYPE_RESOLUTION_CHANGE = 2,
-    MESSAGE_TYPE_SET_VIDEO_ALPHA = 3,
-};
-
-struct PipeMessage
-{
-    uint32_t magic;
-    uint32_t type;
-    uint32_t data[6];
-};
-
 void CSendRecvMessage::pipe_set_client_feedback(uint32_t delay, uint32_t size)
 {
     if (!private_pipe_connect()) {
@@ -380,9 +365,9 @@ void CSendRecvMessage::pipe_set_client_feedback(uint32_t delay, uint32_t size)
         return;
     }
 
-    PipeMessage p = {};
+    irrv_pipe_message_t p = {};
     p.magic = 0xdeadbeef;
-    p.type = MESSAGE_TYPE_TCAE_FEEDBACK;
+    p.type = IRRV_PIPE_MESSAGE_TYPE_TCAE_FEEDBACK;
     p.data[0] = delay;
     p.data[1] = size;
 
@@ -403,9 +388,9 @@ void CSendRecvMessage::pipe_set_resolution_change(uint32_t width, uint32_t heigh
 
     ga_logger(Severity::INFO, LOG_PREFIX "setting resolution to %dx%d\n", width, height);
 
-    PipeMessage p = {};
+    irrv_pipe_message_t p = {};
     p.magic = 0xdeadbeef;
-    p.type = MESSAGE_TYPE_RESOLUTION_CHANGE;
+    p.type = IRRV_PIPE_MESSAGE_TYPE_RESOLUTION_CHANGE;
     p.data[0] = width;
     p.data[1] = height;
 
@@ -426,9 +411,9 @@ void CSendRecvMessage::pipe_set_video_alpha(uint32_t action)
 
     ga_logger(Severity::INFO, LOG_PREFIX "setting video alpha mode to %d\n", action);
 
-    PipeMessage p = {};
+    irrv_pipe_message_t p = {};
     p.magic = 0xdeadbeef;
-    p.type = MESSAGE_TYPE_SET_VIDEO_ALPHA;
+    p.type = IRRV_PIPE_MESSAGE_TYPE_SET_VIDEO_ALPHA;
     p.data[0] = action;
 
     int ret = write(m_privatePipe, &p, sizeof(p));

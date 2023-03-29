@@ -24,6 +24,7 @@
 #include <sys/un.h>
 #include <poll.h>
 
+#include "irrv/irrv_protocol.h"
 #include "display_server_vhal.h"
 #include "display_video_renderer.h"
 #include "utils/TimeLog.h"
@@ -324,21 +325,6 @@ void DisplayServerVHAL::CommandHandler(CommandType cmd, const vhal::client::fram
     }
 }
 
-enum PipeMessageType
-{
-    MESSAGE_TYPE_NONE = 0,
-    MESSAGE_TYPE_TCAE_FEEDBACK = 1,
-    MESSAGE_TYPE_RESOLUTION_CHANGE = 2,
-    MESSAGE_TYPE_SET_VIDEO_ALPHA = 3,
-};
-
-struct PipeMessage
-{
-    uint32_t magic;
-    uint32_t type;
-    uint32_t data[6];
-};
-
 int DisplayServerVHAL::PipeMsgHandler()
 {
     // create epoll
@@ -372,7 +358,7 @@ int DisplayServerVHAL::PipeMsgHandler()
             }
         }
 
-        PipeMessage msg;
+        irrv_pipe_message_t msg;
 
         for (int n = 0; n < nfds; ++n)
         {
@@ -383,13 +369,13 @@ int DisplayServerVHAL::PipeMsgHandler()
             }
             switch (msg.type)
             {
-                case MESSAGE_TYPE_TCAE_FEEDBACK:
+                case IRRV_PIPE_MESSAGE_TYPE_TCAE_FEEDBACK:
                     irr_stream_set_client_feedback(msg.data[0], msg.data[1]); // (delay, size)
                     break;
-                case MESSAGE_TYPE_RESOLUTION_CHANGE:
+                case IRRV_PIPE_MESSAGE_TYPE_RESOLUTION_CHANGE:
                     m_vhalReceiver->setMode(msg.data[0], msg.data[1]); // (new width, new height)
                     break;
-                case MESSAGE_TYPE_SET_VIDEO_ALPHA:
+                case IRRV_PIPE_MESSAGE_TYPE_SET_VIDEO_ALPHA:
                     m_vhalReceiver->setVideoAlpha(msg.data[0]); // (action)
                     break;
                 default:

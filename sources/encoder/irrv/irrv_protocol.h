@@ -245,5 +245,20 @@ typedef struct _irrv_message_event_t {
     irrv_message_t  msg;
 } irrv_message_event_t;
 
+typedef enum _irrv_pipe_message_type
+{
+    IRRV_PIPE_MESSAGE_TYPE_NONE = 0,
+    IRRV_PIPE_MESSAGE_TYPE_TCAE_FEEDBACK = 1,
+    IRRV_PIPE_MESSAGE_TYPE_RESOLUTION_CHANGE = 2,
+    IRRV_PIPE_MESSAGE_TYPE_SET_VIDEO_ALPHA = 3,
+} irrv_pipe_message_type;
+
+typedef struct _irrv_pipe_message_t
+{
+    uint32_t magic;
+    uint32_t type; /* see irrv_pipe_message_type */
+    uint32_t data[6];
+} irrv_pipe_message_t;
+
 #endif // IRRV_PROTOCOL_H
 
