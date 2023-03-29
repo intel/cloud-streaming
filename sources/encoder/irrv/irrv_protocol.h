@@ -102,19 +102,19 @@
 #define DEFAULT_AUTH_KEY        "irrv_key"
 
 typedef struct _irrv_event_t {
-    unsigned int    magic;
-    unsigned int    type;
-    unsigned int    size;
-    unsigned int    value;
+    uint32_t        magic;
+    uint32_t        type;
+    uint32_t        size;
+    uint32_t        value;
 } irrv_event_t;
 
 typedef struct _irrv_vhead_t {
-    unsigned int    flags;
-    unsigned int    width;
-    unsigned int    height;
-    unsigned int    format;
-    unsigned int    auth;
-    unsigned int    reserved[3];
+    uint32_t        flags;
+    uint32_t        width;
+    uint32_t        height;
+    uint32_t        format;
+    uint32_t        auth;
+    uint32_t        reserved[3];
 } irrv_vhead_t;
 
 typedef struct _irrv_vhead_event_t {
@@ -129,13 +129,13 @@ typedef enum {
 } irrv_vframe_flags_t;
 
 typedef struct _irrv_vframe_t {
-    unsigned int    flags;
-    unsigned int    data_size;
-    unsigned int    video_size;
-    unsigned int    alpha_size;
-    unsigned int    width;
-    unsigned int    height;
-    unsigned int    reserved[2];
+    uint32_t        flags;
+    uint32_t        data_size;
+    uint32_t        video_size;
+    uint32_t        alpha_size;
+    uint32_t        width;
+    uint32_t        height;
+    uint32_t        reserved[2];
 } irrv_vframe_t;
 
 typedef struct _irrv_vframe_event_t {
@@ -178,8 +178,8 @@ typedef enum _irrv_vctrl_type {
 
 typedef struct _irrv_vctrl_t {
     irrv_vctrl_type  ctrl_type;
-    unsigned int     value;
-    unsigned int     reserved[6];
+    uint32_t         value;
+    uint32_t         reserved[6];
 } irrv_vctrl_t;
 
 typedef struct _irrv_vctrl_event_t {
@@ -216,7 +216,7 @@ typedef struct _irrv_vauth_t {
     irrv_uuid_t    id;
     irrv_uuid_t    key;
     AuthResult     result;
-    unsigned int   reserved[6];
+    uint32_t       reserved[6];
 } irrv_vauth_t;
 
 typedef struct _irrv_vauth_event_t {
@@ -239,8 +239,8 @@ typedef enum _MessageType {
 } MessageType;
 typedef struct _irrv_message_t {
     MessageType      msg_type;
-    unsigned int     value;
-    unsigned int     reserved[6];
+    uint32_t         value;
+    uint32_t         reserved[6];
 } irrv_message_t;
 
 typedef struct _irrv_message_event_t {
