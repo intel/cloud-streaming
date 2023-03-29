@@ -75,34 +75,13 @@ pkg_check_modules(VA REQUIRED libva IMPORTED_TARGET)
 add_library(libva-deps INTERFACE)
 target_link_libraries(libva-deps INTERFACE PkgConfig::VA)
 
-set (executable "icr_encoder")
-
 add_definitions(-DBUILD_FOR_HOST=1)
 
 add_definitions(-Wno-unused-variable -Wno-unused-function -Wno-unused-but-set-variable -Wno-misleading-indentation -Wno-deprecated-declarations)
 
 include_directories(${CMAKE_CURRENT_LIST_DIR})
 
-add_executable( ${executable}
-    cli.cpp
-    main.cpp
-    display_server.cpp
-    display_server_vhal.cpp
-    display_video_renderer.cpp
-    )
-
-target_link_libraries( ${executable}
-    irr_encoder
-    sock_util
-    dl
-    ${M_LIB}
-    libvhal-client-deps
-    libavcodec-deps
-    libva-deps
-    drm-deps)
-
-install(TARGETS ${executable} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-
+add_subdirectory(server)
 add_subdirectory(shared)
 add_subdirectory(sock_util)
 
