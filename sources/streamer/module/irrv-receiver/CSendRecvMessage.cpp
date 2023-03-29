@@ -268,12 +268,12 @@ int CSendRecvMessage::irrv_set_region_of_interest(int roi_num, AVRoI2 roi_para[]
         ctrls[i].event.type  = IRRV_EVENT_VCTRL;
         ctrls[i].event.size  = sizeof(irrv_vctrl_event_t);
         ctrls[i].info.ctrl_type   = IRRV_CTRL_ROI_SETTING;
-        ctrls[i].info.value       = roi_num;
-        ctrls[i].info.reserved[0] = roi_para[i].x;
-        ctrls[i].info.reserved[1] = roi_para[i].y;
-        ctrls[i].info.reserved[2] = roi_para[i].width;
-        ctrls[i].info.reserved[3] = roi_para[i].height;
-        ctrls[i].info.reserved[4] = roi_para[i].roi_value;
+        ctrls[i].info.roi.roi_num = roi_num;
+        ctrls[i].info.roi.x       = roi_para[i].x;
+        ctrls[i].info.roi.y       = roi_para[i].y;
+        ctrls[i].info.roi.width   = roi_para[i].width;
+        ctrls[i].info.roi.height  = roi_para[i].height;
+        ctrls[i].info.roi.value   = roi_para[i].roi_value;
         ga_logger(Severity::INFO, LOG_PREFIX "roi_index=%d, x=%d, y=%d, width=%d, height=%d, roi_value=%d\n",
           i, roi_para[i].x, roi_para[i].y,
           roi_para[i].width, roi_para[i].height, roi_para[i].roi_value);
