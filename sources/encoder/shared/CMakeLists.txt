@@ -53,6 +53,7 @@ target_include_directories(irr_encoder PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(irr_encoder
   PRIVATE
+    irrv-protocol
     sock_util
     libavcodec-deps
     libavfilter-deps
@@ -65,21 +66,5 @@ target_link_libraries(irr_encoder
 
 target_link_options(irr_encoder PRIVATE -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/irr_encoder.map)
 
-if (IS_ABSOLUTE ${CMAKE_INSTALL_INCLUDEDIR})
-  set(PKGCONFIG_HEADER_DIR ${CMAKE_INSTALL_INCLUDEDIR})
-else()
-  set(PKGCONFIG_HEADER_DIR ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR})
-endif()
-
-if (IS_ABSOLUTE ${CMAKE_INSTALL_LIBDIR})
-  set(PKGCONFIG_LIB_DIR ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
-else()
-  set(PKGCONFIG_LIB_DIR ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/pkgconfig)
-endif()
-
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/irrv/irrv.pc.in ${CMAKE_CURRENT_BINARY_DIR}/irrv.pc @ONLY)
-
 install(TARGETS irr_encoder LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-install(FILES ${CMAKE_CURRENT_LIST_DIR}/irrv/irrv_protocol.h DESTINATION ${PKGCONFIG_HEADER_DIR}/irrv/)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/irrv.pc DESTINATION ${PKGCONFIG_LIB_DIR})
 

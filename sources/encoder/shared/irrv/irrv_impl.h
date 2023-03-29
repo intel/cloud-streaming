@@ -17,7 +17,7 @@
 #ifndef IRRV_IMPL_H
 #define IRRV_IMPL_H
 
-#include "irrv_protocol.h"
+#include "irrv/irrv_protocol.h"
 #include <stddef.h>
 
 #ifdef __cplusplus
