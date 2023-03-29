@@ -202,6 +202,12 @@ typedef struct _irrv_minmax_qp_t {
     uint32_t max_qp;
 } irrv_minmax_qp_t;
 
+typedef struct _irrv_resolution_t {
+    uint32_t reserved;
+    uint32_t width;
+    uint32_t height;
+} irrv_resolution_t;
+
 typedef struct _irrv_vctrl_t {
     irrv_vctrl_type  ctrl_type;
     union {
@@ -212,6 +218,7 @@ typedef struct _irrv_vctrl_t {
         irrv_rir_t rir;
         irrv_roi_t roi;
         irrv_minmax_qp_t minmax_qp;
+        irrv_resolution_t resolution;
     };
 } irrv_vctrl_t;
 

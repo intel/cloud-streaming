@@ -390,7 +390,7 @@ int irrv_checknewconn(void *opaque)
                                 irr_stream_set_min_max_qp(vctrl.minmax_qp.min_qp, vctrl.minmax_qp.max_qp);
                                 break;
                             case IRRV_CTRL_RESOLUTION:
-                                irr_stream_change_resolution(vctrl.reserved[0], vctrl.reserved[1]);
+                                irr_stream_change_resolution(vctrl.resolution.width, vctrl.resolution.height);
                                 break;
                             case IRRV_CTRL_CHANGE_CODEC_TYPE:
                                 irr_stream_change_codec((AVCodecID)vctrl.value);

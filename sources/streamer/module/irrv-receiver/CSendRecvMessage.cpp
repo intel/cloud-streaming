@@ -293,8 +293,8 @@ int CSendRecvMessage::irrv_set_min_max_qp(unsigned int min_qp, unsigned int max_
 int CSendRecvMessage::irrv_change_resolution(unsigned int new_width, unsigned int new_height) {
     irrv_vctrl_t ctrl{};
     ctrl.ctrl_type   = IRRV_CTRL_RESOLUTION;
-    ctrl.reserved[0] = new_width;
-    ctrl.reserved[1] = new_height;
+    ctrl.resolution.width  = new_width;
+    ctrl.resolution.height = new_height;
     ga_logger(Severity::INFO, LOG_PREFIX "IRRV_CTRL_RESOLUTION: %dx%d\n", new_width, new_height);
     return irrv_op(ctrl);
 }
