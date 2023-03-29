@@ -19,6 +19,9 @@
 
 #include <stdint.h>
 
+#define IRRV_VERSION_MAJOR 2
+#define IRRV_VERSION_MINOR 0
+
 /*
     Basic communication flow :
     1) server start and listen on specific port
