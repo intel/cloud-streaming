@@ -39,6 +39,14 @@ endif()
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
 
+pkg_check_modules(PKG_IRRV REQUIRED irrv IMPORTED_TARGET)
+
+add_library(irrv-deps INTERFACE)
+target_link_libraries(irrv-deps
+  INTERFACE
+    PkgConfig::PKG_IRRV
+)
+
 add_subdirectory(config)
 add_subdirectory(core)
 add_subdirectory(module)

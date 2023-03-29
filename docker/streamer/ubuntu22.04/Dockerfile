@@ -112,6 +112,29 @@ RUN mkdir -p /opt/lib/pkgconfig && \
 
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    cmake \
+    gcc \
+    g++ \
+    make \
+    pkg-config && \
+  rm -rf /var/lib/apt/lists/*
+COPY sources/encoder /opt/build/encoder
+
+RUN cd /opt/build/encoder \
+  && mkdir _build && cd _build \
+  && cmake \
+    -DBUILD_SERVER=OFF \
+    -DCMAKE_C_FLAGS="-D_FORTIFY_SOURCE=2 -fstack-protector-strong" \
+    -DCMAKE_CXX_FLAGS="-D_FORTIFY_SOURCE=2 -fstack-protector-strong" \
+    -DCMAKE_INSTALL_PREFIX=/opt \
+    -DCMAKE_INSTALL_LIBDIR=/opt/lib \
+    .. \
+  && make VERBOSE=1 -j $(nproc --all) \
+  && make install DESTDIR=/opt/dist \
+  && make install
+
+RUN apt-get update && \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     gcc \
     g++ \
     libssl-dev \

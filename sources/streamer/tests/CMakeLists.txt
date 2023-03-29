@@ -27,7 +27,7 @@ target_include_directories(irrv-client-test
   PRIVATE ../module/irrv-receiver)
 
 target_link_libraries(irrv-client-test
-  PRIVATE GTest::GTest GTest::Main ga Threads::Threads)
+  PRIVATE irrv-deps GTest::GTest GTest::Main ga Threads::Threads)
 
 install(TARGETS irrv-client-test RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
@@ -42,7 +42,7 @@ target_include_directories(irrv-client
   PRIVATE ../module/irrv-receiver)
 
 target_link_libraries(irrv-client
-  PRIVATE ga Threads::Threads)
+  PRIVATE irrv-deps ga Threads::Threads)
 
 install(TARGETS irrv-client RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 

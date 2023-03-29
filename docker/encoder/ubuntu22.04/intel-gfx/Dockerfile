@@ -130,6 +130,7 @@ COPY sources/encoder /opt/build/encoder
 RUN cd /opt/build/encoder \
   && mkdir _build && cd _build \
   && cmake \
+    -DBUILD_SERVER=ON \
     -DCMAKE_C_FLAGS="-D_FORTIFY_SOURCE=2 -fstack-protector-strong" \
     -DCMAKE_CXX_FLAGS="-D_FORTIFY_SOURCE=2 -fstack-protector-strong" \
     -DCMAKE_INSTALL_PREFIX=/opt \

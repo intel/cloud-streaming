@@ -140,7 +140,7 @@ typedef struct _irrv_vframe_event_t {
     irrv_vframe_t   info;
 } irrv_vframe_event_t;
 
-typedef enum _VCtrlType {
+typedef enum _irrv_vctrl_type {
     IRRV_CTRL_NONE                  = 0,
     IRRV_CTRL_KEYFRAME_SETTING      = 1,
     IRRV_CTRL_BITRATE_SETTING       = 2,
@@ -171,10 +171,10 @@ typedef enum _VCtrlType {
     IRRV_CTRL_PROFILE_LEVEL         = 27,
     IRRV_CTRL_CLIENT_FEEDBACK       = 28,
     IRRV_CTRL_END
-} VCtrlType;
+} irrv_vctrl_type;
 
 typedef struct _irrv_vctrl_t {
-    VCtrlType        ctrl_type;
+    irrv_vctrl_type  ctrl_type;
     unsigned int     value;
     unsigned int     reserved[6];
 } irrv_vctrl_t;

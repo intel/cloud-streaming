@@ -24,6 +24,7 @@ target_compile_definitions(irrv-receiver
 
 target_link_libraries(irrv-receiver
   PRIVATE
+    irrv-deps
     ga
     Threads::Threads)
 
