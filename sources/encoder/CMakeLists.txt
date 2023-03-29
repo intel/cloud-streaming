@@ -79,8 +79,7 @@ add_definitions(-DBUILD_FOR_HOST=1)
 
 add_definitions(-Wno-unused-variable -Wno-unused-function -Wno-unused-but-set-variable -Wno-misleading-indentation -Wno-deprecated-declarations)
 
-include_directories(${CMAKE_CURRENT_LIST_DIR})
-
+add_subdirectory(irrv)
 add_subdirectory(server)
 add_subdirectory(shared)
 add_subdirectory(sock_util)
