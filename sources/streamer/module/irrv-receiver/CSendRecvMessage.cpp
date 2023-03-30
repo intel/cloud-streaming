@@ -331,9 +331,9 @@ void CSendRecvMessage::irrv_set_alpha_transmission_flag(unsigned int flags) {
 
 int CSendRecvMessage::irrv_set_sei(unsigned int sei_type, unsigned int sei_id) {
     irrv_vctrl_t ctrl{};
-    ctrl.ctrl_type   = IRRV_CTRL_SEI_SETTING;
-    ctrl.reserved[0] = sei_type;
-    ctrl.reserved[1] = sei_id;
+    ctrl.ctrl_type = IRRV_CTRL_SEI_SETTING;
+    ctrl.sei.type  = sei_type;
+    ctrl.sei.id    = sei_id;
     ga_logger(Severity::INFO, LOG_PREFIX "IRRV_CTRL_SEI_SETTING: sei_type=%d, sei_id=%d\n", sei_type, sei_id);
     return irrv_op(ctrl);
 }
