@@ -41,14 +41,6 @@
 
 #include <linux/input.h>
 
-extern "C" {
-int irr_stream_set_client_feedback(uint32_t delay, uint32_t size);
-void irr_stream_setEncodeFlag(bool bAllowEncode);
-void irr_stream_incClient();
-void irr_stream_setTransmitFlag(bool bAllowTransmit);
-int irr_stream_force_keyframe(int force_key_frame);
-}
-
 using namespace std;
 using namespace vhal::client;
 
