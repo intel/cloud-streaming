@@ -409,7 +409,7 @@ int irrv_checknewconn(void *opaque)
                                 irr_stream_runtime_writer_stop(IRR_RT_MODE_OUTPUT);
                                 break;
                             case IRRV_CTRL_SEI_SETTING:
-                                irr_stream_set_sei(vctrl.reserved[0], vctrl.reserved[1]);
+                                irr_stream_set_sei(vctrl.sei.type, vctrl.sei.id);
                                 break;
                             case IRRV_CTRL_GOP_SETTING:
                                 irr_stream_set_gop_size(vctrl.value);

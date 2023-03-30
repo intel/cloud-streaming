@@ -208,6 +208,12 @@ typedef struct _irrv_resolution_t {
     uint32_t height;
 } irrv_resolution_t;
 
+typedef struct _irrv_sei_t {
+    uint32_t reserved;
+    uint32_t type;
+    uint32_t id;
+} irrv_sei_t;
+
 typedef struct _irrv_vctrl_t {
     irrv_vctrl_type  ctrl_type;
     union {
@@ -219,6 +225,7 @@ typedef struct _irrv_vctrl_t {
         irrv_roi_t roi;
         irrv_minmax_qp_t minmax_qp;
         irrv_resolution_t resolution;
+        irrv_sei_t sei;
     };
 } irrv_vctrl_t;
 
