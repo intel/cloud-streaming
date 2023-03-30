@@ -214,6 +214,11 @@ typedef struct _irrv_sei_t {
     uint32_t id;
 } irrv_sei_t;
 
+typedef struct _irrv_screen_capture_t {
+    uint32_t interval;
+    uint32_t quality_factor;
+} irrv_screen_capture_t;
+
 typedef struct _irrv_vctrl_t {
     irrv_vctrl_type  ctrl_type;
     union {
@@ -226,6 +231,7 @@ typedef struct _irrv_vctrl_t {
         irrv_minmax_qp_t minmax_qp;
         irrv_resolution_t resolution;
         irrv_sei_t sei;
+        irrv_screen_capture_t screen_capture;
     };
 } irrv_vctrl_t;
 

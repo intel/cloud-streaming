@@ -341,8 +341,8 @@ int CSendRecvMessage::irrv_set_sei(unsigned int sei_type, unsigned int sei_id) {
 int CSendRecvMessage::irrv_set_screen_capture_start(unsigned int capture_interval, unsigned int quality_factor) {
     irrv_vctrl_t ctrl{};
     ctrl.ctrl_type   = IRRV_CTRL_SCREEN_CAPTURE_START;
-    ctrl.value       = capture_interval;
-    ctrl.reserved[0] = quality_factor;
+    ctrl.screen_capture.interval = capture_interval;
+    ctrl.screen_capture.quality_factor = quality_factor;
     ga_logger(Severity::INFO, LOG_PREFIX "IRRV_CTRL_SCREEN_CAPTURE_START: capture_interval=%d, quality_factor=%d\n",
       capture_interval, quality_factor);
     return irrv_op(ctrl);

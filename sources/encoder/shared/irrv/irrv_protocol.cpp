@@ -415,8 +415,8 @@ int irrv_checknewconn(void *opaque)
                                 irr_stream_set_gop_size(vctrl.value);
                                 break;
                             case IRRV_CTRL_SCREEN_CAPTURE_START:
-                                irr_sream_set_screen_capture_interval(vctrl.value);
-                                irr_stream_set_screen_capture_quality(vctrl.reserved[0]);
+                                irr_sream_set_screen_capture_interval(vctrl.screen_capture.interval);
+                                irr_stream_set_screen_capture_quality(vctrl.screen_capture.quality_factor);
                                 irr_stream_set_screen_capture_flag(true);
                                 break;
                             case IRRV_CTRL_SCREEN_CAPTURE_STOP:
