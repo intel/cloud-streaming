@@ -219,6 +219,11 @@ typedef struct _irrv_screen_capture_t {
     uint32_t quality_factor;
 } irrv_screen_capture_t;
 
+typedef struct _irrv_client_feedback_t {
+    uint32_t delay;
+    uint32_t size;
+} irrv_client_feedback_t;
+
 typedef struct _irrv_vctrl_t {
     irrv_vctrl_type  ctrl_type;
     union {
@@ -232,6 +237,7 @@ typedef struct _irrv_vctrl_t {
         irrv_resolution_t resolution;
         irrv_sei_t sei;
         irrv_screen_capture_t screen_capture;
+        irrv_client_feedback_t client_feedback;
     };
 } irrv_vctrl_t;
 

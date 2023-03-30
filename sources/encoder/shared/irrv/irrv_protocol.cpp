@@ -447,7 +447,7 @@ int irrv_checknewconn(void *opaque)
                                 break;
 #endif
                             case IRRV_CTRL_CLIENT_FEEDBACK:
-                                irr_stream_set_client_feedback(vctrl.value, vctrl.reserved[0]);
+                                irr_stream_set_client_feedback(vctrl.client_feedback.delay, vctrl.client_feedback.size);
                                 break;
                             default:
                                 IrrvLog.Warn("ERROR encode setting (type < %d)\n", IRRV_CTRL_END);

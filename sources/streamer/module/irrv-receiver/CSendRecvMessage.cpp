@@ -352,8 +352,8 @@ int CSendRecvMessage::irrv_set_client_feedback(unsigned int delay, unsigned int 
 {
     irrv_vctrl_t ctrl{};
     ctrl.ctrl_type   = IRRV_CTRL_CLIENT_FEEDBACK;
-    ctrl.value       = delay;
-    ctrl.reserved[0] = size;
+    ctrl.client_feedback.delay = delay;
+    ctrl.client_feedback.size  = size;
     ga_logger(Severity::DBG, LOG_PREFIX "IRRV_CTRL_CLIENT_FEEDBACK: delay=%d, size=%d\n", delay, size);
     return irrv_op(ctrl);
 }
