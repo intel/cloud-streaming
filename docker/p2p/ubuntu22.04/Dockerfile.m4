@@ -17,7 +17,7 @@
 include(defs.m4)dnl
 include(begin.m4)
 include(owt-p2p-server.m4)
-include(p2p.m4)
+include(entrypoint.m4)
 include(end.m4)
 PREAMBLE
 

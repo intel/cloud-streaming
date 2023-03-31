@@ -17,6 +17,7 @@
 file(GLOB_RECURSE srcs ${CMAKE_SOURCE_DIR}/templates/*.m4)
 
 set(M4FLAGS ${M4FLAGS} -E
+  -I ${CMAKE_SOURCE_DIR}/docker/encoder
   -I ${CMAKE_SOURCE_DIR}/templates
   -I ${CMAKE_SOURCE_DIR}/templates/m4docker/system
   -I ${CMAKE_SOURCE_DIR}/templates/m4docker/components
@@ -24,6 +25,7 @@ set(M4FLAGS ${M4FLAGS} -E
 
 add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx/Dockerfile
   DEPENDS ${srcs}
+    ${CMAKE_SOURCE_DIR}/docker/encoder/entrypoint.m4
     ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx/Dockerfile.m4
   COMMAND ${M4} ${M4FLAGS} -D OS_NAME=ubuntu -D OS_VERSION=22.04
     ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx/Dockerfile.m4 > ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx/Dockerfile
