@@ -22,7 +22,7 @@ define(`FFMPEG_PATCH_PATH',patches/ffmpeg)
 include(intel-gfx.m4)
 include(ffmpeg.m4)
 include(libvhal-client.m4)
-include(intel-cloud-encoder.m4)
+include(encoder.m4)
 include(entrypoint.m4)
 include(end.m4)
 PREAMBLE
