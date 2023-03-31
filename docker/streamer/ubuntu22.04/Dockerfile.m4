@@ -19,7 +19,7 @@ include(begin.m4)
 include(owt.prebuilt.m4)
 include(libvhal-client.m4)
 include(ga.m4)
-include(streaming.m4)
+include(entrypoint.m4)
 include(end.m4)
 PREAMBLE
 

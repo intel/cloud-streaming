@@ -27,7 +27,7 @@ include(msdk.m4)
 include(ffmpeg.m4)
 include(libvhal-client.m4)
 include(intel-cloud-encoder.m4)
-include(icr.m4)
+include(entrypoint.m4)
 include(end.m4)dnl
 PREAMBLE
 

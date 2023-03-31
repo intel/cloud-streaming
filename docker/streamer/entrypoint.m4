@@ -30,12 +30,14 @@ dnl OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 dnl
 include(begin.m4)
 
-define(`ICR_INSTALL_DEPS',`dnl
+define(`ENTRYPOINT_INSTALL_DEPS',`dnl
   iproute2 dnl
-  ifdef(`BUILD_LIBVA2_UTILS',,vainfo) dnl
+  ifelse(
+    OS_NAME:OS_VERSION,ubuntu:20.04,libprotobuf17,
+    OS_NAME:OS_VERSION,ubuntu:22.04,libprotobuf23) dnl
   ifdef(`DEVEL',`sudo wget')')
 
-define(`INSTALL_ICR',`dnl
+define(`INSTALL_ENTRYPOINT',`dnl
 # Installing entrypoint helper scripts
 COPY assets/demo-alive /usr/bin/
 COPY assets/demo-bash /usr/bin/
@@ -71,8 +73,8 @@ CMD ["/usr/bin/hello-bash"]
 
 # demo-bash will execute whatever command is provided by the user making
 # sure that environment settings are correct.
-ENTRYPOINT ["/usr/bin/demo-bash"]') # define(INSTALL_ICR)
+ENTRYPOINT ["/usr/bin/demo-bash"]') dnl define(INSTALL_ENTRYPOINT)
 
-REG(ICR)
+REG(ENTRYPOINT)
 
 include(end.m4)

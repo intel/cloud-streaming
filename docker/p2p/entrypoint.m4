@@ -30,28 +30,10 @@ dnl OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 dnl
 include(begin.m4)
 
-define(`STREAMING_INSTALL_DEPS',`dnl
-  iproute2 dnl
-  ifelse(
-    OS_NAME:OS_VERSION,ubuntu:20.04,libprotobuf17,
-    OS_NAME:OS_VERSION,ubuntu:22.04,libprotobuf23) dnl
-  ifdef(`DEVEL',`sudo wget')')
+define(`ENTRYPOINT_INSTALL_DEPS',`iproute2 ifdef(`DEVEL',`sudo wget')')
 
-define(`INSTALL_STREAMING',`dnl
-# Installing entrypoint helper scripts
-COPY assets/demo-alive /usr/bin/
-COPY assets/demo-bash /usr/bin/
-COPY assets/hello-bash /usr/bin/
-COPY assets/demo-setup BUILD_PREFIX/bin/
-
-RUN { \
-  echo "export DEMO_NAME=ga"; \
-  echo "export DEMO_PREFIX=BUILD_PREFIX"; \
-  echo "export MANPATH=\$DEMO_PREFIX/share/man:\$MANPATH"; \
-  echo "export PATH=\$DEMO_PREFIX/bin:\$PATH"; \
-  echo "export LIBVA_DRIVER_NAME=iHD"; \
-  echo "export DEVICE=\${DEVICE:-/dev/dri/renderD128}"; \
-} > /etc/demo.env
+define(`INSTALL_ENTRYPOINT',`dnl
+COPY assets/p2p-alive /usr/bin/
 
 # Create default container user <user>
 RUN groupadd -r user && useradd -lrm -s /bin/bash -g user user
@@ -60,21 +42,13 @@ RUN usermod -aG sudo user
 RUN sed -i -e "s/%sudo.*/%sudo ALL=(ALL) NOPASSWD:ALL/g" /etc/sudoers'
 )
 
-# Setting up environment common for all samples
-
 # Check running container healthy status with:
 #  docker inspect --format="{{json .State.Health}}" <container-id>
-HEALTHCHECK CMD /usr/bin/demo-alive
+HEALTHCHECK CMD /usr/bin/p2p-alive
 
-# hello-bash is a default command which will be executed by demo-bash if
-# user did not provide any arguments starting the container. Basically hello-bash
-# will print welcome message and enter regular bash with correct environment.
-CMD ["/usr/bin/hello-bash"]
+ENTRYPOINT ["node", "BUILD_PREFIX/share/owt-server-p2p-OWT_P2P_SERVER_VER/peerserver.js"]
+')
 
-# demo-bash will execute whatever command is provided by the user making
-# sure that environment settings are correct.
-ENTRYPOINT ["/usr/bin/demo-bash"]') # define(INSTALL_STREAMING)
-
-REG(STREAMING)
+REG(ENTRYPOINT)
 
 include(end.m4)
