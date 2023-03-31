@@ -32,14 +32,14 @@ include(begin.m4)
 
 include(sioclient.m4)
 
-define(`GA_BUILD_DEPS',gcc g++ dnl
+define(`STREAMER_BUILD_DEPS',gcc g++ dnl
   libssl-dev libgtest-dev make nlohmann-json3-dev pkg-config libprotobuf-dev protobuf-compiler)
-define(`GA_INSTALL_DEPS',dnl
+define(`STREAMER_INSTALL_DEPS',dnl
   openssl)
 
 pushdef(`CFLAGS',`-Wformat -Wformat-security -Wall -D_FORTIFY_SOURCE=2 -fstack-protector-strong')
 
-define(`BUILD_GA',
+define(`BUILD_STREAMER',
 COPY sources/streamer /opt/build/streamer
 
 ENV GAPATH=BUILD_HOME
@@ -55,10 +55,10 @@ RUN cd BUILD_HOME/streamer && \
   make -j$(nproc) && \
   make install DESTDIR=BUILD_DESTDIR && \
   make install
-) # define(BUILD_GA)
+) dnl define(BUILD_STREAMER)
 
 popdef(`CFLAGS')
 
-REG(GA)
+REG(STREAMER)
 
 include(end.m4)
