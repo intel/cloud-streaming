@@ -30,20 +30,20 @@ dnl OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 dnl
 include(begin.m4)
 
-define(`ICR_SERVICE_BUILD_DEPS',`dnl
+define(`ENCODER_BUILD_DEPS',`dnl
   cmake gcc g++ libdrm-dev dnl
   ifdef(`BUILD_ONEVPL',,libvpl-dev) dnl
   ifdef(`BUILD_LIBVA2',,libva-dev) dnl
   make patch pkg-config')
 
-define(`ICR_SERVICE_INSTALL_DEPS',`dnl
+define(`ENCODER_INSTALL_DEPS',`dnl
   ifdef(`BUILD_ONEVPL',,libvpl2) dnl
   ifdef(`BUILD_ONEVPLGPU',,libmfxgen1) dnl
   ifdef(`BUILD_LIBVA2',,libva2 libva-drm2)')
 
 pushdef(`CFLAGS',`-D_FORTIFY_SOURCE=2 -fstack-protector-strong')
 
-define(`BUILD_ICR_SERVICE',
+define(`BUILD_ENCODER',
 COPY sources/encoder /opt/build/encoder
 
 RUN cd BUILD_HOME/encoder \
@@ -57,10 +57,10 @@ RUN cd BUILD_HOME/encoder \
   && make VERBOSE=1 -j $(nproc --all) \
   && make install DESTDIR=BUILD_DESTDIR \
   && make install
-) # define(BUILD_ICR_SERVICE)
+) dnl define(BUILD_ENCODER)
 
 popdef(`CFLAGS')
 
-REG(ICR_SERVICE)
+REG(ENCODER)
 
 include(end.m4)

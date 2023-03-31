@@ -26,7 +26,7 @@ include(onevpl-gpu.m4)
 include(msdk.m4)
 include(ffmpeg.m4)
 include(libvhal-client.m4)
-include(intel-cloud-encoder.m4)
+include(encoder.m4)
 include(entrypoint.m4)
 include(end.m4)dnl
 PREAMBLE
