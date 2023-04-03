@@ -219,7 +219,7 @@ RUN apt-get update && \
 ARG FFMPEG_REPO=https://github.com/FFmpeg/FFmpeg.git
 RUN git clone $FFMPEG_REPO /opt/build/ffmpeg && \
   cd /opt/build/ffmpeg && \
-  git checkout n6.0
+  git checkout 57afccc
 
 COPY patches/ffmpeg /opt/build/ffmpeg
 RUN cd /opt/build/ffmpeg && { set -e; \
