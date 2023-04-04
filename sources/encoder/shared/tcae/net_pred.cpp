@@ -31,8 +31,8 @@ NetPred::NetPred():
     m_exceptionThreshold(1.0),
     m_reverseBandWidth(1.0),
     m_propagotionDelay(0.0),
-    m_effectiveDataLen(2),
     m_effectiveSizeThreshold(1.0),
+    m_effectiveDataLen(2),
 #ifdef _DEBUG
     m_dumpflag(true),
 #else
