@@ -24,13 +24,13 @@ PredictorTcaeImpl::PredictorTcaeImpl() :
     m_features(),
     m_initialTargetDelayInMs(),
     m_maxSequentialDropsCount(),
-    m_minDropFramesDist(),
     m_maxFrameSizeInBytes(),
+    m_minDropFramesDist(),
+    m_framesSinceLastDrop(),
     m_idrRequested(),
     m_frameDropsCount(),
     m_lastKnownDelayInMs(),
     m_lastTransmittedSize(),
-    m_framesSinceLastDrop(),
     m_pLogger()
 {
 }
