@@ -1185,13 +1185,13 @@ void CTransCoder::dynamicSetEncParameters(CEncoder *pEnc, AVFrame *pFrame, AVFra
     }
 
     if(m_setBitrate) {
-        m_Log->Info("set dynamic bitrate at framenum=%d, bitrate=%d\n", curEncFrames, m_bitrate);
+        m_Log->Debug("set dynamic bitrate at framenum=%d, bitrate=%d\n", curEncFrames, m_bitrate);
         ((CFFEncoder*)pEnc)->setBitrate(m_bitrate);
         m_setBitrate = 0;
     }
 
     if (m_setMaxBitrate) {
-        m_Log->Info("set dynamic max bitrate at framenum=%d, max_bitrate=%d\n", curEncFrames, m_maxBitrate);
+        m_Log->Debug("set dynamic max bitrate at framenum=%d, max_bitrate=%d\n", curEncFrames, m_maxBitrate);
         ((CFFEncoder*)pEnc)->setMaxBitrate(m_maxBitrate);
         m_setMaxBitrate = 0;
     }
