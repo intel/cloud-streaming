@@ -784,54 +784,61 @@ void ICSP2PClient::InsertFrame(ga_packet_t* packet) {
       void* pMsg = gpMsg; // gpMsg should come from OnMessageReceived
       unsigned int frameToSend = getFrameNumber();
       bool sendServerStat = false;
+      uint32_t encode_time = (uint32_t)(meta_data.encoding_end - meta_data.encoding_start);
 
-      if (startMsgs && (pMsg == nullptr || frameToSend != currentFrame + 2)) {
-          ga_logger(Severity::DBG, "ics-p2p-client: InsertFrame: Creating server statistics msg to send Frame %d (previous latency frame was %d)\n", frameToSend, currentFrame);
+      if (pMsg != nullptr) {
+          gLatencyServerInstance->SetSendTime(pMsg);
+          uint64_t server_send_time_ms = gLatencyServerInstance->GetSendTime(pMsg) / (uint64_t)1000000;
+          uint64_t server_received_time_ms = gLatencyServerInstance->GetReceivedTime(pMsg) / (uint64_t)1000000;
+          uint64_t server_render_time = server_send_time_ms - server_received_time_ms - encode_time;
+          if (server_render_time <= 0) {
+              // The message was received after the beginning of encoding, should wait until next InsertFrame call
+              frame_delay++;
+              ga_logger(Severity::DBG, "changing frame_delay to %d\n", frame_delay);
+          } else {
+              gLatencyServerInstance->SetRenderTime(pMsg, (uint64)server_render_time);
+          }
+      }
+    
+      if (startMsgs && (pMsg == nullptr || frameToSend != currentFrame + frame_delay)) {
+          ga_logger(Severity::DBG, "ics-p2p-client: InsertFrame: Creating server statistics msg to send Frame %d (previous latency frame was %d, frame delay is %d)\n", frameToSend, currentFrame, frame_delay);
           pMsg = gLatencyServerInstance->CreateLatencyMsg();
           gLatencyServerInstance->SetClientInputTime(pMsg, 0);  // 0 tells client this is purely a server statistics msg
           sendServerStat = true;
       }
 
       if (pMsg != nullptr) {
-          uint32 encode_time = (uint32)(meta_data.encoding_end - meta_data.encoding_start);
-
           gLatencyServerInstance->SetProcessingFrameId(pMsg, frameToSend);
-          gLatencyServerInstance->SetSendTime(pMsg);
           gLatencyServerInstance->SetEncodeTime(pMsg, encode_time);
-
-          if (gLatencyServerInstance->GetReceivedTime(pMsg)) {
-              uint64 server_send_time_ms = gLatencyServerInstance->GetSendTime(pMsg) / (uint64)1000000;
-              uint64 server_received_time_ms = gLatencyServerInstance->GetReceivedTime(pMsg) / (uint64)1000000;
-              uint64 server_render_time = server_send_time_ms - server_received_time_ms - encode_time;
-              gLatencyServerInstance->SetRenderTime(pMsg, server_render_time);
+          if (sendServerStat) {
+              gLatencyServerInstance->SetSendTime(pMsg);
           }
 
           int64_t timediff = current_time - prev_time;
           ga_logger(Severity::DBG, "ics-p2p-client: InsertFrame: timediff from prev InsertFrame call: %lld ms\n",
               timediff);
 
-          if (frameToSend == currentFrame + 2 || sendServerStat) {
-              std::string msgString = gLatencyServerInstance->PrintMessage(pMsg);
-              // copy message to meta data
-              if (!msgString.empty()) {
-                  // allocate memory for latency message
-                  meta_data.encoded_image_sidedata_new(msgString.size());
-                  uint8_t* p_latency_message = meta_data.encoded_image_sidedata_get();
-                  size_t latency_message_size = meta_data.encoded_image_sidedata_size();
-                  // copy the message
-                  if (msgString.size() > 0 && p_latency_message) {
-                      memcpy(p_latency_message, msgString.data(), msgString.size());
-                  }
-                  ga_logger(Severity::DBG, "ics-p2p-client: InsertFrame: Frame %d: msg_size %d: Latency message sent from server: %s\n",
-                      frameToSend, latency_message_size, msgString.c_str());
+          std::string msgString = gLatencyServerInstance->PrintMessage(pMsg);
+          // copy message to meta data
+          if (!msgString.empty()) {
+              // allocate memory for latency message
+              meta_data.encoded_image_sidedata_new(msgString.size());
+              uint8_t* p_latency_message = meta_data.encoded_image_sidedata_get();
+              size_t latency_message_size = meta_data.encoded_image_sidedata_size();
+              // copy the message
+              if (msgString.size() > 0 && p_latency_message) {
+                  memcpy(p_latency_message, msgString.data(), msgString.size());
               }
-              if (sendServerStat){
-                  gLatencyServerInstance->FreeMessage(pMsg);
-              }
-              else {
-                  gLatencyServerInstance->FreeMessage(gpMsg);
-                  gpMsg = nullptr;
-              }
+              ga_logger(Severity::DBG, "ics-p2p-client: InsertFrame: Frame delay is %d, Frame %d: msg_size %d: Latency message sent from server: %s\n",
+                  frame_delay, frameToSend, latency_message_size, msgString.c_str());
+          }
+          if (sendServerStat){
+              gLatencyServerInstance->FreeMessage(pMsg);
+          }
+          else {
+              gLatencyServerInstance->FreeMessage(gpMsg);
+              gpMsg = nullptr;
+              frame_delay = 1;
           }
       }
   }

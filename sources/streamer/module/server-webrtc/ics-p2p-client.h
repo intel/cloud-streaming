@@ -167,6 +167,7 @@ private:
   static unsigned int frameNumber;
   uint64_t gClientTimestamp = 0;
   unsigned int currentFrame = 0;
+  unsigned int frame_delay = 1;
   bool startMsgs = false;
 #endif
   bool enable_render_drc = false;
