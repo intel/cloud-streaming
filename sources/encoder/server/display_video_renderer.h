@@ -39,7 +39,7 @@ public :
     virtual bool init(char *name, encoder_info_t *info);
     virtual void deinit();
 
-    virtual disp_res_t* createDispRes(buffer_handle_t handle, int format, int width, int height, int stride);
+    virtual disp_res_t* createDispRes(vhal::client::cros_gralloc_handle_t);
     virtual void destroyDispRes(disp_res_t* res);
 
     virtual void drawDispRes(disp_res_t* res, int client_id, int client_count, std::unique_ptr<vhal::client::display_control_t> ctrl);
