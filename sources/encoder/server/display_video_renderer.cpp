@@ -20,7 +20,6 @@
 #include "utils/TimeLog.h"
 
 #define DRV_MAX_PLANES 4
-#define TOTAL_NUM_INTS_DATA 49
 
 using namespace std;
 
@@ -90,65 +89,50 @@ void DisplayVideoRenderer::deinit()
     irr_encoder_stop();
 }
 
-disp_res_t* DisplayVideoRenderer::createDispRes(buffer_handle_t handle, int format, int width, int height, int stride)
+disp_res_t* DisplayVideoRenderer::createDispRes(vhal::client::cros_gralloc_handle_t handle)
 {
-
-    SOCK_LOG(("%s:%d : handle = %p, format = %d, width = %d, height = %d, stride = %d\n", __func__, __LINE__,
-            handle, format, width, height, stride));
+    SOCK_LOG(("%s:%d : handle = %p\n", __func__, __LINE__, handle));
 
     disp_res_t* res = new disp_res_t();
     if(res) {
-        res->local_handle   = handle;
+
+        vhal::client::buffer_handle_t baseData = &(handle->base);
+        res->local_handle= baseData;
 
         {
-            SOCK_LOG(("%s:%d : numFds = %d, numInts = %d\n",
-                    __func__, __LINE__, handle->numFds, handle->numInts));
-            if ((handle->numFds + handle->numInts) <= TOTAL_NUM_INTS_DATA) {
-                for (int i = 0; i < handle->numFds + handle->numInts; i++) {
-                    SOCK_LOG(("t\t data[%d] = 0x%x(%d)\n", i, handle->data[i], handle->data[i]));
-                }
-            }
-            else {
-                SOCK_LOG(("%s:%d : total num of ints in data array is wrong ! handle->numFds = %d, handle->numInts = %d\n",
-                    __func__, __LINE__, handle->numFds, handle->numInts));
+            int MaxPayloadSize = (sizeof(*handle) - sizeof(*baseData))/sizeof(uint32_t);
+            if (baseData->numInts > MaxPayloadSize) {
+                sock_log("%s:%d : total num of ints in data array is wrong !numFds = %d, numInts = %d, MaxPayloadSize = %d\n",
+                          __func__, __LINE__, baseData->numFds, baseData->numInts, MaxPayloadSize);
             }
         }
 
-        res->width          = handle->data[24];
-        res->height         = handle->data[25];
-        res->drm_format     = handle->data[26];
-        res->android_format = handle->data[31];
-
-        res->prime_fds[0]   = handle->data[0];
-        res->prime_fds[1]   = handle->data[1];
-        res->prime_fds[2]   = handle->data[2];
-        res->prime_fds[3]   = handle->data[3];
-
-        res->strides[0]     = handle->data[4];
-        res->strides[1]     = handle->data[5];
-        res->strides[2]     = handle->data[6];
-        res->strides[3]     = handle->data[7];
-
-        res->offsets[0]     = handle->data[8];
-        res->offsets[1]     = handle->data[9];
-        res->offsets[2]     = handle->data[10];
-        res->offsets[3]     = handle->data[11];
-
+        res->width          = handle->width;
+        res->height         = handle->height;
+        res->drm_format     = handle->format;
+        res->android_format = handle->droid_format;
         res->seq_no         = 0;
+
+        for (int i = 0; i < DRV_MAX_PLANES; i++) {
+            res->prime_fds[i]   = handle->fds[i];
+            res->strides[i]     = handle->strides[i];
+            res->offsets[i]     = handle->offsets[i];
+        }
+
 
         SOCK_LOG(("%s:%d : create disp res for : \n", __func__, __LINE__));
         SOCK_LOG(("%s:%d : width = %d, height=%d, drm_format = 0x%x, android_format=%d, seq_no = %u\n", __func__, __LINE__,
                 res->width, res->height, res->drm_format, res->android_format, res->seq_no));
 
-        if (handle->numFds <= DRV_MAX_PLANES) {
-            for (int i = 0; i < handle->numFds; i++) {
+        if (baseData->numFds <= DRV_MAX_PLANES) {
+            for (int i = 0; i < baseData->numFds; i++) {
                 SOCK_LOG(("%s:%d : plane [%d] : prime_fd = %d, stride =%d, offset = %d\n", __FUNCTION__, __LINE__,
                     i, res->prime_fds[i], res->strides[i], res->offsets[i]));
             }
         }
         else {
-            sock_log("%s:%d : handle->numFds is wrong! handle->numFds = %d\n",
-                __func__, __LINE__, handle->numFds);
+            sock_log("%s:%d : handle->base.numFds is wrong! handle->base.numFds = %d\n",
+                __func__, __LINE__, baseData->numFds);
         }
 
         irr_surface_info_t info;

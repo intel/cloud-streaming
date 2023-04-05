@@ -213,8 +213,7 @@ void DisplayServerVHAL::deinit()
 void DisplayServerVHAL::CreateBuffer(cros_gralloc_handle_t handle)
 {
     // Create DispRes
-    disp_res_t* dispRes = m_renderer->createDispRes((::buffer_handle_t)handle, handle->format, handle->width,
-                    handle->height, handle->height);
+    disp_res_t* dispRes = m_renderer->createDispRes(handle);
 
     auto ite = m_dispReses.find(handle);
     if (ite != m_dispReses.end())

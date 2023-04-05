@@ -20,19 +20,10 @@
 #include <stdint.h>
 #include "api/irrv.h"
 
-typedef struct native_handle
-{
-    int version;        /* sizeof(native_handle_t) */
-    int numFds;         /* number of file-descriptors at &data[0] */
-    int numInts;        /* number of ints at &data[numFds] */
-    int data[0];        /* numFds + numInts ints */
-} native_handle_t;
-
-typedef native_handle_t* buffer_handle_t;
-
 #define MAX_HANDLE_COUNT 4
 typedef struct _disp_res {
-    buffer_handle_t local_handle;
+    vhal::client::buffer_handle_t local_handle;
+
     int             width;
     int             height;
     int             drm_format;
@@ -46,7 +37,7 @@ typedef struct _disp_res {
     uint32_t        fb_ids[MAX_HANDLE_COUNT];
 
     irr_surface_t*  surface;
-    
+
     bool is_reged;
 } disp_res_t;
 
