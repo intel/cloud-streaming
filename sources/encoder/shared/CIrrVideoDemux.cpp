@@ -276,7 +276,7 @@ int CIrrVideoDemux::sendPacket(IrrPacket *pkt) {
 
     m_nLastFrameTs = curr_mcs;
 
-    lock.unlock();
+    bool notify = true;
     if (!getRenderFpsEncFlag()) {
 
         // For constant fps app,  the interval between post is almost constant.
@@ -284,21 +284,17 @@ int CIrrVideoDemux::sendPacket(IrrPacket *pkt) {
         // So we can't strictly compare it with frame time,  add 1ms time range here for workaround.
         // The better way is to record frame timestamp in post and pass the value to here.
         if (diff1_mcs >= (frame_mcs - 1000)) {
-            bool notify = true;
 
             if ((diff2_mcs > 0) && (diff2_mcs < 3000)) {
                 notify = false;
             }
-
-            if (notify) {
-                m_cv.notify_one();
-            }
         }
     }
-    else {
+
+    lock.unlock();
+    if (notify) {
         m_cv.notify_one();
     }
-
     return 0;
 }
 
