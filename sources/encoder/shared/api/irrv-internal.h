@@ -152,18 +152,6 @@ void irr_encoder_set_skipframe(bool bSkipFrame);
 */
 int irr_encoder_get_skipframe(void);
 
-/*
-* @Desc set the encoder latency optimization flag.
-* @param bLatencyOpt is true mean that flag turn on, false mean turn off.
-*/
-void irr_encoder_set_latency_optflag(bool bLatencyOpt);
-
-/*
-* @Desc get the encoder latency optimization flag.
-* @return minus mean call the function fail, 1 mean that flag turn on, 0 mean turn off.
-*/
-int irr_encoder_get_latency_optflag(void);
-
 struct IrrStreamInfo {
     int pix_format;            ///< fmt
     /* Output-only parameters */
@@ -378,15 +366,6 @@ void irr_stream_set_encode_renderfps_flag(bool bRenderFpsEnc);
 * @Desc get encode by reder fps flag, minus mean call the function fail, 1 mean that flag turn on, 0 mean turn off.
 */
 int irr_stream_get_encode_renderfps_flag(void);
-
-
-void irr_stream_set_latency_optflag(bool bLatencyOpt);
-
-/*
-* @Desc get the encoder latency optimization flag.
-* @return minus mean call the function fail, 1 mean that flag turn on, 0 mean turn off.
-*/
-int irr_stream_get_latency_optflag(void);
 
 #ifdef __cplusplus
 }

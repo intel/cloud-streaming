@@ -124,15 +124,6 @@ public:
     */
     int getRenderFpsEncFlag(void);
 
-    void setLatencyOptFlag(bool bLatencyOpt);
-
-    /**
-    * get the encoder latency optimization flag
-    *
-    * @return minus mean that the call of the function fail, 1 mean that optimization flag is trun on, 0 mean turn off.
-    */
-    int getLatencyOptFlag(void);
-
 private:
     CIrrVideoDemux *m_pDemux;
     CTransCoder    *m_pTrans;

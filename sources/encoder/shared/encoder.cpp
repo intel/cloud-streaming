@@ -974,15 +974,6 @@ int irr_encoder_start(int id, encoder_info_t *encoder_info) {
                 e_Log->Info("%s : %d : SEI host timestamp info enabled.\n", __func__, __LINE__);
         }
 
-        if (encoder_info->latency_opt == 0) {
-            sock_log("Encoding latency optimization disabled.\n");
-            info.latency_opt = 0;
-        }
-        else {
-            sock_log("Encoding latency optimization enabled.\n");
-            info.latency_opt = 1;
-        }
-
         if (encoder_info->renderfps_enc == 0) {
             sock_log("Encoding by rendering fps disabled\n");
             info.renderfps_enc = 0;
@@ -1390,13 +1381,3 @@ int irr_encoder_get_skipframe(void) {
     return ret;
 }
 
-
-void irr_encoder_set_latency_optflag(bool bLatencyOpt) {
-    irr_stream_set_latency_optflag(bLatencyOpt);
-}
-
-int irr_encoder_get_latency_optflag(void) {
-    int ret = 0;
-    ret = irr_stream_get_latency_optflag();
-    return ret;
-}

@@ -86,30 +86,20 @@ int CIrrVideoDemux::readPacket(IrrPacket *irrpkt) {
 
     if (!getRenderFpsEncFlag()) {
         if (m_eFrc == eFRC_CONST) {
-            if (getLatencyOptFlag()) {
-                diff_mcs = curr_mcs - m_nPrevPts;
-                wait_mcs = frame_mcs - (diff_mcs % frame_mcs);
+            diff_mcs = curr_mcs - m_nPrevPts;
+            wait_mcs = frame_mcs - (diff_mcs % frame_mcs);
 
-                // If previous frame is notified before waiting completed, add the left time
-                // to total wait time this frame for compensation,  to keep encoding fps.
-                wait_mcs += m_nLeftMcs;
+            // If previous frame is notified before waiting completed, add the left time
+            // to total wait time this frame for compensation,  to keep encoding fps.
+            wait_mcs += m_nLeftMcs;
 
-                //
-                // If there is a new frame ready during previous encoding time slot,
-                // wait more time in this frame to avoid falling in always long latency case.
-                //
-                if (m_nPrevPts <= m_nLastFrameTs) {
-                    wait_mcs += 3000;  // 3ms is experience value of encoding and writeback time
-                    // printf("read packet : add extra wait, wait_mcs = %ld \n", wait_mcs);
-                }
-            }
-            else {
-                wait_mcs = m_nPrevPts - curr_mcs + frame_mcs;
-                //printf("CIrrVideoDemux::readPacket : read packet : wait_mcs = %ld \n", wait_mcs);
-                if (wait_mcs < 10000) {
-                    wait_mcs = 10000; // If delay too long and the calculated waiting time is less than 10ms, set wait_mcs to 10ms.
-                    //printf("CIrrVideoDemux::readPacket: read packet set wait_mcs to frame_mcs - 3000: wait_mcs = %ld \n", wait_mcs);
-                }
+            //
+            // If there is a new frame ready during previous encoding time slot,
+            // wait more time in this frame to avoid falling in always long latency case.
+            //
+            if (m_nPrevPts <= m_nLastFrameTs) {
+                wait_mcs += 3000;  // 3ms is experience value of encoding and writeback time
+                // printf("read packet : add extra wait, wait_mcs = %ld \n", wait_mcs);
             }
 
             time_to_wait = std::chrono::microseconds(wait_mcs);
@@ -170,25 +160,23 @@ int CIrrVideoDemux::readPacket(IrrPacket *irrpkt) {
     else {
         wait_status = m_cv.wait_for(lock, time_to_wait);
 
-        if (getLatencyOptFlag()) {
-            if (m_eFrc == eFRC_CONST) {
-                if (wait_status == std::cv_status::timeout) {
-                    m_nLeftMcs = 0;
+        if (m_eFrc == eFRC_CONST) {
+            if (wait_status == std::cv_status::timeout) {
+                m_nLeftMcs = 0;
+            }
+            else {
+                diff_mcs = av_gettime_relative() - m_nPrevPts;
+                if (left_mcs >= (frame_mcs + m_nLeftMcs)) {
+                    left_mcs = 0;
                 }
                 else {
-                    diff_mcs = av_gettime_relative() - m_nPrevPts;
-                    if (left_mcs >= (frame_mcs + m_nLeftMcs)) {
-                        left_mcs = 0;
-                    }
-                    else {
-                        left_mcs = (frame_mcs + m_nLeftMcs) - diff_mcs;
-                    }
-
-                    m_nLeftMcs = (left_mcs < frame_mcs) ? left_mcs : 0;
+                    left_mcs = (frame_mcs + m_nLeftMcs) - diff_mcs;
                 }
 
-                // printf("read packet : m_eFrc = %d, wait_mcs = %ld, left_mcs = %ld, m_nLeftMcs = %ld \n", m_eFrc, wait_mcs, left_mcs, m_nLeftMcs);
+                m_nLeftMcs = (left_mcs < frame_mcs) ? left_mcs : 0;
             }
+
+            // printf("read packet : m_eFrc = %d, wait_mcs = %ld, left_mcs = %ld, m_nLeftMcs = %ld \n", m_eFrc, wait_mcs, left_mcs, m_nLeftMcs);
         }
     }
 
@@ -275,31 +263,26 @@ int CIrrVideoDemux::sendPacket(IrrPacket *pkt) {
 
     lock.unlock();
     if (!getRenderFpsEncFlag()) {
-        if (getLatencyOptFlag()) {
-            if (m_eFrc == eFRC_CONST) {
+        if (m_eFrc == eFRC_CONST) {
 
-                // For constant fps app,  the interval between post is almost constant.
-                // But since the readback time and various lock/unlock time is not constant,  the interval between sendPacket is not constant.
-                // So we can't strictly compare it with frame time,  add 1ms time range here for workaround.
-                // The better way is to record frame timestamp in post and pass the value to here.
-                if (diff1_mcs >= (frame_mcs - 1000)) {
-                    bool notify = true;
+            // For constant fps app,  the interval between post is almost constant.
+            // But since the readback time and various lock/unlock time is not constant,  the interval between sendPacket is not constant.
+            // So we can't strictly compare it with frame time,  add 1ms time range here for workaround.
+            // The better way is to record frame timestamp in post and pass the value to here.
+            if (diff1_mcs >= (frame_mcs - 1000)) {
+                bool notify = true;
 
-                    if ((diff2_mcs > 0) && (diff2_mcs < 3000)) {
-                        notify = false;
-                    }
-
-                    if (notify) {
-                        m_cv.notify_one();
-                    }
+                if ((diff2_mcs > 0) && (diff2_mcs < 3000)) {
+                    notify = false;
                 }
-            }
-            else {
-                m_cv.notify_one();
+
+                if (notify) {
+                    m_cv.notify_one();
+                }
             }
         }
         else {
-            //m_cv.notify_one();
+            m_cv.notify_one();
         }
     }
     else {
