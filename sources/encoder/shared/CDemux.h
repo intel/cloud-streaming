@@ -30,7 +30,7 @@ struct IrrPacket {
 
 class CDemux {
 public:
-    CDemux() :m_isVASurfaceID(false), m_bLatencyOpt(true), m_bRenderFpsEnc(true), m_MinFpsEnc(3), m_isQSVSurfaceID(false), m_bFirstStartEncoding(false), m_iFirstStartEncodingCnt(0){}
+    CDemux() :m_isVASurfaceID(false), m_bRenderFpsEnc(true), m_MinFpsEnc(3), m_isQSVSurfaceID(false), m_bFirstStartEncoding(false), m_iFirstStartEncodingCnt(0){}
     virtual ~CDemux() {}
     /**
      * @param format,pDict Extra informations for demux
@@ -61,8 +61,6 @@ public:
     virtual bool getVASurfaceFlag() { return m_isVASurfaceID; }
     virtual void setQSVSurfaceFlag(bool bQSVSurfaceID) { m_isQSVSurfaceID = bQSVSurfaceID; }
     virtual bool getQSVSurfaceFlag() { return m_isQSVSurfaceID; }
-    virtual void setLatencyOptFlag(bool bLatencyOpt) { m_bLatencyOpt = bLatencyOpt; }
-    virtual bool getLatencyOptFlag() { return m_bLatencyOpt; }
     virtual void setRenderFpsEncFlag(bool bRenderFpsEnc) { m_bRenderFpsEnc = bRenderFpsEnc; }
     virtual bool getRenderFpsEncFlag() { return m_bRenderFpsEnc; }
     virtual void setMinFpsEnc(int iMinFpsEnc) { m_MinFpsEnc = iMinFpsEnc; }
@@ -72,7 +70,6 @@ public:
     virtual void stop() { }
 private:
     bool m_isVASurfaceID;
-    bool m_bLatencyOpt;
     bool m_bRenderFpsEnc;
     int  m_MinFpsEnc;
     bool m_isQSVSurfaceID;

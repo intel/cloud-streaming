@@ -220,13 +220,6 @@ int IrrStreamer::start(IrrStreamInfo *param) {
         } while (expar.size());
     }
 
-    if (param->latency_opt == 0) {
-        m_pDemux->setLatencyOptFlag(false);
-    }
-    else {
-        m_pDemux->setLatencyOptFlag(true);
-    }
-
     if (param->renderfps_enc == 0) {
         m_pDemux->setRenderFpsEncFlag(false);
     }
@@ -1146,25 +1139,3 @@ int IrrStreamer::getRenderFpsEncFlag(void) {
     return m_pTrans->getRenderFpsEncFlag();
 }
 
-void IrrStreamer::setLatencyOptFlag(bool bLatencyOpt) {
-    lock_guard<mutex> lock(m_Lock);
-
-    if (!m_pDemux) {
-        Error("%s : %d : m_pDemux is null!\n", __func__, __LINE__);
-        return;
-    }
-
-    m_pDemux->setLatencyOptFlag(bLatencyOpt);
-    return;
-}
-
-int IrrStreamer::getLatencyOptFlag(void) {
-    lock_guard<mutex> lock(m_Lock);
-
-    if (!m_pDemux) {
-        Error("%s : %d : m_pDemux is null!\n", __func__, __LINE__);
-        return AVERROR(EINVAL);
-    }
-
-    return m_pDemux->getLatencyOptFlag();
-}

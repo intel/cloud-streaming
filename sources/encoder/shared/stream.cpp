@@ -440,19 +440,3 @@ int irr_stream_get_encode_renderfps_flag(void) {
     return pStreamer->getRenderFpsEncFlag();
 }
 
-void irr_stream_set_latency_optflag(bool bLatencyOpt) {
-    IrrStreamer* pStreamer = IrrStreamer::get();
-    if (!pStreamer)
-        return;
-
-    pStreamer->setLatencyOptFlag(bLatencyOpt);
-}
-
-int irr_stream_get_latency_optflag(void) {
-    IrrStreamer* pStreamer = IrrStreamer::get();
-    if (!pStreamer)
-        return -EINVAL;
-
-    return pStreamer->getLatencyOptFlag();
-}
-
