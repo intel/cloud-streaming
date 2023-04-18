@@ -3,6 +3,8 @@ Control Protocol Specification
 
 .. contents::
 
+.. _Generic.kl: https://android.googlesource.com/platform/frameworks/base/+/refs/heads/master/data/keyboards/Generic.kl
+
 High Level Spec
 ---------------
 
@@ -177,8 +179,7 @@ device. Supported commands are:
 `k <code> <value>`
   Joystick button message.
 
-  ``<code>`` is expected to be one of the following Android "Unified Scan Codes"
-  defined in `Generic.kl <https://android.googlesource.com/platform/frameworks/base/+/refs/heads/master/data/keyboards/Generic.kl>`_:
+  ``<code>`` is expected to be one of the following Android "Unified Scan Codes" defined in `Generic.kl`_:
 
   +------+---------------+
   | Code | Button        |
@@ -221,7 +222,7 @@ device. Supported commands are:
 `a <code> <value>`
   Joystick axis message. ``<code>`` is expected to be one of:
 
-  * One of the following Android "Unified Scan Code" for "axis" defined in `Generic.kl <https://android.googlesource.com/platform/frameworks/base/+/refs/heads/master/data/keyboards/Generic.kl>`_:
+  * One of the following Android "Unified Scan Code" for "axis" defined in `Generic.kl`_:
 
   +----------+---------------------+----------+
   | Code     | ``<value>`` range   | Notes    |
@@ -625,7 +626,7 @@ as an array of strings.
 `NULL` string has special meaning marking missed camera information.
 
 Control Commands to Client
--------------------------
+--------------------------
 
 The control commands are the messages sent to client upon request from AIC.
 Command messages are in json-message format with the following template::
