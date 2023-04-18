@@ -13,6 +13,17 @@ jobs:
         make -j$(nproc)
         git diff --exit-code
 
+  rst-lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends \
+          python3-pkg-resources \
+          python3-restructuredtext-lint
+    - run: rst-lint --level info .
+
   encoder-selfbuild-prodkmd:
     runs-on: ubuntu-latest
     steps:
