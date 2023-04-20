@@ -14,12 +14,21 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+#include <algorithm>
 #include <chrono>
-#include "utils/CTransLog.h"
 #include "CIrrVideoDemux.h"
 #include "IrrStreamer.h"
+#include "utils/CTransLog.h"
 
-#define FIRST_START_ENCODE_FPS_DEFAULT 60
+#ifdef __DEBUG
+#define DEBUG_LOG(...)  do {                                                                           \
+        m_logger->Debug("%s: %d :: TimeStamp = %ld: ", __FUNCTION__, __LINE__, av_gettime_relative()); \
+        m_logger->Debug(__VA_ARGS__);                                                                  \
+        m_logger->Debug("\n");                                                                         \
+    } while(0);
+#else
+#define DEBUG_LOG(...) ;
+#endif
 
 CIrrVideoDemux::CIrrVideoDemux(int w, int h, int format, float framerate, IrrPacket* pkt) :m_Lock(), m_cv() {
     m_logger = std::move(std::unique_ptr<CTransLog>(new CTransLog("CIrrVideoDemux::")));
@@ -32,9 +41,7 @@ CIrrVideoDemux::CIrrVideoDemux(int w, int h, int format, float framerate, IrrPac
     m_Info.m_rFrameRate             = av_d2q(framerate, 1024);
     m_Info.m_rTimeBase              = AV_TIME_BASE_Q;
     m_nPrevPts                      = 0;
-    m_nLastFrameTs                  = 0;
-    m_nLastEncodeFrameTs            = 0;
-    m_nLeftMcs                      = 0;
+    m_totalWaitMcs                  = 0;
 
     av_packet_move_ref(&m_Pkt.av_pkt, &pkt->av_pkt);
     if (pkt->display_ctrl != nullptr) {
@@ -45,8 +52,8 @@ CIrrVideoDemux::CIrrVideoDemux(int w, int h, int format, float framerate, IrrPac
     m_nLatencyStats = 0;
     m_bStartLatency = false;
 
-    m_timeoutCount = 0;
     m_stop = false;
+    m_notified = false;
 }
 
 CIrrVideoDemux::~CIrrVideoDemux() {
@@ -66,118 +73,95 @@ void CIrrVideoDemux::updateDynamicChangedFramerate(int framerate) {
     m_Info.m_rFrameRate = (AVRational){framerate, 1};
 }
 
+void CIrrVideoDemux::stop()
+{
+    DEBUG_LOG("Entry. Pre-Lock Acquire");
+
+    {
+        std::unique_lock<std::mutex> lock(m_Lock);
+        m_stop = true;
+    }
+
+    DEBUG_LOG("Lock Released");
+    m_cv.notify_one();
+}
+
 int CIrrVideoDemux::readPacket(IrrPacket *irrpkt) {
-    int ret;
+
+    // This function is called in the Encoding thread, and "Posts" frames for encode
+    // when appropriate. Two scenarios when the Post event occurs.
+    // 1) A new frame notification by the thread that receives frames from HWC (renderFpsEnc = 1 mode)
+    // 2) A time-window corresponding to target fps elapses (renderFpsEnc = 0 mode)
+
+    int ret = 0;
 
     TimeLog timelog("IRRB_CIrrVideoDemux_readPacket");
     ATRACE_CALL();
 
+    // Thread control variables
     std::unique_lock<std::mutex> lock(m_Lock);
-#ifndef USE_QUICK
     std::chrono::microseconds time_to_wait(1000000);
-#else
-    std::chrono::microseconds time_to_wait(13000); //13ms
-#endif
+    bool notify_status = false;
 
-    ///< Wait for 1 frame's time if const FPS
+    // Track Time Window for single frame assuming constant fps
     int64_t frame_mcs = av_rescale_q(1, av_inv_q(m_Info.m_rFrameRate), m_Info.m_rTimeBase);
-    int64_t curr_mcs = av_gettime_relative();
-    // Local variable 'targ_mcs' is never used
-    //int64_t targ_mcs = 0;
-    int64_t diff_mcs = 0;
-    int64_t wait_mcs = 0;
-    int64_t left_mcs = 0;
+    int64_t curr_mcs  = av_gettime_relative();
 
     if (!getRenderFpsEncFlag()) {
-        diff_mcs = curr_mcs - m_nPrevPts;
-        wait_mcs = frame_mcs - (diff_mcs % frame_mcs);
 
-        // If previous frame is notified before waiting completed, add the left time
-        // to total wait time this frame for compensation,  to keep encoding fps.
-        wait_mcs += m_nLeftMcs;
-
-        //
-        // If there is a new frame ready during previous encoding time slot,
-        // wait more time in this frame to avoid falling in always long latency case.
-        //
-        if (m_nPrevPts <= m_nLastFrameTs) {
-            wait_mcs += 3000;  // 3ms is experience value of encoding and writeback time
-            // printf("read packet : add extra wait, wait_mcs = %ld \n", wait_mcs);
-        }
-
+        int64_t time_since_last_post = curr_mcs - m_nPrevPts;
+        int64_t wait_mcs = std::max<int64_t>(frame_mcs - time_since_last_post, 0);
         time_to_wait = std::chrono::microseconds(wait_mcs);
+
+        DEBUG_LOG("curr_mcs = %ld, m_nPrevPts = %ld, wait_mcs = %ld, frame_mcs = %ld, "
+                  "time_since_last_post = %ld",
+                  curr_mcs, m_nPrevPts, wait_mcs, frame_mcs, time_since_last_post);
+
+
+        if (wait_mcs > 0) {
+            // Release lock before threads sleeps to account for wait time (to maintain fps)
+            // If SendPacket is called more than once before this thread is active again, m_pkt will be
+            // overwritten by the AiC frame in the latest call (older ones are effectively dropped
+            // without submitting to the encoder)
+            lock.unlock();
+            std::this_thread::sleep_for(time_to_wait);
+            m_totalWaitMcs += wait_mcs;
+
+            // Re-Acquire lock and continue
+            lock.lock();
+        }
+
+        notify_status = m_notified;
+    }
+    else { //RenderFpsEncFlag = 1
+
+        // Follow Render fps instead of fixed encode fps.
+        // If configured, adhere to a min fps
+
+        int64_t time_wait = NEW_FRAME_WAIT_TIMEOUT_MCS;
+        if (getMinFpsEnc() != 0)
+            time_wait = 1000000 / getMinFpsEnc();
+        time_to_wait = std::chrono::microseconds(time_wait);
+
+        //Wait for notification, till time-out
+        notify_status = m_cv.wait_for(lock, time_to_wait,  [&] { return m_notified; });
+
+        m_totalWaitMcs += time_wait;
     }
 
-    ///< Always output a packet no matter we are notified or not
-    std::cv_status wait_status;
-    if (getRenderFpsEncFlag()) {
-        int iStartFrameRate = FIRST_START_ENCODE_FPS_DEFAULT;
-        int iInitialFrameRate = (int)av_q2d(m_Info.m_rFrameRate);
-        if (iInitialFrameRate > 0) {
-            iStartFrameRate = iInitialFrameRate;
-        }
-
-        if (m_bFirstStartEncoding) {
-            m_iFirstStartEncodingCnt = iStartFrameRate * 4;
-            m_bFirstStartEncoding = false;
-        }
-
-        if (m_iFirstStartEncodingCnt > 0) {
-            m_iFirstStartEncodingCnt--;
-            int64_t time_wait_const = 1000000 / iStartFrameRate;
-            if (m_timeoutCount < 30)
-                time_wait_const = frame_mcs + frame_mcs/10;
-            time_to_wait = std::chrono::microseconds(time_wait_const/10);
-
-            for (int i = 0; i < 10; i++) {
-                wait_status = m_cv.wait_for(lock, time_to_wait);
-                if (wait_status != std::cv_status::timeout || m_stop) {
-                    break;
-                }
-            }
-            if (wait_status == std::cv_status::timeout) {
-                m_nLastFrameTs = curr_mcs;
-                m_timeoutCount++;
-            }
-        } else if (m_nLastEncodeFrameTs == m_nLastFrameTs) {
-            int64_t time_wait_const = 1000000 / getMinFpsEnc();
-            if (m_timeoutCount < 30)
-                time_wait_const = frame_mcs + frame_mcs/10;
-            time_to_wait = std::chrono::microseconds(time_wait_const/10);
-            for (int i = 0; i < 10; i++) {
-                wait_status = m_cv.wait_for(lock, time_to_wait);
-                if (wait_status != std::cv_status::timeout || m_stop) {
-                    break;
-                }
-            }
-            if (wait_status == std::cv_status::timeout) {
-                m_nLastFrameTs = curr_mcs;
-                m_timeoutCount++;
-            }
-            else {
-                m_timeoutCount = 0;
-            }
-        }
+    if (notify_status || m_stop) {
+        //Reset wait time counter if there is a frame notified
+        m_totalWaitMcs = 0;
     }
-    else {
-        wait_status = m_cv.wait_for(lock, time_to_wait);
 
-        if (wait_status == std::cv_status::timeout) {
-            m_nLeftMcs = 0;
-        }
-        else {
-            diff_mcs = av_gettime_relative() - m_nPrevPts;
-            if (left_mcs >= (frame_mcs + m_nLeftMcs)) {
-                left_mcs = 0;
-            }
-            else {
-                left_mcs = (frame_mcs + m_nLeftMcs) - diff_mcs;
-            }
+    DEBUG_LOG("status = %d, time_to_wait = %ld, m_stop = %d, m_totalWaitMcs = %ld",
+              (int)notify_status, time_to_wait, (int)m_stop, m_totalWaitMcs);
 
-            m_nLeftMcs = (left_mcs < frame_mcs) ? left_mcs : 0;
-        }
+    if (m_totalWaitMcs >= NEW_FRAME_WAIT_TIMEOUT_MCS) {
+        // Reset wait time measurement
+        m_totalWaitMcs = 0;
 
-        // printf("read packet : wait_mcs = %ld, left_mcs = %ld, m_nLeftMcs = %ld \n", wait_mcs, left_mcs, m_nLeftMcs);
+        m_logger->Debug("ReadPacket: No new frame notification for last 1s");
     }
 
     // Check if a valid packet is received. Exit with INVALIDDATA error if not
@@ -228,73 +212,46 @@ int CIrrVideoDemux::readPacket(IrrPacket *irrpkt) {
     }
 
     irrpkt->av_pkt.pts = irrpkt->av_pkt.dts = m_nPrevPts = av_gettime_relative();
-    m_nLastEncodeFrameTs = m_nLastFrameTs;
-    //printf ("read packet : m_nPrePts = %ld, m_nLastEncodeFrameTs = %ld, latency = %ld \n", m_nPrevPts, m_nLastEncodeFrameTs, m_nPrevPts - m_nLastEncodeFrameTs);
 
     if (m_nLatencyStats && m_bStartLatency ) {
         m_Pkt.av_pkt.pts = AV_NOPTS_VALUE;
     }
 
 cleanup:
-    lock.unlock();
-
+    m_notified = false;
     return ret;
 }
 
 int CIrrVideoDemux::sendPacket(IrrPacket *pkt) {
-    std::unique_lock<std::mutex> lock(m_Lock);
+    DEBUG_LOG("Entry. Pre-Lock Acquire");
 
     TimeLog timelog("IRRB_CIrrVideoDemux_sendPacket");
     ATRACE_CALL();
 
-    av_packet_unref(&m_Pkt.av_pkt);
-    av_packet_move_ref(&m_Pkt.av_pkt, &pkt->av_pkt);
-    // if m_Pkt.display_ctrl is not nullptr, the ctrl is not read. Keep it non-nullptr
-    // to avoid missing ctrl SEI.
-    if (pkt->display_ctrl != nullptr)
-        m_Pkt.display_ctrl = std::move(pkt->display_ctrl);
+    {
+        std::unique_lock<std::mutex> lock(m_Lock);
+        DEBUG_LOG("Lock Acquired");
 
-    if (m_nLatencyStats) {
-        if (!m_bStartLatency) {
-            m_bStartLatency = true;
-        }
-        m_Pkt.av_pkt.pts = m_mProfTimer["pkt_latency"]->profTimerBegin();
-    }
+        av_packet_unref(&m_Pkt.av_pkt);
+        av_packet_move_ref(&m_Pkt.av_pkt, &pkt->av_pkt);
+        // if m_Pkt.display_ctrl is not nullptr, the ctrl is not read. Keep it non-nullptr
+        // to avoid missing ctrl SEI.
+        if (pkt->display_ctrl != nullptr)
+            m_Pkt.display_ctrl = std::move(pkt->display_ctrl);
 
-    int64_t curr_mcs = av_gettime_relative();
-    int64_t diff1_mcs = 0;
-    int64_t diff2_mcs = 0;
-
-    int64_t frame_mcs = av_rescale_q(1, av_inv_q(m_Info.m_rFrameRate), m_Info.m_rTimeBase);
-
-    diff1_mcs =  curr_mcs - m_nLastEncodeFrameTs;
-    diff2_mcs =  m_nLastFrameTs - m_nPrevPts;
-    /*
-    printf("send packet : curr_mcs = %ld, m_nLastFrameTs = %ld, m_nLastEncodeFrameTs = %ld, m_nPrevPts = %ld, diff1_mcs = %ld, diff2_mcs = %ld, frame_mcs = %ld \n", \
-            curr_mcs, m_nLastFrameTs, m_nLastEncodeFrameTs, m_nPrevPts, diff1_mcs, diff2_mcs, frame_mcs);
-    */
-
-    m_nLastFrameTs = curr_mcs;
-
-    bool notify = true;
-    if (!getRenderFpsEncFlag()) {
-
-        // For constant fps app,  the interval between post is almost constant.
-        // But since the readback time and various lock/unlock time is not constant,  the interval between sendPacket is not constant.
-        // So we can't strictly compare it with frame time,  add 1ms time range here for workaround.
-        // The better way is to record frame timestamp in post and pass the value to here.
-        if (diff1_mcs >= (frame_mcs - 1000)) {
-
-            if ((diff2_mcs > 0) && (diff2_mcs < 3000)) {
-                notify = false;
+        if (m_nLatencyStats) {
+            if (!m_bStartLatency) {
+                m_bStartLatency = true;
             }
+            m_Pkt.av_pkt.pts = m_mProfTimer["pkt_latency"]->profTimerBegin();
         }
+
+        m_notified = true;
     }
 
-    lock.unlock();
-    if (notify) {
-        m_cv.notify_one();
-    }
+    DEBUG_LOG("Lock Released");
+    m_cv.notify_one();
+
     return 0;
 }
 

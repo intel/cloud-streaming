@@ -32,6 +32,8 @@ extern "C" {
 #include <map>
 #include <list>
 
+#define NEW_FRAME_WAIT_TIMEOUT_MCS 1000000 //1s
+
 class CIrrVideoDemux : public CDemux {
 public:
     CIrrVideoDemux(int w, int h, int format, float framerate, IrrPacket* pkt);
@@ -48,7 +50,7 @@ public:
 
     void updateDynamicChangedFramerate(int framerate);
 
-    void stop() {m_stop = true; }
+    void stop();
 
 private:
     std::mutex                  m_Lock;
@@ -56,9 +58,7 @@ private:
     CStreamInfo                 m_Info;
     IrrPacket                   m_Pkt;
     int64_t                     m_nPrevPts;
-    int64_t                     m_nLastFrameTs;
-    int64_t                     m_nLastEncodeFrameTs;
-    int64_t                     m_nLeftMcs;
+    int64_t                     m_totalWaitMcs;
     IORuntimeWriter::Ptr        mRuntimeWriter;
 
     ///< pkt_round: profile one round, mostly it is 1/fps, such as 40ms for 25fps
@@ -68,8 +68,8 @@ private:
     int m_nLatencyStats;
     bool m_bStartLatency;
 
-    uint64_t m_timeoutCount;
     bool m_stop;
+    volatile bool m_notified;
 
     std::unique_ptr<CTransLog> m_logger;
 };
