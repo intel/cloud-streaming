@@ -30,7 +30,7 @@ struct IrrPacket {
 
 class CDemux {
 public:
-    CDemux() :m_isVASurfaceID(false), m_bRenderFpsEnc(true), m_MinFpsEnc(3), m_isQSVSurfaceID(false), m_bFirstStartEncoding(false), m_iFirstStartEncodingCnt(0){}
+    CDemux() :m_isVASurfaceID(false), m_bRenderFpsEnc(true), m_MinFpsEnc(0), m_isQSVSurfaceID(false), m_bFirstStartEncoding(false){}
     virtual ~CDemux() {}
     /**
      * @param format,pDict Extra informations for demux
@@ -65,7 +65,7 @@ public:
     virtual bool getRenderFpsEncFlag() { return m_bRenderFpsEnc; }
     virtual void setMinFpsEnc(int iMinFpsEnc) { m_MinFpsEnc = iMinFpsEnc; }
     virtual int  getMinFpsEnc() { return m_MinFpsEnc; }
-    virtual void  setFirstStartEncoding(bool bFirstStartEncoding) { m_bFirstStartEncoding = bFirstStartEncoding; }
+    virtual void setFirstStartEncoding(bool bFirstStartEncoding) { m_bFirstStartEncoding = bFirstStartEncoding; }
 
     virtual void stop() { }
 private:
@@ -76,7 +76,6 @@ private:
 
 protected:
     bool m_bFirstStartEncoding;
-    int  m_iFirstStartEncodingCnt;
 };
 
 #endif /* CDEMUX_H */
