@@ -51,11 +51,6 @@ public:
     void stop() {m_stop = true; }
 
 private:
-    enum eFRC{
-        eFRC_CONST = 0,
-        eFRC_VARI,
-        eFRC_NUM
-    };
     std::mutex                  m_Lock;
     std::condition_variable     m_cv;
     CStreamInfo                 m_Info;
@@ -64,7 +59,6 @@ private:
     int64_t                     m_nLastFrameTs;
     int64_t                     m_nLastEncodeFrameTs;
     int64_t                     m_nLeftMcs;
-    eFRC                        m_eFrc;         ///< Framerate Control
     IORuntimeWriter::Ptr        mRuntimeWriter;
 
     ///< pkt_round: profile one round, mostly it is 1/fps, such as 40ms for 25fps
