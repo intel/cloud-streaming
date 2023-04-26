@@ -117,8 +117,9 @@ disp_res_t* DisplayVideoRenderer::createDispRes(vhal::client::cros_gralloc_handl
             res->prime_fds[i]   = handle->fds[i];
             res->strides[i]     = handle->strides[i];
             res->offsets[i]     = handle->offsets[i];
+            res->format_modifiers[i] =
+                ((uint64_t)handle->format_modifiers[2*i]) | ((uint64_t)handle->format_modifiers[2*i + 1]);
         }
-
 
         SOCK_LOG(("%s:%d : create disp res for : \n", __func__, __LINE__));
         SOCK_LOG(("%s:%d : width = %d, height=%d, drm_format = 0x%x, android_format=%d, seq_no = %u\n", __func__, __LINE__,
@@ -147,6 +148,7 @@ disp_res_t* DisplayVideoRenderer::createDispRes(vhal::client::cros_gralloc_handl
             info.stride[i]   = res->strides[i];
             info.offset[i]   = res->offsets[i];
             info.fd[i]      = res->prime_fds[i];
+            info.format_modifier[i] = res->format_modifiers[i];
         }
         info.data_size  = 0;
         info.pdata      = NULL;

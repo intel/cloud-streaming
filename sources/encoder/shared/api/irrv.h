@@ -106,6 +106,7 @@ typedef  struct _irr_surface_info {
     int stride[MAX_PLANE_NUM];
     int offset[MAX_PLANE_NUM];
     int fd[MAX_PLANE_NUM];                     ///< This is prime id, for example, it maybe got from vhal via sockets.
+    uint64_t format_modifier[MAX_PLANE_NUM];
     int data_size;
 
     unsigned char*  pdata;                ///< This is buff for store the data.
