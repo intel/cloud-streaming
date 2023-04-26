@@ -530,6 +530,9 @@ static irr_surface_t* create_surface_from_fd(irr_surface_info_t* surface_info)
     va_attrib_extbuf.flags = VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME;
     va_attrib_extbuf.private_data = NULL;
 
+    if (surface_info->format_modifier[0] != 0)
+        va_attrib_extbuf.flags |= VA_SURFACE_EXTBUF_DESC_ENABLE_TILING;
+
     switch (surface_info->format) {
     case DRM_FORMAT_ABGR8888:
     case DRM_FORMAT_XBGR8888:
@@ -540,7 +543,6 @@ static irr_surface_t* create_surface_from_fd(irr_surface_info_t* surface_info)
         break;
     case DRM_FORMAT_NV12:
         va_attrib_extbuf.pixel_format = VA_FOURCC_NV12;
-        va_attrib_extbuf.flags |= VA_SURFACE_EXTBUF_DESC_ENABLE_TILING;
         va_attrib_extbuf.num_planes = 2;
         va_attrib_extbuf.pitches[1] = surface_info->stride[1];
         va_attrib_extbuf.offsets[1] = surface_info->offset[1];

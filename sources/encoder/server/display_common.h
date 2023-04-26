@@ -32,6 +32,7 @@ typedef struct _disp_res {
     int             strides[MAX_HANDLE_COUNT];
     int             offsets[MAX_HANDLE_COUNT];
     unsigned int    seq_no;
+    uint64_t        format_modifiers[MAX_HANDLE_COUNT];
 
     uint32_t        gem_handles[MAX_HANDLE_COUNT];
     uint32_t        fb_ids[MAX_HANDLE_COUNT];
