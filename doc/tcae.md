@@ -313,7 +313,7 @@ sequenceDiagram
     EncodeThread ->> EncodeThread: avcodec_send_frame()
     rect rgb(226, 240, 217)
     EncodeThread ->> EncodeThread: PredictorTcaeImpl::BitstreamSent()
-    Note left of EncodeThread: Populate Encoded Stream Data Buffer {S(k)}
+    Note left of EncodeThread: Populate Encoded Stream Data Buffer {s(k)}
     end
     EncodeThread ->> StreamerProcess : IRRV_EVENT_VFRAME
     deactivate EncodeThread
@@ -360,8 +360,301 @@ for the current frame. $t_k$ is then passed to the Media driver as part of
 the encode submission. 
 
 See the section on [Software Interfaces for TCBRC](#SDK-Level-Interface)
-for more info on the specific structures involved
+for more info on the specific structures involved.
 
+
+## Algorithm for Reference TCAE implementation
+
+This section describes the algorithm that goes into determining the target
+frame size upon invocation of the `PredictEncSettings` function. This call
+consumes the available data in the Delay Data buffer upto that point, and
+buffers the data internally. The most recent L samples in this buffer are
+considered in making the frame size prediction, where`L=BufferedRecordsCount`
+(default value 100). The flow-chart below describes the steps involved in
+determining the target frame size. The rest of this section provides more
+details for each step.
+
+**Note: Notation $f(n)$ and $f_n$ is used interchangably.**
+
+```mermaid
+flowchart TD
+    DDB[(INPUT </br></br>Delay Data Buffer, </br>Encode Bitstream data)] --> NDC{New Delay Data?}
+    DDB --> ABC[[Adaptive Bandwidth Check]]
+    NDC --> |Yes| WLR[[Weighted Linear Regression </br></br> d = α.s + β]]
+    NDC --> |No| DFS[[Drop frame size by 5%]]
+    WLR --> |α , β| OD[[Outlier Detection </br></br> d = α'.s + β']]
+    OD -->  |α', β'|RMP[[Reaction Model </br> Preliminary Prediction]]
+    RMP --> |"p(k)"| ATG[[Adjust Target]]
+    ATG --> |"u(k)"| OIF[[Output IIR Filter]]
+    OIF --> |"t(k)"| TFS[(OUTPUT </br></br>Target </br> Frame Size)]
+    DFS ----> TFS
+    ABC ---> SSD[(</br> Bandwidth Estimate, </br></br> State Data)]
+    SSD --> ATG
+```
+
+If there are no new feedback samples available to consume at the point of
+invocation, then an early exit is taken, with the target frame size dropped 
+by 5% i.e. $t_k = 0.95 \cdot t_k-1$. In this path, the target frame size goes
+from maximum (corresponds to 100% of target bitrate) to the minimum (10% of
+target bitrate specified) in about 45 frames.
+
+If there is new feedback data available, the target frame size is computed
+by the following steps. 
+- A `Weighted Linear Regression (WLR)` process is run to curve-fit the
+  data samples into a linear model defined by parameters α and β
+
+  $$d_n = α \cdot s'_n + β$$
+ 
+- For a given frame, the final values of α, β are adjusted to α',β’ to account 
+  for the results of an `Outlier Detection` step that follows WLR. With the
+  model now in place, a preliminary target size prediction $p_k$ is generated
+  for the given `TargetDelay`.
+- The target size is adjusted to $u_k$` based on safeguards to ensure an
+  output in the expected valid range of values, and the results of the
+  Adaptive Bandwidth Check feature, if enabled.
+- The `Adaptive Bandwidth Check` block tracks the Delay data buffer and 
+  the Encoded bitstream data buffer to check if there is a latency pattern 
+  that indicates that the network has a steady bandwidth that is lower than
+  the target bitrate. If yes, the estimated bandwidth and other state info
+  captured by this block are also taken into account to determine $u_k$.
+- An `Output IIR Filter` is then run to refine $u_k$ to the final target
+  $t_k$. The filter co-efficient controls how quickly the target size can
+  change over time.
+
+### Latency Model and Weighted Linear Regression
+
+In this TCAE implementation, the relationship between latency (d) and bitstream
+size (s) is approximated by a linear model expressed as: 
+
+$$d = α \cdot s + β \tag{1}$$
+
+* $α = (1/BandWidth)$ and is defined as the `Inverse Bandwidth`. The α.s term
+  covers the Transmission latency: this linearly varies with bitstream size.
+* β is referred to as the `Propagation Delay` in a simplified sense. It is
+  intended to cover for all other types of delay in the system including the
+  network propagation delay, response latency, software latency, etc. This is
+  not related to the bitstream size.
+
+The `Weighted Linear Regression (WLR)` block is meant to estimate the
+parameters α and β, by curve-fitting (1) with the last L buffered
+records of (size, latency) data pairs $(s’_n, d_n))$ with the least
+mean-squared error (MSE). This is expressed mathematically as follows:
+
+``` math
+(α,β) = \underset{(α,β)} {argmin} \sum_ {t=0}^L ω(t)^2 \cdot \left( α \cdot s'_ {n-t} + β - d_ {n-t}\right)^2 \tag{2}
+```
+ω(t) is the weight assigned to the data point correspoing to frame `n-t`.
+
+The solution to the WLR problem is given by 
+
+``` math
+\begin{equation}
+α =  {\sum_ {t=0}^L ω(t)^2 \cdot \left( d_ {n-t} - m_d \right) \cdot \left( s'_ {n-t} - m_s \right)}
+     / {\sum_ {t=0}^L ω(t)^2 \cdot \left( s'_ {n-t} - m_s \right)^2}
+\end{equation}           
+```
+``` math
+β = m_d - α.m_s\tag{3}
+```
+where:
+``` math
+m_s = \sum_ {t=0}^L ω(t) \cdot s'_ {n-t} / \sum_ {t=0}^Lω(t) 
+```
+``` math
+m_d = \sum_ {t=0}^L ω(t) \cdot d_ {n-t} / \sum_ {t=0}^Lω(t) 
+```
+
+The result computed from above equations is sanity-checked to ensure α, β
+are non-negative, and α is not a very tiny number (implying infinite bandwidth).
+In such cases, there are two mitigations attempted:
+
+* `Safe Model Update`: The data points are filtered to qualify only those that
+  indicate an increasing function between latency and bitstream size. If not,
+  (0,0) is used in its place. The qualification criterion is `Q > 0`, where
+```math
+        Q = \left( s'_ {n-t} - m_s \right) \cdot \left( d_ {n-t} - m_d \right)
+```
+* `Small Model Update`: If the Safe Model result still fails to pass the Sanity Check,
+   we then compute α,β by the following: 
+```math
+   α = m_d/m_s ,  β = 0 \tag{3'}
+```
+
+The call flow to update the latency model is indicated in the flowchart below:
+```mermaid
+flowchart TD
+    BR[(All Buffered Records)] --> Normal[[Normal Model Update]]
+    Normal --> |α,β| Check{Sanity Check Passed?}
+    Check --> |Yes| Result[( OUTPUT </br></br> α , β)]
+    Check --> |No| Safe[[Safe Model Update]]
+    Safe --> |α,β| Check2{Sanity Check Passed?}
+    Check2 --> |Yes| Result[( OUTPUT </br></br> α , β)]
+    Check2 --> |No| Small[[Small Model Update]]
+    Small --> |α,β| Result
+```
+   
+The weights  ω(t) (0 <= t <= L) are chosen to bias the model towards more 
+recent inputs of size and latency, and are given by below formula:
+
+```math
+    ω_t = ω_0. \left( 0.01 \right)^ {t/2L}    ..... 	ω(0) = 1
+```
+A plot of the weight distributions vs age of the sample for L=100 is given below.
+w(0) is the weight applied to the most recent sample.
+
+![Tcae_Weights](pic/Tcae_Weights.png)
+
+### Outlier Detection and Handling
+
+An outlier means the current `{s’(n), d(n)}` can’t fit well into (1) with the
+α and β given by WLR. It may indicate the network status has changed suddenly. 
+
+In this case, the α, β values are adjusted according to the last `{s’(n), d(n)}`
+as a quick response to a sudden network status change.
+
+Weighted Mean-squared error (WMSE) across all buffered records used in the WLR
+is used as a criterion to detect an outlier:
+
+``` math
+\begin{equation}
+WMSE =  {\sum_ {t=0}^L ω(t)^2 \cdot \left( α \cdot s'_ {n-t} + β - d_ {n-t}\right)^2}
+       /{\sum_ {t=0}^L ω(t)^2}
+\end{equation}           
+```
+β value is adjusted to β' if the error for the latest sample $(s'_n, d_n)$
+exceeds one standard deviation.
+
+```math
+β' = \begin{cases}
+     d_n - α \cdot s'_n     & \text{if } \left( α \cdot s'_n+ β - d_n\right)^2 \gt WMSE\
+     β                 & \text{else}
+   \end{cases}
+```
+
+Further, is the delay d(n) is greater than the target delay for the system, 
+β' is adjusted further, and α is modified to α'
+
+```math
+β' = \begin{cases}
+     \left(β + β'\right)/2   & \quad \text{if } \left(α \cdot s'_n+ β - d_n\right)^2 \gt WMSE\ & \text{and } \left(d_n \gt 0.9 * TargetDelay\right)\
+     β'                      & \quad \text{else }\
+   \end{cases}
+ ```
+ 
+ ```math
+α' = \begin{cases}
+     \left(d_n - β'\right)/s'_n   & \quad \text{if} \left(α \cdot s'_n+ β - d_n\right)^2 \gt WMSE\ & \text{and } \left(d_n \gt 0.9 * TargetDelay\right)\
+     α                            & \quad \text{else }\
+   \end{cases}
+``` 
+
+With the model parameters in place, a preliminary prediction $p_k$ is made
+as below:
+
+```math
+p(k) = \left(0.9 * TargetDelay - β'\right)/α'
+``` 
+**Example**
+
+The figure below shows sample results of WLR and outlier detection at three 
+adjacent frames in a test run. (labeled A, B, C with n = 1615, 1616, 1617
+respectively). 
+* In each figure, scattered points in blue make the model dataset
+{(s’<sub>n-1</sub>, d<sub>n-1</sub>),..(s’<sub>n-L</sub>, d<sub>n-L</sub>)}.
+* The red point is the most recent data point (s’<sub>n</sub>, d<sub>n</sub>).
+
+![Tcae_Outlier_Detection_example](pic/Tcae_Outlier_Detection_example.png)
+
+The Blue line (note that it is overlapped by yellow line in A and C) is the
+linear relationship (1) and green line is the criterion line to detect outlier:
+`d = αs + β + sqrt(wmse)`. 
+
+The Yellow line is the final reaction model after outlier detection and handler.
+In B, the network status dropped suddenly resulting in a sharp latency spike
+above the green line, and hence detecting it as an outlier, β is adjusted to β’
+in the yellow line to fit it well. As a result, the model’s prediction u(k=n+D)
+is decreased quickly at frame B to react to the sudden network status change.
+
+### Safety Checks and Target Adjustment
+
+The preliminary target is then adjusted to `u(k)` to ensure it conforms to:
+
+* Being within the required minimum (corresponds to ~10% of target bitrate)
+  and maximum values (corresponds to 100% of target bitrate) supported.
+* Following a downward trend if reported latency spikes above target delay.
+  This is intended as a safety check to make sure there is a quick response
+  to deal with latency approaching target limits.
+* Any limits imposed by the Adaptive Bandwidth Check block, if enabled.
+  The Adaptive Bandwidth check imposes a cap on the target frame size, if 
+  it detects a network capability below the target bitrate. 
+
+### Adaptive Bandwidth Check
+
+To make a decision if the network is operating at a steady bandwidth
+below the target bitrate, the latency feedback data is processed to
+detect latency spikes (latency above target delay / missing feedback
+for 5+ frames). 
+
+The logic to determine this follows the state diagram below. `Good 
+channel` conditions are assumed for initialization. State is updated
+based on latency patterns observed.
+
+* If there are multiple such spikes within a timeout duration, the
+  algorithm decides there is a `NewSteadyState`, and computes an
+  estimated bandwidth based on the frame sizes streamed over the duration.
+  This is then imposed as a frame-size cap for the Target Adjustment
+  block for TCAE.
+* If channel conditions have improved, a `RecoveryAttempt` is made after
+  a time equivalent to `RecoveryPeriod` elapses. (Initial value = 10s).
+* If the recovery is unsuccessful (i.e. new latency spikes are observed),
+  the RecoveryPeriod is geometrically increased with `r=2`. If successful
+  (i.e. no new latency spikes are seen), the state is moved to `GoodChannel`
+  and all state parameters are reset to initial values.
+* If operating in a new steady state, any subsequent latency spikes are
+  used to determine if there is a significant (10%+) change in the 
+  frame-size cap. If yes, the recovery mechanism is reset.
+
+```mermaid
+stateDiagram
+    [*] --> GoodChannel
+    note left of GoodChannel
+        NewState = 0
+        Spikes = 0
+        FramesSinceLastSpike = 0 
+        Reset Recovery Parameters
+    end note
+    
+    GoodChannel --> NewSteadyState: 2 Latency Spikes </br> within timeout  
+    note left of NewSteadyState
+        Compute Frame-Size cap based on
+        bandwidth estimate
+    end note
+    
+    NewSteadyState --> NewSteadyState: LatencySpike  </br> Reset Recovery Parameters if needed
+    NewSteadyState  --> RecoveryAttempt: RecoveryPeriod elapsed
+    RecoveryAttempt --> NewSteadyState: 2 Latency spikes </br> Recovery Failure
+    note right of RecoveryAttempt
+        if Recovery attempt fails:
+            RecoveryPeriod *= 2
+    end note
+
+    RecoveryAttempt --> GoodChannel: TimeOut elapsed. </br> Recovery Success
+```
+
+### Output IIR Filter
+
+A linear Infinite Impulse Response (IIR) filter is deployed to control
+the rate of change for the target bitstream size after `u(k)` is provided
+by the reaction model.The filter's response is characterized by the
+equation below. The output of the filter makes the final target 
+size prediction `t(k)` in this TCAE implementation.
+
+```math
+t_k = (1-ρ)t_ {k-1} +ρ.u_ {k}
+```
+ρ, the filter co-efficient controls the rate of change of the frame size
+as desired. Higher the value of ρ, higher the rate of change for the target
+size. In this implementation, `ρ = 0.5`
 
 ## Appendix: Software Interfaces for TCBRC
 
