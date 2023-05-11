@@ -260,7 +260,7 @@ encoder_register_client(void /*RTSPContext*/ *rtsp) {
         }
     }
     encoder_clients[rtsp] = rtsp;
-    ga_logger(Severity::INFO, "encoder client registered: total %d clients.\n", encoder_clients.size());
+    ga_logger(Severity::INFO, "encoder client registered: total %zu clients.\n", encoder_clients.size());
     return 0;
 }
 
@@ -274,7 +274,7 @@ int
 encoder_unregister_client(void /*RTSPContext*/ *rtsp) {
     std::unique_lock<std::shared_mutex> lock(encoder_lock);
     encoder_clients.erase(rtsp);
-    ga_logger(Severity::INFO, "encoder client unregistered: %d clients left.\n", encoder_clients.size());
+    ga_logger(Severity::INFO, "encoder client unregistered: %zu clients left.\n", encoder_clients.size());
     if(encoder_clients.size() == 0) {
         threadLaunched = false;
         ga_logger(Severity::INFO, "encoder: no more clients, quitting ...\n");

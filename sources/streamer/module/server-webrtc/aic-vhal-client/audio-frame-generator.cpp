@@ -41,8 +41,8 @@ AudioFrameGenerator::AudioFrameGenerator(int instanceId, CommandHandler cmd_hand
                                          audio_bytes_per_sample(ctrl_msg.asci.format);
             mVhalStreamStopped=true;
             ga_logger(Severity::INFO,
-                TAG "audio channel_count:%d | format:%d | frame_count:%d | "
-                "sample_rate:%d | buffer_size:%zu\n",
+                TAG "audio channel_count:%u | format:%d | frame_count:%d | "
+                "sample_rate:%u | buffer_size:%d\n",
                 ctrl_msg.asci.channel_count, ctrl_msg.asci.format, ctrl_msg.asci.frame_count,
                 ctrl_msg.asci.sample_rate, mRecBufLen10ms);
             for (int i = 0; i < MAX_QUEUE_SIZE; i++) {
