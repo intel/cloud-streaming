@@ -145,14 +145,15 @@ int DisplayServer::event_flag = 0;
 void DisplayServer::signal_handler(int signum) {
     switch (signum){
         case SIGINT://Ctrl+C trigger
-            SOCK_LOG(("%s:%d : received SIGINT!\n", __func__, __LINE__));
+            SOCK_LOG(("%s:%d : received SIGINT, set event_flag to 1!\n", __func__, __LINE__));
+            event_flag = 1;
+            break;
         case SIGTERM://Ctrl+\ trigger
-            SOCK_LOG(("%s:%d : received SIGTERM!\n", __func__, __LINE__));
+            SOCK_LOG(("%s:%d : received SIGTERM, set event_flag to 1!\n", __func__, __LINE__));
+            event_flag = 1;
+            break;
         case SIGQUIT://kill command will trigger
-            SOCK_LOG(("%s:%d : received SIGQUIT!\n", __func__, __LINE__));
-        //case SIGKILL://kill -9 command will trigger, but it can not be captured.
-            //SOCK_LOG(("%s:%d : received SIGKILL!\n", __func__, __LINE__));
-            SOCK_LOG(("%s:%d : set event_flag to 1!\n", __func__, __LINE__));
+            SOCK_LOG(("%s:%d : received SIGQUIT, set event_flag to 1!\n", __func__, __LINE__));
             event_flag = 1;
             break;
     default:
