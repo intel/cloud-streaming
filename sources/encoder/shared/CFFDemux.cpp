@@ -27,7 +27,7 @@ CFFDemux::CFFDemux(const char *url) : CTransLog(__func__) {
 }
 
 CFFDemux::~CFFDemux() {
-    for (auto it:m_mStreamInfos)
+    for (const auto& it:m_mStreamInfos)
         delete it.second;
 
     if (m_pDemux) {
