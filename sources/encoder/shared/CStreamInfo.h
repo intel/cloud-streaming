@@ -39,13 +39,15 @@ struct CStreamInfo {
     }
 
     CStreamInfo& operator=(const CStreamInfo &orig) {
+        if (this == &orig)
+            return *this;
         avcodec_parameters_copy(m_pCodecPars, orig.m_pCodecPars);
         m_rFrameRate = orig.m_rFrameRate;
         m_rTimeBase  = orig.m_rTimeBase;
         return *this;
     }
 
-    AVCodecParameters *m_pCodecPars;
+    AVCodecParameters *m_pCodecPars = nullptr;
     AVRational         m_rFrameRate;
     AVRational         m_rTimeBase;
 };

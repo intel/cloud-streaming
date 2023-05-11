@@ -44,7 +44,7 @@ private:
     ~CQSVAPIDevice();
 
 private:
-    AVBufferRef *m_pDev;
+    AVBufferRef *m_pDev = nullptr;
     static CQSVAPIDevice* m_pQSVapiDev;
 };
 

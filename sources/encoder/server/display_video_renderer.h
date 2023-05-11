@@ -70,7 +70,7 @@ private :
     irr_surface_t*    m_blankSurface;
     irr_surface_t*    m_curSurface;
 
-    encoder_info_t m_currentInfo;
+    encoder_info_t m_currentInfo = {};
 };
 
 #endif // _DISPLAY_VIDEO_RENDERER_H_

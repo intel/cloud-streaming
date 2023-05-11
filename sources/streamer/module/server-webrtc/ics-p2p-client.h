@@ -146,19 +146,19 @@ private:
   std::promise<int> connect_status_;
   std::shared_ptr<GAVideoEncoder> ga_encoder_;
   std::unique_ptr<Controller> controller_;
-  int64_t bytes_sent_on_last_stat_call_;
-  int64_t bytes_sent_on_last_credit_call_;
-  int64_t credit_bytes_;
-  int64_t current_available_bandwidth_;
+  int64_t bytes_sent_on_last_stat_call_ = 0;
+  int64_t bytes_sent_on_last_credit_call_ = 0;
+  int64_t credit_bytes_ = 0;
+  int64_t current_available_bandwidth_ = 0;
   std::string remote_user_id_;
-  bool streaming_;
+  bool streaming_ = false;
   unsigned char cursor_shape_[4096];  // The latest cursor shape.
-  bool first_cursor_info_;
+  bool first_cursor_info_ = false;
   bool capturer_started_ = false;
   std::unique_ptr<owt::base::Clock> clock_;
   bool enable_dump_ = false;
   FILE* dump_file_ = nullptr;
-  uint64_t last_timestamp_;
+  uint64_t last_timestamp_ = 0;
   uint64_t send_failures_ = 0;
   bool send_blocked_ = true;
 #ifdef E2ELATENCY_TELEMETRY_ENABLED

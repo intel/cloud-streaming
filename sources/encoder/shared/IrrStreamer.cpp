@@ -45,6 +45,7 @@ IrrStreamer::IrrStreamer(int id, int w, int h, float framerate) : CTransLog(__fu
     m_nMaxPkts   = 5;
     m_nCurPkts   = 0;
     m_pTrans     = nullptr;
+    m_pMux       = nullptr;
     m_pDemux     = nullptr;
     m_pWriter    = nullptr;
     m_pPool      = nullptr;
