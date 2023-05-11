@@ -100,11 +100,11 @@ CTransCoder::~CTransCoder() {
     av_dict_free(&m_pExtProp);
 
     delete m_pMux;
-    for (auto it:m_mEncoders)
+    for (const auto& it : m_mEncoders)
         delete it.second;
-    for (auto it:m_mFilters)
+    for (const auto& it : m_mFilters)
         delete it.second;
-    for (auto it:m_mDecoders)
+    for (const auto& it : m_mDecoders)
         delete it.second;
     delete m_Log;
 
@@ -310,7 +310,7 @@ void CTransCoder::run() {
 }
 
 bool CTransCoder::allStreamFound() {
-    for (auto it:m_mStreamFound)
+    for (const auto& it:m_mStreamFound)
         if (!it.second)
             return false;
     return true;
@@ -622,7 +622,7 @@ int CTransCoder::processInput() {
         if (ret == AVERROR_EOF) {
             m_Log->Warn("Eof detected. Exiting...\n");
             /* Flush decoder */
-            for (auto it:m_mDecoders) {
+            for (const auto& it : m_mDecoders) {
                 it.second->write(nullptr);
                 decode(it.first);
             }
@@ -811,7 +811,7 @@ int CTransCoder::doOutput(bool flush) {
     ATRACE_CALL();
 
     if(m_mFilters.size()>0)
-    for (auto it:m_mFilters) {
+    for (const auto& it : m_mFilters) {
         int        idx = it.first;
         CFilter *pFilt = it.second;
         CEncoder *pEnc = nullptr;
@@ -1800,7 +1800,7 @@ int CTransCoder::setLatencyStats(int nLatencyStats) {
     }
 
     //Encoder
-    for (auto it:m_mFilters) {
+    for (const auto& it : m_mFilters) {
         int idx = it.first;
         CFilter *pFilt = it.second;
         if (m_mEncoders.find(idx) != m_mEncoders.end()) {

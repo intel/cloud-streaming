@@ -114,7 +114,7 @@ int64_t SensorHandler::now_ns()
 void SensorHandler::configureClientSensors()
 {
     std::unique_lock<std::mutex> lck(sensorMapMutex);
-    for (auto it : mSensorMap)
+    for (const auto& it : mSensorMap)
        sendCmdToClient(it.first, it.second.first, it.second.second);
 }
 
