@@ -41,6 +41,8 @@ public:
     static void Unregister();
 
     IrrStreamer(int id, int w, int h, float framerate);
+    IrrStreamer(const IrrStreamer&) = delete;
+    IrrStreamer& operator=(const IrrStreamer&) = delete;
     ~IrrStreamer();
 
     int   start(IrrStreamInfo *param);

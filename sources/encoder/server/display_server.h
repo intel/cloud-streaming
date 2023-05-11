@@ -25,6 +25,8 @@
 class DisplayServer {
 public:
     static DisplayServer *Create(const char *socket);
+    DisplayServer(const DisplayServer&) = delete;
+    DisplayServer& operator=(const DisplayServer&) = delete;
     DisplayServer();
     virtual ~DisplayServer();
 
