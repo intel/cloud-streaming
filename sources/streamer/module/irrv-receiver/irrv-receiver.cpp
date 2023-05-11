@@ -102,6 +102,7 @@ static int irrv_receiver_ioctl(int command, int argsize, void *arg) {
             uint32_t action = *(uint32_t*)arg;
             pCSendRecvMessage->pipe_set_video_alpha(action);
         }
+        break;
     default:
         ga_logger(Severity::DBG, LOG_PREFIX "GA_IOCTL_<unknown>: %d\n", command);
         ret = GA_IOCTL_ERR_NOTSUPPORTED;

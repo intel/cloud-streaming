@@ -909,6 +909,7 @@ int irr_encoder_start(int id, encoder_info_t *encoder_info) {
 
                 info.url = encoder_info->url;
             }
+            break;
         case LOCAL_MUX:
             info.url = encoder_info->url;
             e_Log->Debug("%s : %d : local output mux enable for %s!\n", __func__, __LINE__, encoder_info->url);
