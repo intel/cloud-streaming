@@ -23,16 +23,6 @@ using std::chrono::microseconds;
 using std::chrono::system_clock;
 
 // ------ TcaeLogger class -------
-
-TcaeLogger::TcaeLogger():
-    m_enabled(false),
-    m_logFilePtr(nullptr),
-    m_EncFrameNumber(0),
-    m_FeedbackFrameNumber(0),
-    m_startTime(0)
-{
-}
-
 TcaeLogger::~TcaeLogger()
 {
     if (m_logFilePtr)

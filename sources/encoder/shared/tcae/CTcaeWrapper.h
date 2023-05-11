@@ -36,9 +36,11 @@ struct FrameData_t
 
 class TcaeLogger
 {
- public:
-    TcaeLogger();
+public:
     ~TcaeLogger();
+    TcaeLogger() = default;
+    TcaeLogger(TcaeLogger&) = delete;
+    TcaeLogger& operator=(TcaeLogger&) = delete;
 
     inline bool LogEnabled()   { return m_enabled;    };
     inline bool LogsOnlyMode() { return m_runVBRmode; };

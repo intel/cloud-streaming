@@ -785,6 +785,8 @@ class StaticSockServer
 {
 public:
     StaticSockServer() {}
+    StaticSockServer(const StaticSockServer&) = delete;
+    StaticSockServer& operator=(const StaticSockServer&) = delete;
     ~StaticSockServer()
     {
         if (m_sock)

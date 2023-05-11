@@ -74,6 +74,8 @@ class CSendRecvMessage {
 public:
 
     CSendRecvMessage(bool startEncoderImmediately = false);
+    CSendRecvMessage(const CSendRecvMessage&) = delete;
+    CSendRecvMessage& operator=(const CSendRecvMessage&) = delete;
 
     ~CSendRecvMessage();
 
