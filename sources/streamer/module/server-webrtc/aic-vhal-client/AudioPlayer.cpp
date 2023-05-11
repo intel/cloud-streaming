@@ -97,7 +97,7 @@ void AudioPlayer::MonoToStereo(
 void AudioPlayer::OnData(const void *audio_data, int bits_per_sample,
                          int sample_rate, size_t number_of_channels,
                          size_t number_of_frames) {
-    ga_logger(Severity::DBG, TAG "WriteData() number_of_frames: %d\n", number_of_frames);
+    ga_logger(Severity::DBG, TAG "WriteData() number_of_frames: %zu\n", number_of_frames);
     const uint16_t *data = reinterpret_cast<const uint16_t *>(audio_data);
 
     const auto sizeInBytes =

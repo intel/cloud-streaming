@@ -523,7 +523,7 @@ void ICSP2PClient::OnMessageReceived(const std::string &remote_user_id,
             long f_start_delay = event_param["framestartdelay"];
             long p_loss = event_param["packetloss"];
 
-            ga_logger(Severity::DBG, "ics-p2p-client: OnMessageRecvd: f_ts=%d, f_size=%d, f_delay=%d, f_start_delay=%d, p_loss=%d\n",
+            ga_logger(Severity::DBG, "ics-p2p-client: OnMessageRecvd: f_ts=%ld, f_size=%ld, f_delay=%d, f_start_delay=%ld, p_loss=%ld\n",
                 f_ts, f_size, f_delay, f_start_delay, p_loss);
 
             if (ga_encoder_)
@@ -829,7 +829,7 @@ void ICSP2PClient::InsertFrame(ga_packet_t* packet) {
               if (msgString.size() > 0 && p_latency_message) {
                   memcpy(p_latency_message, msgString.data(), msgString.size());
               }
-              ga_logger(Severity::DBG, "ics-p2p-client: InsertFrame: Frame delay is %d, Frame %d: msg_size %d: Latency message sent from server: %s\n",
+              ga_logger(Severity::DBG, "ics-p2p-client: InsertFrame: Frame delay is %u, Frame %u: msg_size %zu: Latency message sent from server: %s\n",
                   frame_delay, frameToSend, latency_message_size, msgString.c_str());
           }
           if (sendServerStat){
