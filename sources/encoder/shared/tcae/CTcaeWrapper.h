@@ -65,7 +65,7 @@ protected:
     //This will allow us to study the delay / size relationship for VBR mode without TCAE/TCBRC
     bool m_runVBRmode = false;
 
-    FrameData_t m_encData;
+    FrameData_t m_encData = {};
     std::mutex m_mutex;
 };
 

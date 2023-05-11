@@ -49,16 +49,16 @@ public:
     void updateDynamicChangedFramerate(int framerate);
 
 private:
-    AVFilterGraph *m_pGraph;
-    bool           m_bInited;
-    AVFilterContext *m_pSrc, *m_pSink;
-    size_t         m_nFrames;
+    AVFilterGraph *m_pGraph = nullptr;
+    bool           m_bInited = false;
+    AVFilterContext *m_pSrc = nullptr, *m_pSink = nullptr;
+    size_t         m_nFrames = 0;
     CStreamInfo    m_SrcInfo, m_SinkInfo;
-    bool m_bVASurface;
-    bool m_bQSVSurface;
-    bool m_vaapiPlugin;
-    bool m_qsvPlugin;
-    int m_lastError;
+    bool m_bVASurface = false;
+    bool m_bQSVSurface = false;
+    bool m_vaapiPlugin = false;
+    bool m_qsvPlugin = false;
+    int m_lastError = 0;
 private:
     AVFilterContext* alloc_filter(const char *name, const char *par);
 };

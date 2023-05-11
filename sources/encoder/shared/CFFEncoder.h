@@ -64,10 +64,10 @@ public:
     void getProfileNameByValue(std::string &strProfileName, const int iProfileValue);
     void getLevelNameByValue(std::string &strLevelName, const int iLevelValue);
 private:
-    AVCodecContext *m_pEnc;
-    bool            m_bInited;
-    size_t          m_nFrames;
-    AVDictionary   *m_pDict;
+    AVCodecContext *m_pEnc = nullptr;
+    bool            m_bInited = false;
+    size_t          m_nFrames = 0;
+    AVDictionary   *m_pDict = nullptr;
     CStreamInfo     m_Info;
     EncodePluginType m_plugin;
 
@@ -77,12 +77,12 @@ private:
 private:
     //ProfTimer *mProfTimer;
     std::map<std::string, ProfTimer *> m_mProfTimer;
-    int m_nLatencyStats;
+    int m_nLatencyStats = 0;
 #ifdef ENABLE_MEMSHARE
     std::map<const void*, AVFrame *> m_mHwFrames;
-    AVBufferRef *m_hw_frames_ctx_bk;
+    AVBufferRef *m_hw_frames_ctx_bk = nullptr;
 #endif
-    long m_g_encode_write_count;
+    long m_g_encode_write_count = 0;
 };
 
 #endif /* CFFENCODER_H */
