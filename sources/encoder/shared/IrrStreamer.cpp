@@ -899,6 +899,10 @@ int IrrStreamer::set_client_feedback(unsigned int delay, unsigned int size)
         return 0;
 }
 
+std::string getStringResolution(int width, int height) {
+    return std::to_string(width) + "x" + std::to_string(height);
+}
+
 void IrrStreamer::set_output_prop(CTransCoder *m_pTrans, IrrStreamInfo *param) {
 
     if (param->rc_params.bitrate)
@@ -939,8 +943,8 @@ void IrrStreamer::set_output_prop(CTransCoder *m_pTrans, IrrStreamInfo *param) {
     if (param->low_power)
         m_pTrans->setOutputProp("low_power", "1");
 
-    if (param->res)
-        m_pTrans->setOutputProp("s", param->res);
+    if (param->width && param->height)
+        m_pTrans->setOutputProp("s", getStringResolution(param->width, param->height).c_str());
 
     if (param->gop_size)
         m_pTrans->setOutputProp("g", param->gop_size);

@@ -33,9 +33,6 @@ DisplayVideoRenderer::DisplayVideoRenderer()
 :DisplayRenderer()
 {
     SOCK_LOG_INIT();
-
-    m_width         = ENCODER_RESOLUTION_WIDTH_DEFAULT;
-    m_height        = ENCODER_RESOLUTION_HEIGHT_DEFAULT;
     m_frameIdx      = 0;
     m_curSurface    = nullptr;
 }
@@ -57,14 +54,10 @@ bool DisplayVideoRenderer::init(char *name, encoder_info_t *info)
     irr_encoder_start(m_id, info);
 
     SOCK_LOG(("rendering and streaming with resolution %s\n", info->res));
-    if(info->res) {
-        sscanf(info->res, "%dx%d", &m_width, &m_height);
-        if( m_width  < ENCODER_RESOLUTION_WIDTH_MIN  || m_width  > ENCODER_RESOLUTION_WIDTH_MAX ||
-            m_height < ENCODER_RESOLUTION_HEIGHT_MIN || m_height > ENCODER_RESOLUTION_HEIGHT_MAX) {
-
-            m_width  = ENCODER_RESOLUTION_WIDTH_DEFAULT;
-            m_height = ENCODER_RESOLUTION_HEIGHT_DEFAULT;
-        }
+    if (m_currentInfo.width < ENCODER_RESOLUTION_WIDTH_MIN || m_currentInfo.width  > ENCODER_RESOLUTION_WIDTH_MAX ||
+        m_currentInfo.height < ENCODER_RESOLUTION_HEIGHT_MIN || m_currentInfo.height > ENCODER_RESOLUTION_HEIGHT_MAX) {
+        m_currentInfo.width = ENCODER_RESOLUTION_WIDTH_DEFAULT;
+        m_currentInfo.height = ENCODER_RESOLUTION_HEIGHT_DEFAULT;
     }
 
     return true;
@@ -400,12 +393,10 @@ int DisplayVideoRenderer::publishStatusToResourceMonitor(uint32_t id, void * sta
 
 void DisplayVideoRenderer::ChangeResolution(int width, int height)
 {
-    m_width = width;
-    m_height = height;
     irr_encoder_stop();
 
-    string curRes = to_string(width) + "x" + to_string(height);
-    m_currentInfo.res = curRes.c_str();
+    m_currentInfo.width = width;
+    m_currentInfo.height = height;
     m_currentInfo.encodeType = VASURFACE_ID;
     irr_encoder_start(m_id, &m_currentInfo);
 }

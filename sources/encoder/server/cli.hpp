@@ -67,7 +67,8 @@ struct char_prop {
 //on or off
 #define ICR_ENCODER_INSIDE_ENABLE             "ro.boot.icr.internal"
 #define ICR_ENCODER_RNODE                     "ro.acg.rnode"
-#define ICR_ENCODER_RES                       "ro.config.media_res"
+#define ICR_ENCODER_WIDTH                     "ro.config.media_width"
+#define ICR_ENCODER_HEIGHT                    "ro.config.media_height"
 #define ICR_ENCODER_RC_MODE                   "ro.config.media_rc_mode"
 #define ICR_ENCODER_FPS                       "ro.config.media_fps"
 #define ICR_ENCODER_ENCODE_UNLIMIT_ENABLE     "ro.config.encode_unlimit"

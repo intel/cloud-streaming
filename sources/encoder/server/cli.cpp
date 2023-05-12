@@ -1,4 +1,4 @@
-// Copyright (C) 2018-2022 Intel Corporation
+// Copyright (C) 2018-2023 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -164,7 +164,7 @@ void icr_parse_args(int argc, char *argv[], encoder_info_t &info) {
             info.streaming = 1;
             break;
         case 'b':
-            info.res = optarg;
+            sscanf(optarg, "%dx%d", &info.width, &info.height);
             break;
         case 'c':
             info.url = optarg;
@@ -317,7 +317,7 @@ void icr_parse_args(int argc, char *argv[], encoder_info_t &info) {
 }
 
 int bitrate_ctrl_sanity_check(encoder_info_t *info) {
-    if (!info || !info->res || !info->rate_contrl_param.ratectrl) {
+    if (!info || !info->width || !info->height || !info->rate_contrl_param.ratectrl) {
         sock_log("%s : %d : resolution or rate control related parameters error!\n", __func__, __LINE__);
         return -1;
     }
@@ -328,14 +328,12 @@ int bitrate_ctrl_sanity_check(encoder_info_t *info) {
 
     sock_log("%s : %d : use default birate ctrl values!\n", __func__, __LINE__);
 
-    int width  = 720, height = 1280;
-    sscanf(info->res, "%dx%d", &width, &height);
-    if (width  <= 0 || width > ENCODER_RESOLUTION_WIDTH_MAX ||
-        height <= 0 || height > ENCODER_RESOLUTION_WIDTH_MAX) {
-        sock_log("%s : %d : Invalid resolution:%s!\n", __func__, __LINE__, info->res);
+    if (info->width  <= 0 || info->width > ENCODER_RESOLUTION_WIDTH_MAX ||
+        info->height <= 0 || info->height > ENCODER_RESOLUTION_WIDTH_MAX) {
+        sock_log("%s : %d : Invalid resolution:%dx%d!\n", __func__, __LINE__, info->width, info->height);
         return -1;
     }
-    int framesize = width * height;
+    int framesize = info->width * info->height;
     int level = framesize <= ICR_ENCODER_BITRATE_LOW ? 0 :
                 (framesize > ICR_ENCODER_BITRATE_LOW && framesize < ICR_ENCODER_BITRATE_HIGH ? 1 : 2);
 
@@ -407,11 +405,12 @@ void encoder_properties_sanity_check(encoder_info_t *info) {
         {ICR_ENCODER_FILTER_THREADS,          (int*)&info->filter_nbthreads,           1     },
         {ICR_ENCODER_LOW_DELAY_BRC,           &low_delay_brc,                          0     },
         { ICR_ENCODER_SKIP_FRAME,             &skipFrame,                              0     },
+        {ICR_ENCODER_WIDTH,                   &info->width,                           720    },
+        {ICR_ENCODER_HEIGHT,                  &info->height,                         1280    },
     };
 
     const char_prop char_prop_table[] = {
         // property name         parameter                          default
-        {ICR_ENCODER_RES,       &info->res,                        "720x1280"},
         {ICR_ENCODER_RC_MODE,   &info->rate_contrl_param.ratectrl,   "CBR"   },
         {ICR_ENCODER_FPS,       &info->framerate,                     "30"   },
         {ICR_ENCODER_URL,       &info->url,                        "irrv:264"},
@@ -531,7 +530,8 @@ void show_encoder_info(encoder_info_t *info) {
     show_para_str(info->format);
     show_para_str(info->url);
     show_para_int(info->low_power);
-    show_para_str(info->res);
+    show_para_int(info->width);
+    show_para_int(info->height);
     show_para_str(info->framerate);
     show_para_str(info->exp_vid_param);
     show_para_int(info->streaming);

@@ -89,10 +89,6 @@ bool DisplayServerVHAL::init(char *id, encoder_info_t *info)
 
     path.append(id);
 
-    // get width and height
-    int width, height;
-    sscanf(info->res, "%dx%d", &width, &height);
-
     ConfigInfo cfg;
     size_t pos = path.find("/hwc-sock");
     cfg.unix_conn_info.socket_dir = path.substr(0, pos);
@@ -104,8 +100,8 @@ bool DisplayServerVHAL::init(char *id, encoder_info_t *info)
         // k8s env
         cfg.unix_conn_info.android_instance_id = -1; //dont need id for k8s env
     }
-    cfg.video_res_width = width;
-    cfg.video_res_height = height;
+    cfg.video_res_width = info->width;
+    cfg.video_res_height = info->height;
     cfg.video_device = dev_dri;
     cfg.user_id = user_id;
     try {
@@ -120,8 +116,8 @@ bool DisplayServerVHAL::init(char *id, encoder_info_t *info)
         return false;
     }
 
-    m_curWidth = width;
-    m_curHeight = height;
+    m_curWidth = info->width;
+    m_curHeight = info->height;
 
     // init renderer
     try {

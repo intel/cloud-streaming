@@ -57,8 +57,6 @@ protected :
     virtual int publishStatusToResourceMonitor(uint32_t id, void * status);
 
 private :
-    int m_width;
-    int m_height;
     bool m_fpsStats = true;
     int m_statsNumFrames = 0;
     uint64_t m_statsStartTimeInMs = 0;
