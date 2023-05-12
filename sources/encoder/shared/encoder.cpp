@@ -477,13 +477,10 @@ int irr_check_roi_options(encoder_info_t *encoder_info) {
         return AVERROR(EINVAL);
     }
 
-    if (encoder_info->res) {
-        sscanf(encoder_info->res, "%dx%d", &width, &height);
-        if (encoder_info->roi_info.x + encoder_info->roi_info.width  > width ||
-            encoder_info->roi_info.y + encoder_info->roi_info.height > height) {
-            e_Log->Error("%s : %d : the ROI region can NOT beyond the resolution(%dx%d)!\n", __func__, __LINE__, width, height);
-            return AVERROR(EINVAL);
-        }
+    if (encoder_info->roi_info.x + encoder_info->roi_info.width  > encoder_info->width ||
+        encoder_info->roi_info.y + encoder_info->roi_info.height > encoder_info->height) {
+        e_Log->Error("%s : %d : the ROI region can NOT beyond the resolution(%dx%d)!\n", __func__, __LINE__, width, height);
+        return AVERROR(EINVAL);
     }
 
     return 0;
@@ -875,28 +872,22 @@ int irr_encoder_start(int id, encoder_info_t *encoder_info) {
     else
         CTransLog::SetLogLevel(CTransLog::LL_INFO);
 
-    //streaming resolution not set, using default 576x960
-    int hw_lcd_width  = RESOLUTION_WIDTH_DEFAULT;
-    int hw_lcd_height = RESOLUTION_HEIGHT_DEFAULT;
-    if (encoder_info->res) {
-        e_Log->Info("%s : %d : rendering and streaming with resolution %s.\n", __func__, __LINE__, encoder_info->res);
-        sscanf(encoder_info->res, "%dx%d", &hw_lcd_width, &hw_lcd_height);
-        if( hw_lcd_width  < RESOLUTION_WIDTH_MIN  || hw_lcd_width  > RESOLUTION_WIDTH_MAX ||
-            hw_lcd_height < RESOLUTION_HEIGHT_MIN || hw_lcd_height > RESOLUTION_HEIGHT_MAX) {
-            e_Log->Error("%s : %d : streaming resolution can NOT be set as %dx%d.\n", __func__, __LINE__, hw_lcd_width, hw_lcd_height);
-            e_Log->Error("%s : %d : resolution constraints: width %d-%d, height %d-%d.\n", __func__, __LINE__,
-                         RESOLUTION_WIDTH_MIN, RESOLUTION_WIDTH_MAX, RESOLUTION_HEIGHT_MIN, RESOLUTION_HEIGHT_MAX);
-            e_Log->Error("%s : %d : using default %dx%d\n", __func__, __LINE__, RESOLUTION_WIDTH_DEFAULT, RESOLUTION_HEIGHT_DEFAULT);
-            hw_lcd_width  = RESOLUTION_WIDTH_DEFAULT;
-            hw_lcd_height = RESOLUTION_HEIGHT_DEFAULT;
-        }
+    e_Log->Info("%s : %d : rendering and streaming with resolution %dx%d.\n", __func__, __LINE__, encoder_info->width, encoder_info->height);
+    if (encoder_info->width  < RESOLUTION_WIDTH_MIN  || encoder_info->width  > RESOLUTION_WIDTH_MAX ||
+        encoder_info->height < RESOLUTION_HEIGHT_MIN || encoder_info->height > RESOLUTION_HEIGHT_MAX) {
+        e_Log->Error("%s : %d : streaming resolution can NOT be set as %dx%d.\n", __func__, __LINE__, encoder_info->width, encoder_info->height);
+        e_Log->Error("%s : %d : resolution constraints: width %d-%d, height %d-%d.\n", __func__, __LINE__,
+                        RESOLUTION_WIDTH_MIN, RESOLUTION_WIDTH_MAX, RESOLUTION_HEIGHT_MIN, RESOLUTION_HEIGHT_MAX);
+        e_Log->Error("%s : %d : using default %dx%d\n", __func__, __LINE__, RESOLUTION_WIDTH_DEFAULT, RESOLUTION_HEIGHT_DEFAULT);
+        encoder_info->width  = RESOLUTION_WIDTH_DEFAULT;
+        encoder_info->height = RESOLUTION_HEIGHT_DEFAULT;
     }
 
 #ifndef USE_QUICK
-    IrrStreamer::Register(id, hw_lcd_width, hw_lcd_height, 30.f);
+    IrrStreamer::Register(id, encoder_info->width, encoder_info->height, 30.f);
 #else
     e_Log->Debug("%s : %d : enable quick\n", __func__, __LINE__);
-    IrrStreamer::Register(id, hw_lcd_width, hw_lcd_height, 0.f);
+    IrrStreamer::Register(id, encoder_info->width, encoder_info->height, 0.f);
 #endif
 
     render_port = getenv("render_server_port");
@@ -1045,7 +1036,9 @@ int irr_encoder_start(int id, encoder_info_t *encoder_info) {
             info.level = encoder_info->level;
 
         info.filter_nbthreads = encoder_info->filter_nbthreads;
-        info.res = encoder_info->res;
+        
+        info.width = encoder_info->width;
+        info.height = encoder_info->height;
         info.low_delay_brc    = encoder_info->low_delay_brc;
 
         info.skip_frame = encoder_info->skip_frame;
@@ -1374,16 +1367,8 @@ static void set_iostream_writer(encoder_info_t* info)
     if (!info->foutput) {
         return;
     }
-
     e_Log->Info("%s : %d : %s!\n", __func__, __LINE__, info->foutput);
-
-    int width  = 0;
-    int height = 0;
-    if (info->res) {
-        sscanf(info->res, "%dx%d", &width, &height);
-    }
-
-    irr_stream_set_iostream_writer_params(info->finput, width, height, info->foutput, info->vframe);
+    irr_stream_set_iostream_writer_params(info->finput, info->width, info->height, info->foutput, info->vframe);
 }
 
 void irr_encoder_write_crop(int client_rect_right, int client_rect_bottom, int fb_rect_right, int fb_rect_bottom, 

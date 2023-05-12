@@ -136,7 +136,8 @@ typedef struct _irr_encoder_info {
     const char *format;        ///< Mux format, e.x. flv; null as auto
     const char *url;           ///< Output url.
     int low_power;             ///< Enable low-power mode, default not.
-    const char *res;           ///< Encoding resolution.
+    int width;                 ///< Encoding width.
+    int height;                ///< Encoding height.
     const char *framerate;     ///< Encoding framerate
     const char *exp_vid_param; ///< Extra encoding/muxer parameters passed to libtrans/FFmpeg
     bool streaming;            ///< streaming true/false
