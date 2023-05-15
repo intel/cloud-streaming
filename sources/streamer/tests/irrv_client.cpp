@@ -85,6 +85,8 @@ int ga_conf_readbool(const char *key)
 int encoder_send_packet(const char* prefix, int channelId, ga_packet_t *pkt, int64_t encoderPts, struct timeval *ptv)
 {
   ga_logger(Severity::DBG, "encoder_send_packet: pkt=%p, size=%d\n", pkt, (pkt)? pkt->size: 0);
+  if (!pkt)
+    return -1;
   if (g_bitstream) {
     fwrite(pkt->data, 1, pkt->size, g_bitstream);
   }
