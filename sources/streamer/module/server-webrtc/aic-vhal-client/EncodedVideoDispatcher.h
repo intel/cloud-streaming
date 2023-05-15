@@ -91,7 +91,7 @@ public:
       : video_sink_( videoSink )
     {}
 
-    ~EncodedVideoDispatcher() {
+    virtual ~EncodedVideoDispatcher() {
         ga_logger(Severity::DBG, "[video_capture] EncodedVideoDispatcher Destructor\n");
     }
 
