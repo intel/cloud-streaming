@@ -32,7 +32,7 @@ const std::string CameraClientHandler::stopPreviewStreamMsg =
     "{ \"key\" : \"stop-camera-preview\" }";
 
 CameraClientHandler::CameraClientHandler(std::shared_ptr<vhal::client::VideoSink> video_sink){
-  this->video_sink_ = video_sink;
+  this->video_sink_ = std::move(video_sink);
 }
 
 std::vector<vhal::client::VideoSink::camera_info_t>
@@ -195,11 +195,9 @@ void CameraClientHandler::updateCameraInfo(const std::string &message){
                 hal_capability->codec_type, hal_capability->resolution);
     // Process camera info message received from client and update it to
     // camera_info_t struct.
-    std::vector<vhal::client::VideoSink::camera_info_t>
-    camera_info = processClientCameraMsg(message);
     // TODO: Need to pass this capability info of Android server to client. Will consider later,
     // since it is not high priority and it would not make any issues in the functionality.
-    bool res = video_sink_->SetCameraCapabilty(camera_info);
+    bool res = video_sink_->SetCameraCapabilty(processClientCameraMsg(message));
     if (res) {
         ga_logger(Severity::INFO, "[video_capture] Camera capability set successfully\n");
     } else {

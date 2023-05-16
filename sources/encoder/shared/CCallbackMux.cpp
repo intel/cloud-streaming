@@ -103,7 +103,7 @@ int CCallbackMux::write(AVPacket *pPkt) {
             pkt_data->size = pPkt->size;
             pkt_data->key_frame = (pPkt->flags & AV_PKT_FLAG_KEY) ? true : false;
 
-            m_pRuntimeWriter->submitRuntimeData(RUNTIME_WRITE_MODE::OUTPUT, pkt_data);
+            m_pRuntimeWriter->submitRuntimeData(RUNTIME_WRITE_MODE::OUTPUT, std::move(pkt_data));
         }
 
         if (ret < 0) {

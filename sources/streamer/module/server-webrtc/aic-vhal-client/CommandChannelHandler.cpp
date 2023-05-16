@@ -24,7 +24,7 @@ using json = nlohmann::json;
 
 CommandChannelHandler::CommandChannelHandler(int instance_id,
                                              MessageHandler msg_handler)
-  : mMsgHandler(msg_handler) {
+  : mMsgHandler(std::move(msg_handler)) {
   vhal::client::TcpConnectionInfo conn_info ={ android::ip() };
   auto callback = [&](const CommandChannelMessage &command_channel_msg) {
     switch (command_channel_msg.msg_type) {

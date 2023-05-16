@@ -379,11 +379,10 @@ Severity ga_get_loglevel_enum(const char* level) {
 EXPORT
 std::string ga_compose_logname(std::string logname)
 {
-    std::string name = logname;
-    auto pidPos = name.find("PID");
+    auto pidPos = logname.find("PID");
     if (pidPos != std::string::npos) // case sensitive
-        name.replace(pidPos, strlen("PID"), std::to_string(getpid()));
-    return name;
+        logname.replace(pidPos, strlen("PID"), std::to_string(getpid()));
+    return logname;
 }
 
 /**

@@ -39,7 +39,7 @@ void P2PSocketSignalingChannel::Connect(
     const std::string& token,
     std::function<void(const std::string&)> on_success,
     std::function<void(std::unique_ptr<Exception>)> on_failure) {
-    connect_success_callback_ = on_success;
+    connect_success_callback_ = std::move(on_success);
     std::map<std::string, std::string> query;
     query.insert(std::pair<std::string, std::string>("clientVersion", "4.2"));
     query.insert(std::pair<std::string, std::string>("clientType", "cpp"));
@@ -79,26 +79,25 @@ void P2PSocketSignalingChannel::Disconnect(std::function<void()> on_success,
 void P2PSocketSignalingChannel::SendMessage(
     const std::string& message,
     const std::string& target_id,
-    std::function<void()>
-    on_success,
-    std::function<void(std::unique_ptr<owt::base::Exception>)>
-    on_failure) {
+    std::function<void()> on_success,
+    std::function<void(std::unique_ptr<owt::base::Exception>)> on_failure)
+{
     sio::message::ptr jsonObject = sio::object_message::create();
     jsonObject->get_map()["to"] = sio::string_message::create(target_id);
     jsonObject->get_map()["data"] = sio::string_message::create(message);
-    io_->socket()->emit("owt-message", jsonObject, [=](const sio::message::list& msg) {
-      if (msg.size() > 0 && msg[0]->get_flag() == sio::message::flag_integer) {
-        if (on_failure) {
-          std::unique_ptr<owt::base::Exception> exception(
-            new owt::base::Exception(ExceptionType::kP2PMessageTargetUnreachable,
-              "Remote user cannot be reached."));
-          on_failure(std::move(exception));
+    io_->socket()->emit("owt-message", std::move(jsonObject), [=](const sio::message::list& msg) {
+        if (msg.size() > 0 && msg[0]->get_flag() == sio::message::flag_integer) {
+            if (on_failure) {
+                std::unique_ptr<owt::base::Exception> exception(
+                    new owt::base::Exception(ExceptionType::kP2PMessageTargetUnreachable,
+                    "Remote user cannot be reached."));
+                on_failure(std::move(exception));
+            }
+            return;
         }
-        return;
-      }
 
-      if (on_success) {
-        on_success();
-      }
+        if (on_success) {
+            on_success();
+        }
     });
 }

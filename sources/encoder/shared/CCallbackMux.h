@@ -43,8 +43,8 @@ public:
     int sendMessage(int msg, unsigned int value);
     bool isIrrv() { return true; }
     void setIOStreamWriter(const IOStreamWriter *writer) { m_pWriter = const_cast<IOStreamWriter *>(writer); }
-    void setIORuntimeWriter(IORuntimeWriter::Ptr writer) { m_pRuntimeWriter = writer; }
-    void setGetTransmissionAllowedFunc(getMuxerTransmissionAllowedFlag func) { getTransmissionAllowed = func;}
+    void setIORuntimeWriter(IORuntimeWriter::Ptr writer) { m_pRuntimeWriter = std::move(writer); }
+    void setGetTransmissionAllowedFunc(getMuxerTransmissionAllowedFlag func) { getTransmissionAllowed = std::move(func);}
 private:
     void       *m_Opaque;
     void       *m_Opaque2;

@@ -47,7 +47,7 @@ bool RemoteStreamHandler::HasActiveStream() const {
 
 void RemoteStreamHandler::setStream(
     std::shared_ptr<owt::base::RemoteStream> remote) {
-  mRemoteStream = remote;
+  mRemoteStream = std::move(remote);
 }
 
 void RemoteStreamHandler::resetStream() { mRemoteStream.reset(); }

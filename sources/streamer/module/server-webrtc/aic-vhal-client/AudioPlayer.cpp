@@ -36,7 +36,7 @@ using namespace std::chrono;
 
 AudioPlayer::AudioPlayer(int instance_id, CommandHandler CmdHandler)
 {
-    mCmdHandler = CmdHandler;
+    mCmdHandler = std::move(CmdHandler);
 
     vhal::client::TcpConnectionInfo conn_info = { android::ip() };
 

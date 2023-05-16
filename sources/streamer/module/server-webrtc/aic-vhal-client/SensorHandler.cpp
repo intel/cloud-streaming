@@ -38,7 +38,7 @@ std::string SensorHandler::sensorStopMsg =
 SensorHandler::SensorHandler(int instanceId, CommandHandler cmdHandler)
 {
     mInstanceId = instanceId;
-    mCmdHandler = cmdHandler;
+    mCmdHandler = std::move(cmdHandler);
     std::string socketDir = ga_conf_readstr("aic-workdir");
 
     if (ga_conf_readbool("k8s", 0) == 0) {
@@ -46,7 +46,7 @@ SensorHandler::SensorHandler(int instanceId, CommandHandler cmdHandler)
     }
 
     ga_logger(Severity::WARNING, "[sensor] Creating SensorHandler %s : %d \n", socketDir.c_str(), instanceId);
-    vhal::client::UnixConnectionInfo conn_info = { socketDir, instanceId };
+    vhal::client::UnixConnectionInfo conn_info = { std::move(socketDir), instanceId };
     auto callback = [&](const SensorInterface::CtrlPacket& ctrlPkt) {
         processVHALCtrlMsg(ctrlPkt);
     };

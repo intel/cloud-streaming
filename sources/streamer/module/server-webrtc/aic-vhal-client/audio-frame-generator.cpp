@@ -27,7 +27,7 @@
 #define TAG "[playback]"
 
 AudioFrameGenerator::AudioFrameGenerator(int instanceId, CommandHandler cmd_handler) {
-    mCmdHandler = cmd_handler;
+    mCmdHandler = std::move(cmd_handler);
     vhal::client::TcpConnectionInfo conn_info ={ android::ip() };
 
     auto callback = [&](const vhal::client::audio::CtrlMessage& ctrl_msg) {
@@ -172,5 +172,5 @@ int AudioFrameGenerator::GetChannelNumber() {
 }
 
 AudioFrameGenerator* AudioFrameGenerator::Create(int instanceId, CommandHandler cmd_handler) {
-    return new AudioFrameGenerator(instanceId, cmd_handler);
+    return new AudioFrameGenerator(instanceId, std::move(cmd_handler));
 }

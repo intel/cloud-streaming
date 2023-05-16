@@ -204,7 +204,7 @@ int CIrrVideoDemux::readPacket(IrrPacket *irrpkt) {
         pkt_data->height = m_Info.m_pCodecPars->height;
         pkt_data->format = IORuntimeWriter::avFormatToFourCC(m_Info.m_pCodecPars->format);
 
-        mRuntimeWriter->submitRuntimeData(RUNTIME_WRITE_MODE::INPUT, pkt_data);
+        mRuntimeWriter->submitRuntimeData(RUNTIME_WRITE_MODE::INPUT, std::move(pkt_data));
     }
 
     if (m_nLatencyStats && (m_nPrevPts>0)) {

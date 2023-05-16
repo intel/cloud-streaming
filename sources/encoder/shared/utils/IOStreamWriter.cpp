@@ -60,7 +60,7 @@ int IOStreamWriter::setInputStream(const std::string &file_path, const int one_f
     }
 
     mInputFile = is;
-    mFeedCbFunc = func;
+    mFeedCbFunc = std::move(func);
     mVideoFrameWidth = width;
     mVideoFrameHeight = height;
     mOneVideoFrameSize = one_frame_size;

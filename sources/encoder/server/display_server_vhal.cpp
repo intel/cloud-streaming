@@ -105,7 +105,7 @@ bool DisplayServerVHAL::init(char *id, encoder_info_t *info)
     cfg.video_device = dev_dri;
     cfg.user_id = user_id;
     try {
-        m_vhalReceiver = new VirtualHwcReceiver(cfg, [this](CommandType cmd, const frame_info_t* frame)
+        m_vhalReceiver = new VirtualHwcReceiver(std::move(cfg), [this](CommandType cmd, const frame_info_t* frame)
             {
                 CommandHandler(cmd, frame);
             });
