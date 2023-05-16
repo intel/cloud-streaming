@@ -412,7 +412,7 @@ int irr_check_rate_ctrl_options (encoder_info_t *encoder_info) {
         }
 
         if (!strcasecmp(rate_contrl_param.ratectrl, "VBR") || !strcasecmp(rate_contrl_param.ratectrl, "QVBR")) {
-            if (_bitrate >= _maxrate) {
+            if (_bitrate > _maxrate) {
                 e_Log->Error("%s : %d : bitrate must be smaller to maxrate in %s mode!\n", __func__, __LINE__, rate_contrl_param.ratectrl);
                 return AVERROR(EINVAL);
             }
