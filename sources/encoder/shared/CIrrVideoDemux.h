@@ -46,7 +46,7 @@ public:
 
     int setLatencyStats(int nLatencyStats);
 
-    void setRuntimeWriter(IORuntimeWriter::Ptr writer) { mRuntimeWriter = writer; }
+    void setRuntimeWriter(IORuntimeWriter::Ptr writer) { mRuntimeWriter = std::move(writer); }
 
     void updateDynamicChangedFramerate(int framerate);
 

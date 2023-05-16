@@ -140,7 +140,7 @@ int IrrStreamer::start(IrrStreamInfo *param) {
             return AVERROR(EINVAL);
         }
 
-        m_pTrans = new CTransCoder(m_pDemux, sDstUrl, sDstFormat);
+        m_pTrans = new CTransCoder(m_pDemux, std::move(sDstUrl), std::move(sDstFormat));
         Debug("%s : %d : create CTransCoder successfully!\n", __func__, __LINE__);
     }
 
@@ -269,7 +269,7 @@ int IrrStreamer::start(IrrStreamInfo *param) {
         m_pMux = pMux;
     }
 
-    m_pRuntimeWriter = runtime_writer;
+    m_pRuntimeWriter = std::move(runtime_writer);
 
     return m_pTrans->start();
 }

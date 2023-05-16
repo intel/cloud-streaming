@@ -207,9 +207,9 @@ public:
 
     void setIOStreamWriter(IOStreamWriter *writer);
 
-    void setGetRunAllowedFunc(getTranscoderRunAllowedFlag func) { getRunAllowed = func; }
+    void setGetRunAllowedFunc(getTranscoderRunAllowedFlag func) { getRunAllowed = std::move(func); }
 
-    void setGetClientsNumFunc(getTranscoderClientsNum func) { getClientsNum = func; }
+    void setGetClientsNumFunc(getTranscoderClientsNum func) { getClientsNum = std::move(func); }
 
 #ifdef ENABLE_MEMSHARE
     /**

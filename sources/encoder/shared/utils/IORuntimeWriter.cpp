@@ -204,7 +204,7 @@ int IORuntimeWriter::startWriting(const RUNTIME_WRITE_MODE mode, const int frame
             Verbose("io runtimewriter input thread exit\n");
         });
 
-        mStreams[INPUT_STREAM] = os;
+        mStreams[INPUT_STREAM] = std::move(os);
         mStatus |= INPUT_WRITING;
     }
 
@@ -264,7 +264,7 @@ int IORuntimeWriter::startWriting(const RUNTIME_WRITE_MODE mode, const int frame
             Verbose("io runtimewriter output thread exit\n");
         });
 
-        mStreams[OUTPUT_STREAM] = os;
+        mStreams[OUTPUT_STREAM] = std::move(os);
         mStatus |= OUTPUT_WRITING;
     }
 
@@ -287,7 +287,7 @@ int IORuntimeWriter::stopWriting(const RUNTIME_WRITE_MODE mode)
             assert (_empty_data.get() != nullptr && "Expected a valid IORuntimeData");
             _empty_data->type = SYSTEM_BLOCK;
             _empty_data->data = nullptr;
-            mDataQueues[INPUT_STREAM].push(_empty_data);
+            mDataQueues[INPUT_STREAM].push(std::move(_empty_data));
 
             mThreads[INPUT_STREAM].join();
         }
@@ -301,7 +301,7 @@ int IORuntimeWriter::stopWriting(const RUNTIME_WRITE_MODE mode)
             assert (_empty_data.get() != nullptr && "Expected a valid IORuntimeData");
             _empty_data->type = SYSTEM_BLOCK;
             _empty_data->data = nullptr;
-            mDataQueues[OUTPUT_STREAM].push(_empty_data);
+            mDataQueues[OUTPUT_STREAM].push(std::move(_empty_data));
 
             mThreads[OUTPUT_STREAM].join();
         }
@@ -340,10 +340,9 @@ int IORuntimeWriter::submitRuntimeData(const RUNTIME_WRITE_MODE mode, std::share
     }
 
     if (mode == INPUT && (mStatus & INPUT_WRITING))
-        mDataQueues[INPUT_STREAM].push(data);
-
-    if (mode == OUTPUT && (mStatus & OUTPUT_WRITING))
-        mDataQueues[OUTPUT_STREAM].push(data);
+        mDataQueues[INPUT_STREAM].push(std::move(data));
+    else if (mode == OUTPUT && (mStatus & OUTPUT_WRITING))
+        mDataQueues[OUTPUT_STREAM].push(std::move(data));
 
     return 0;
 }

@@ -360,18 +360,15 @@ int ICSP2PClient::Init(void *arg) {
     std::string coturn_password = ga_conf_readstr("coturn-password");
     std::string coturn_port = ga_conf_readstr("coturn-port");
 
-    std::string stun_url = "stun:" + coturn_ip + ":" + coturn_port;
-    stun_server.urls.push_back(stun_url);
+    stun_server.urls.push_back("stun:" + coturn_ip + ":" + coturn_port);
     stun_server.username = coturn_username;
     stun_server.password = coturn_password;
     config.ice_servers.push_back(stun_server);
 
-    std::string turn_url_tcp = "turn:" + coturn_ip + ":" + coturn_port + "?transport=tcp";
-    std::string turn_url_udp = "turn:" + coturn_ip + ":" + coturn_port + "?transport=udp";
-    turn_server.urls.push_back(turn_url_tcp);
-    turn_server.urls.push_back(turn_url_udp);
-    turn_server.username = coturn_username;
-    turn_server.password = coturn_password;
+    turn_server.urls.push_back("turn:" + coturn_ip + ":" + coturn_port + "?transport=tcp");
+    turn_server.urls.push_back("turn:" + coturn_ip + ":" + coturn_port + "?transport=udp");
+    turn_server.username = std::move(coturn_username);
+    turn_server.password = std::move(coturn_password);
     config.ice_servers.push_back(turn_server);
   }
   else {
@@ -474,7 +471,7 @@ void ICSP2PClient::OnMessageReceived(const std::string &remote_user_id,
         streaming_ = true;
         ga_encoder_->RequestKeyFrame();
         RequestCursorShape();
-        publication_ = pub;
+        publication_ = std::move(pub);
         publication_->AddObserver(*this);
       },
       nullptr);
@@ -682,16 +679,10 @@ void ICSP2PClient::CreateStream() {
   ga_encoder_ = std::make_unique<GAVideoEncoder>();
   stream_provider_ = owt::base::EncodedStreamProvider::Create();
   stream_provider_->RegisterEncoderObserver(*this);
-  std::shared_ptr<owt::base::LocalCustomizedStreamParameters> lcsp;
-  if (!av_bundle) {
-    lcsp.reset(
-      (new LocalCustomizedStreamParameters(false, true)));
-  } else {
-    lcsp.reset((new LocalCustomizedStreamParameters(true, true)));
-  }
+  std::shared_ptr<owt::base::LocalCustomizedStreamParameters> lcsp(new LocalCustomizedStreamParameters(av_bundle, true));
   lcsp->Resolution(640, 480);
   int error_code = 0;
-  local_stream_ = LocalStream::Create(lcsp, stream_provider_);
+  local_stream_ = LocalStream::Create(std::move(lcsp), stream_provider_);
   if (audio_enabled && !av_bundle) {
     owt::base::LocalCameraStreamParameters lcspc(true, false);
     local_audio_stream = LocalStream::Create(lcspc, error_code);
@@ -889,7 +880,7 @@ void ICSP2PClient::OnStreamAdded(
     std::shared_ptr<owt::base::RemoteStream> stream) {
 #ifndef WIN32
   ga_logger(Severity::INFO, "OnStreamAdded\n");
-  mRemoteStreamHandler->setStream(stream);
+  mRemoteStreamHandler->setStream(std::move(stream));
   mRemoteStreamHandler->subscribeForAudio();
 #endif
 }

@@ -44,7 +44,7 @@ public:
     using CommandHandler = std::function<void(uint32_t cmd)>;
 
     EncodedVideoDispatcher(int instance_id, CommandHandler cmd_handler)
-      : mCmdHandler(cmd_handler)
+      : mCmdHandler(std::move(cmd_handler))
     {
         std::string socket_dir = ga_conf_readstr("aic-workdir");
         if (ga_conf_readbool("k8s", 0) == 0) {
@@ -52,7 +52,7 @@ public:
         }
         ga_logger(Severity::INFO, "[video_capture] VideoSink socketDir:%s instance#%d\n",
                   socket_dir.c_str(), instance_id);
-        vhal::client::UnixConnectionInfo conn_info = { socket_dir, instance_id };
+        vhal::client::UnixConnectionInfo conn_info = { std::move(socket_dir), instance_id };
 
         auto callback = [&](const vhal::client::VideoSink::camera_config_cmd_t& ctrl_msg) {
             switch (ctrl_msg.cmd) {
@@ -88,7 +88,7 @@ public:
     }
 
     EncodedVideoDispatcher(std::shared_ptr<vhal::client::VideoSink> videoSink)
-      : video_sink_( videoSink )
+      : video_sink_(std::move(videoSink))
     {}
 
     virtual ~EncodedVideoDispatcher() {

@@ -130,7 +130,7 @@ static int webrtc_server_send_cursor(std::shared_ptr<CURSOR_DATA> cursorInfo, st
 
 static int webrtc_server_send_qos(std::shared_ptr<QosInfo> qosInfo) {
   if(p2pclient_)
-    p2pclient_->SendQoS(qosInfo);
+    p2pclient_->SendQoS(std::move(qosInfo));
   return 0;
 }
 
