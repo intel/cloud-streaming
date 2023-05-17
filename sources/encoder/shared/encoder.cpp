@@ -538,6 +538,10 @@ static irr_surface_t* create_surface_from_fd(irr_surface_info_t* surface_info)
     case DRM_FORMAT_XBGR8888:
         va_attrib_extbuf.pixel_format = VA_FOURCC_RGBA;
         break;
+    case DRM_FORMAT_ARGB8888:
+    case DRM_FORMAT_XRGB8888:
+        va_attrib_extbuf.pixel_format = VA_FOURCC_BGRA;
+        break;
     case DRM_FORMAT_RGB565:
         va_attrib_extbuf.pixel_format = VA_FOURCC_RGB565;
         break;
@@ -562,7 +566,7 @@ static irr_surface_t* create_surface_from_fd(irr_surface_info_t* surface_info)
     va_attribs[1].value.type = VAGenericValueTypePointer;
     va_attribs[1].value.value.p = &va_attrib_extbuf;
 
-    if (va_attrib_extbuf.pixel_format == VA_FOURCC_RGBA) {
+    if (va_attrib_extbuf.pixel_format == VA_FOURCC_RGBA || va_attrib_extbuf.pixel_format == VA_FOURCC_BGRA) {
         status = vaCreateSurfaces(va_dpy, VA_RT_FORMAT_RGB32, surface_info->width, surface_info->height,
           &vaSurf, 1, va_attribs, 2);
     } else if (va_attrib_extbuf.pixel_format == VA_FOURCC_RGB565) {
