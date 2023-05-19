@@ -30,12 +30,8 @@
 #include <limits.h>
 #include <errno.h>
 #include <map>
-#include <vector>
 #include <string>
-#ifdef WIN32
-#else
-#include <libgen.h>
-#endif
+#include <filesystem>
 
 #include "ga-common.h"
 #include "ga-conf.h"
@@ -135,37 +131,14 @@ ga_conf_parse(const char *filename, int lineno, char *buf) {
         return 0;
     // check if its a include
     if(strcmp(option, "include") == 0) {
-#ifdef WIN32
-        char incfile[_MAX_PATH];
-        char tmpdn[_MAX_DIR];
-        char drive[_MAX_DRIVE], tmpfn[_MAX_FNAME];
-        char *ptr = incfile;
-        if(token[0] == '/' || token[0] == '\\' || token[1] == ':') {
-            strncpy(incfile, token, sizeof(incfile));
-        } else {
-            _splitpath(filename, drive, tmpdn, tmpfn, NULL);
-            _makepath(incfile, drive, tmpdn, token, NULL);
+        std::filesystem::path incPath = std::filesystem::path(token);
+        if (!incPath.is_absolute()) {
+            std::filesystem::path directoryPath = std::filesystem::path(filename).parent_path();
+            incPath = directoryPath / incPath;
         }
-        // replace '/' with '\\'
-        while(*ptr) {
-            if(*ptr == '/')
-                *ptr = '\\';
-            ptr++;
-        }
-#else
-        char incfile[PATH_MAX];
-        char tmpdn[PATH_MAX];
-        //
-        strncpy(tmpdn, filename, sizeof(tmpdn));
-
-        if(token[0]=='/') {
-            strncpy(incfile, token, sizeof(incfile));
-        } else {
-            snprintf(incfile, sizeof(incfile), "%s/%s", dirname(tmpdn), token);
-        }
-#endif
-        ga_logger(Severity::INFO, "# include: %s\n", incfile);
-        return ga_conf_load(incfile);
+        std::string incPathStr = incPath.string();
+        ga_logger(Severity::INFO, "# include: %s\n", incPathStr.c_str());
+        return ga_conf_load(incPathStr.c_str());
     }
     // check if its a map
     if((leftbracket = strchr(option, '[')) != NULL) {
