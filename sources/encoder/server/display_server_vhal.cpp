@@ -143,13 +143,6 @@ bool DisplayServerVHAL::init(char *id, encoder_info_t *info)
         }
     }
 
-
-    if (m_renderer)
-    {
-        sock_log("%s:%d : drawBlankRes!\n", __func__, __LINE__);
-        m_renderer->drawBlankRes(0, 0);
-    }
-
     m_vhalReceiver->start();
 
     // create private fifo

@@ -43,7 +43,6 @@ public :
     virtual void destroyDispRes(disp_res_t* res)=0;
 
     virtual void drawDispRes(disp_res_t* res, int client_id, int client_count, std::unique_ptr<vhal::client::display_control_t> ctrl)=0;
-    virtual void drawBlankRes(int client_id, int client_count)=0;
 
     virtual void setVideoMode(int mode_info)=0;
 

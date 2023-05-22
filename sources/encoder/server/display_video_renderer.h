@@ -43,7 +43,6 @@ public :
     virtual void destroyDispRes(disp_res_t* res);
 
     virtual void drawDispRes(disp_res_t* res, int client_id, int client_count, std::unique_ptr<vhal::client::display_control_t> ctrl);
-    virtual void drawBlankRes(int client_id, int client_count);
 
     virtual void beginFrame();
     virtual void endFrame();
@@ -67,7 +66,6 @@ private :
     uint64_t m_frameIdx;
     std::list<std::pair<uint64_t, disp_res_t*>>    m_deletedReses;
 
-    irr_surface_t*    m_blankSurface;
     irr_surface_t*    m_curSurface;
 
     encoder_info_t m_currentInfo = {};
