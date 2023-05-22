@@ -37,8 +37,6 @@ DisplayVideoRenderer::DisplayVideoRenderer()
     m_width         = ENCODER_RESOLUTION_WIDTH_DEFAULT;
     m_height        = ENCODER_RESOLUTION_HEIGHT_DEFAULT;
     m_frameIdx      = 0;
-
-    m_blankSurface  = nullptr;
     m_curSurface    = nullptr;
 }
 
@@ -47,12 +45,6 @@ DisplayVideoRenderer::~DisplayVideoRenderer()
     SOCK_LOG_INIT();
 
     flushDelayDelRes();
-
-    if (m_blankSurface) {
-        m_blankSurface->ref_count = 1;
-        irr_encoder_unref_surface(m_blankSurface);
-        m_blankSurface = nullptr;
-    }
 }
 
 bool DisplayVideoRenderer::init(char *name, encoder_info_t *info)
@@ -190,26 +182,6 @@ void DisplayVideoRenderer::drawDispRes(disp_res_t* disp_res, int client_id, int 
         surface = disp_res->surface;
     }
 
-    if(!surface) {
-        // Use blank surface if disp_res is null, or disp_res->surface is null.
-        if(!m_blankSurface) {
-            irr_surface_info_t info;
-            memset(&info, 0, sizeof(info));
-
-            info.type       = FD;
-            info.width      = m_width;
-            info.height     = m_height;
-            for (int i = 0; i < MAX_PLANE_NUM; i++) {
-                info.fd[i]  = -1;
-            }
-            m_blankSurface = irr_encoder_create_blank_surface(&info);
-            if(!m_blankSurface) {
-                SOCK_LOG(("%s : %d : irr_encoder_create_blank_surface failed\n", __func__, __LINE__));
-            }
-        }
-        surface = m_blankSurface;
-    }
-
     if(surface) {
         int ret = 0;
         ATRACE_NAME("irr_encoder_write");
@@ -240,13 +212,6 @@ void DisplayVideoRenderer::drawDispRes(disp_res_t* disp_res, int client_id, int 
 
         m_curSurface = surface;
     }
-}
-
-void DisplayVideoRenderer::drawBlankRes(int client_id, int client_count)
-{
-
-    SOCK_LOG(("%s:%d : client_id = %d, client_count = %d\n", __func__, __LINE__, client_id, client_count));
-    drawDispRes(nullptr, client_id, client_count, nullptr);
 }
 
 void DisplayVideoRenderer::beginFrame()
