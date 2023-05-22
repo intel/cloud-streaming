@@ -17,10 +17,13 @@
 #include <chrono>
 #include "utils/CTransLog.h"
 #include "CIrrVideoDemux.h"
+#include "IrrStreamer.h"
 
 #define FIRST_START_ENCODE_FPS_DEFAULT 60
 
-CIrrVideoDemux::CIrrVideoDemux(int w, int h, int format, float framerate):m_Lock(), m_cv() {
+CIrrVideoDemux::CIrrVideoDemux(int w, int h, int format, float framerate, IrrPacket* pkt) :m_Lock(), m_cv() {
+    m_logger = std::move(std::unique_ptr<CTransLog>(new CTransLog("CIrrVideoDemux::")));
+
     m_Info.m_pCodecPars->codec_type = AVMEDIA_TYPE_VIDEO;
     m_Info.m_pCodecPars->codec_id   = AV_CODEC_ID_RAWVIDEO;
     m_Info.m_pCodecPars->format     = format;
@@ -33,8 +36,11 @@ CIrrVideoDemux::CIrrVideoDemux(int w, int h, int format, float framerate):m_Lock
     m_nLastEncodeFrameTs            = 0;
     m_nLeftMcs                      = 0;
     m_eFrc                          = av_q2d(m_Info.m_rFrameRate) > 0 ? eFRC_CONST : eFRC_VARI;
-    av_new_packet(&m_Pkt.av_pkt,
-                  av_image_get_buffer_size(AVPixelFormat(format), w, h, 32));
+
+    av_packet_move_ref(&m_Pkt.av_pkt, &pkt->av_pkt);
+    if (pkt->display_ctrl != nullptr) {
+        m_logger->Warn("pkt->display_ctrl expected to be nullptr\n");
+    }
 
     // Latency
     m_nLatencyStats = 0;
@@ -42,7 +48,6 @@ CIrrVideoDemux::CIrrVideoDemux(int w, int h, int format, float framerate):m_Lock
 
     m_timeoutCount = 0;
     m_stop = false;
-
 }
 
 CIrrVideoDemux::~CIrrVideoDemux() {
@@ -180,12 +185,26 @@ int CIrrVideoDemux::readPacket(IrrPacket *irrpkt) {
         }
     }
 
+    // Check if a valid packet is received. Exit with INVALIDDATA error if not
+    if (!m_Pkt.av_pkt.buf || !m_Pkt.av_pkt.buf->data) {
+        if (!m_Pkt.av_pkt.buf) {
+            m_logger->Error("ReadPacket: m_Pkt.av_pkt.buf (AVBufferRef* from pool) is NULL!\n");
+        }
+        else if (!m_Pkt.av_pkt.buf->data) {
+            m_logger->Error("ReadPacket: m_Pkt.av_pkt.buf->data (mfxFrameSurface1*) is NULL!\n");
+        }
+        ret = AVERROR_INVALIDDATA;
+        goto cleanup;
+    }
+
+    // Latency stats book-keeping
     if (m_nLatencyStats && m_bStartLatency) {
         if(m_Pkt.av_pkt.pts!=AV_NOPTS_VALUE){
             m_mProfTimer["pkt_latency"]->profTimerEnd("pkt_latency");
         }
     }
 
+    // Copy received packet from shared resource m_Pkt
     ret = av_packet_ref(&irrpkt->av_pkt, &m_Pkt.av_pkt);
     irrpkt->display_ctrl = std::move(m_Pkt.display_ctrl);
 
@@ -221,6 +240,7 @@ int CIrrVideoDemux::readPacket(IrrPacket *irrpkt) {
         m_Pkt.av_pkt.pts = AV_NOPTS_VALUE;
     }
 
+cleanup:
     lock.unlock();
 
     return ret;
