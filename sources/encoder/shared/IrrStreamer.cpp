@@ -102,13 +102,19 @@ int IrrStreamer::start(IrrStreamInfo *param) {
     if(param->pix_format== (int)AV_PIX_FMT_BGRA){
         m_nPixfmt    = (AVPixelFormat)param->pix_format;
     }
-    m_pDemux = new CIrrVideoDemux(m_nWidth, m_nHeight, m_nPixfmt, frameRate);
+
+    //Create a pkt with blank frame to initialize CIrrVideoDemux::m_Pkt
+    IrrPacket pkt;
+    if (InitBlankFramePacket(pkt) != 0) {
+        Error("%s : %d : InitBlankFramePacket failed!\n", __func__, __LINE__);
+        return AVERROR(EINVAL);
+    }
+
+    m_pDemux = new CIrrVideoDemux(m_nWidth, m_nHeight, m_nPixfmt, frameRate, &pkt);
     if (!m_pDemux) {
         Error("%s : %d : fail to create Demux!\n", __func__, __LINE__);
         return AVERROR(ENOMEM);
     }
-
-    // m_pDemux->setVASurfaceFlag(m_bVASurface);
 
     if (strncmp(param->plugin, "qsv", strlen("qsv")) == 0) {
         m_pDemux->setQSVSurfaceFlag(m_bQSVSurface);
@@ -292,11 +298,6 @@ int IrrStreamer::generate_packet(irr_surface_t* surface, IrrPacket& pkt)
         return AVERROR(EINVAL);
     }
 
-    if (!m_pDemux) {
-        Error("%s : %d : fail to get Demux!\n", __func__, __LINE__);
-        return AVERROR(EINVAL);
-    }
-
     if (!m_pPool) {
         size_t size = av_image_get_buffer_size(m_nPixfmt, surface->info.width, surface->info.height, 32);
 
@@ -350,10 +351,16 @@ int IrrStreamer::generate_packet(irr_surface_t* surface, IrrPacket& pkt)
 int IrrStreamer::write(irr_surface_t* surface) {
     std::unique_lock<mutex> lock(m_Lock);
 
+    if (!m_pDemux) {
+        Error("%s : %d : fail to get Demux!\n", __func__, __LINE__);
+        return AVERROR(EINVAL);
+    }
+
     IrrPacket pkt;
     int ret = generate_packet(surface, pkt);
 
     if (ret != 0) {
+        Error("%s: %d: generate_packet failed with code %d\n", __func__, __LINE__, ret);
         return ret;
     }
 
@@ -1157,3 +1164,53 @@ int IrrStreamer::getRenderFpsEncFlag(void) {
     return m_pTrans->getRenderFpsEncFlag();
 }
 
+
+int IrrStreamer::InitBlankFramePacket(IrrPacket& pkt)
+{
+    int ret = 0;
+
+    if(m_blankSurface) {
+        Info("Blank surface already initialized\n");
+        return 0;
+    }
+
+    Debug("Initializing Blank surface\n");
+
+    irr_surface_info_t info;
+    memset(&info, 0, sizeof(info));
+
+    info.type       = FD;
+    info.width      = getWidth();
+    info.height     = getHeight();
+    for (int i = 0; i < MAX_PLANE_NUM; i++) {
+        info.fd[i]  = -1;
+    }
+
+    m_blankSurface = irr_encoder_create_blank_surface(&info);
+    if(!m_blankSurface) {
+        Error("%s : %d : irr_encoder_create_blank_surface failed\n", __func__, __LINE__);
+        return -1;
+    }
+
+    ret = generate_packet(m_blankSurface, pkt);
+    if (ret != 0) {
+        Error("%s: %d: Error %d in blank packet generation\n", __func__, __LINE__, ret);
+        return ret;
+    }
+
+    irr_encoder_ref_surface(m_blankSurface);
+
+    return 0;
+}
+
+int IrrStreamer::DeinitBlankFramePacket()
+{
+    if (m_blankSurface) {
+        Debug("Deinit Blank surface");
+        m_blankSurface->ref_count = 1;
+        irr_encoder_unref_surface(m_blankSurface);
+        m_blankSurface = nullptr;
+    }
+
+    return 0;
+}

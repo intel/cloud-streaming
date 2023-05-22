@@ -19,6 +19,8 @@
 
 #include <mutex>
 #include <condition_variable>
+#include "api/irrv.h"
+
 extern "C" {
 #include <libavutil/time.h>
 #include <libavutil/imgutils.h>
@@ -32,7 +34,7 @@ extern "C" {
 
 class CIrrVideoDemux : public CDemux {
 public:
-    CIrrVideoDemux(int w, int h, int format, float framerate);
+    CIrrVideoDemux(int w, int h, int format, float framerate, IrrPacket* pkt);
     ~CIrrVideoDemux();
 
     int getNumStreams();
@@ -57,7 +59,7 @@ private:
     std::mutex                  m_Lock;
     std::condition_variable     m_cv;
     CStreamInfo                 m_Info;
-    IrrPacket                    m_Pkt;
+    IrrPacket                   m_Pkt;
     int64_t                     m_nPrevPts;
     int64_t                     m_nLastFrameTs;
     int64_t                     m_nLastEncodeFrameTs;
@@ -74,6 +76,8 @@ private:
 
     uint64_t m_timeoutCount;
     bool m_stop;
+
+    std::unique_ptr<CTransLog> m_logger;
 };
 
 #endif /* CIRRVIDEODEMUX_H */

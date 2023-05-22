@@ -149,6 +149,14 @@ private:
     AVBufferRef   *m_hw_frames_ctx;
     bool           m_tcaeEnabled;
 
+    /// A blank surface is allocated and used to initialize CIrrVideoDemux::m_Pkt
+    /// This is required for the scenario where app flow calls CIrrVideoDemux::readPacket
+    /// before CIrrVideoDemux::sendPacket. A valid packet is required for the encoder
+    irr_surface_t* m_blankSurface = nullptr;
+
+    int InitBlankFramePacket(IrrPacket& pkt);
+    int DeinitBlankFramePacket();
+
 #ifdef FFMPEG_v42
     static AVBufferRef* m_BufAlloc(void *opaque, int size);
 #else
