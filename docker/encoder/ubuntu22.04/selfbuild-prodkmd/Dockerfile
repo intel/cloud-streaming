@@ -90,10 +90,10 @@ RUN apt-get update && \
     wget && \
   rm -rf /var/lib/apt/lists/*
 # build media driver
-ARG MEDIA_DRIVER_REPO=https://github.com/intel/media-driver/archive/intel-media-23.1.4.tar.gz
+ARG MEDIA_DRIVER_REPO=https://github.com/intel/media-driver/archive/intel-media-23.2.1.tar.gz
 RUN cd /opt/build && \
   wget -O - ${MEDIA_DRIVER_REPO} | tar xz
-RUN cd /opt/build/media-driver-intel-media-23.1.4 && mkdir build && cd build && \
+RUN cd /opt/build/media-driver-intel-media-23.2.1 && mkdir build && cd build && \
   cmake \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/opt \
@@ -117,9 +117,9 @@ RUN apt-get update && \
     wget && \
   rm -rf /var/lib/apt/lists/*
 # build libva2-utils
-ARG LIBVA2_UTILS_REPO=https://github.com/intel/libva-utils/archive/2.17.1.tar.gz
+ARG LIBVA2_UTILS_REPO=https://github.com/intel/libva-utils/archive/2.18.1.tar.gz
 RUN cd /opt/build && wget -O - ${LIBVA2_UTILS_REPO} | tar xz
-RUN cd /opt/build/libva-utils-2.17.1 && \
+RUN cd /opt/build/libva-utils-2.18.1 && \
   ./autogen.sh --prefix=/opt --libdir=/opt/lib && \
   make -j$(nproc) && \
   make install DESTDIR=/opt/dist && \
@@ -137,11 +137,11 @@ RUN apt-get update && \
     cmake \
     dh-autoreconf && \
   rm -rf /var/lib/apt/lists/*
-ARG ONEVPL_REPO=https://github.com/oneapi-src/oneVPL/archive/v2023.1.3.tar.gz
+ARG ONEVPL_REPO=https://github.com/oneapi-src/oneVPL/archive/v2023.2.1.tar.gz
 RUN cd /opt/build && \
   wget -O - ${ONEVPL_REPO} | tar xz
 # build oneVPL
-RUN cd /opt/build/oneVPL-2023.1.3 && \
+RUN cd /opt/build/oneVPL-2023.2.1 && \
     mkdir build && cd build && \
     cmake \
       -DCMAKE_BUILD_TYPE=Release \
@@ -162,11 +162,11 @@ RUN apt-get update && \
     cmake \
     make && \
   rm -rf /var/lib/apt/lists/*
-ARG ONEVPLGPU_REPO=https://github.com/oneapi-src/oneVPL-intel-gpu/archive/intel-onevpl-23.1.4.tar.gz
+ARG ONEVPLGPU_REPO=https://github.com/oneapi-src/oneVPL-intel-gpu/archive/intel-onevpl-23.2.1.tar.gz
 RUN cd /opt/build && \
   wget -O - ${ONEVPLGPU_REPO} | tar xz
 # build oneVPL gpu
-RUN cd /opt/build/oneVPL-intel-gpu-intel-onevpl-23.1.4 && \
+RUN cd /opt/build/oneVPL-intel-gpu-intel-onevpl-23.2.1 && \
     mkdir -p _build && cd _build && \
     cmake \
     -DCMAKE_BUILD_TYPE=Release \
@@ -188,10 +188,10 @@ RUN apt-get update && \
     wget && \
   rm -rf /var/lib/apt/lists/*
 # build media sdk
-ARG MSDK_REPO=https://github.com/Intel-Media-SDK/MediaSDK/archive/intel-mediasdk-23.1.4.tar.gz
+ARG MSDK_REPO=https://github.com/Intel-Media-SDK/MediaSDK/archive/intel-mediasdk-23.2.1.tar.gz
 RUN cd /opt/build && \
   wget -O - ${MSDK_REPO} | tar xz
-RUN cd /opt/build/MediaSDK-intel-mediasdk-23.1.4 && \
+RUN cd /opt/build/MediaSDK-intel-mediasdk-23.2.1 && \
   mkdir -p build && cd build && \
   cmake \
     -DCMAKE_BUILD_TYPE=Release \
