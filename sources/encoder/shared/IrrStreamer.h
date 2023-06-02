@@ -48,6 +48,7 @@ public:
     int   start(IrrStreamInfo *param);
     void  stop();
     int   write(irr_surface_t* surface);
+    int   generate_packet(irr_surface_t* surface, IrrPacket& pkt);
     int   force_key_frame(int force_key_frame);
     int   set_qp(int qp);
     int   set_bitrate(int bitrate);
