@@ -282,8 +282,15 @@ void IrrStreamer::stop() {
     }
 }
 
-int IrrStreamer::write(irr_surface_t* surface) {
-    std::unique_lock<mutex> lock(m_Lock);
+int IrrStreamer::generate_packet(irr_surface_t* surface, IrrPacket& pkt)
+{
+    // Takes irr_surface_t* as input and populates provided IrrPacket& pkt
+    // Returns error if preliminary structures are not set up correctly.
+
+    if (!surface) {
+        Error("%s: %d : provided surface is null\n", __func__, __LINE__);
+        return AVERROR(EINVAL);
+    }
 
     if (!m_pDemux) {
         Error("%s : %d : fail to get Demux!\n", __func__, __LINE__);
@@ -330,14 +337,25 @@ int IrrStreamer::write(irr_surface_t* surface) {
         }
     }
 
-    IrrPacket pkt;
-
     av_init_packet(&pkt.av_pkt);
     pkt.av_pkt.buf  = pBuf;
     pkt.av_pkt.data = pkt.av_pkt.buf->data;
     pkt.av_pkt.size = pkt.av_pkt.buf->size;
     pkt.av_pkt.stream_index = 0;
     pkt.display_ctrl = std::move(surface->display_ctrl);
+
+    return 0;
+}
+
+int IrrStreamer::write(irr_surface_t* surface) {
+    std::unique_lock<mutex> lock(m_Lock);
+
+    IrrPacket pkt;
+    int ret = generate_packet(surface, pkt);
+
+    if (ret != 0) {
+        return ret;
+    }
 
     return m_pDemux->sendPacket(&pkt);
 }
