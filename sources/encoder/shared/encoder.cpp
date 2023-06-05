@@ -489,6 +489,63 @@ int irr_check_roi_options(encoder_info_t *encoder_info) {
     return 0;
 }
 
+static VAStatus ZeroInitVASurface(irr_surface_t* surface)
+{
+    if (!surface) {
+        e_Log->Error("%s: %d: Null surface input!\n", __func__, __LINE__);
+        return VA_STATUS_ERROR_INVALID_VALUE;
+    }
+
+    e_Log->Debug("%s: %d: surface = %p, surfID=%d, w=%d, h=%d\n", __func__, __LINE__,
+                 surface, surface->vaSurfaceID, surface->info.width, surface->info.height);
+
+    // Initialize image to 0
+    VAStatus status, des_status;
+    VAImage image;
+    unsigned char *Y, *UV;
+    void* buffer  = nullptr;
+
+    status = vaSyncSurface(va_dpy, surface->vaSurfaceID);
+    if (status != VA_STATUS_SUCCESS) {
+        e_Log->Error("%s: %d: vaSyncSurface call failed with code %d\n", __func__, __LINE__, status);
+        return status;
+    }
+
+    status = vaDeriveImage(va_dpy, surface->vaSurfaceID, &image);
+    if (status != VA_STATUS_SUCCESS) {
+        e_Log->Error("%s: %d: vaDeriveImage call failed with code %d\n", __func__, __LINE__, status);
+        return status;
+    }
+
+    status = vaMapBuffer(va_dpy, image.buf, &buffer);
+    if (status != VA_STATUS_SUCCESS) {
+        e_Log->Error("%s: %d: vaMapBuffer call failed with code %d\n", __func__, __LINE__, status);
+        goto ZeroInitCleanUp;
+    }
+
+    Y  = (unsigned char*)buffer + image.offsets[0];
+    UV = (unsigned char*)buffer + image.offsets[1];
+
+    for (int row = 0; row < surface->info.height; row++, Y += image.pitches[0])
+        memset(Y, 0, surface->info.width);
+    for (int row = 0; row < surface->info.height/2; row++, UV += image.pitches[1])
+        memset(UV, 0, surface->info.width);
+
+    status = vaUnmapBuffer(va_dpy, image.buf);
+    if (status != VA_STATUS_SUCCESS) {
+        e_Log->Error("%s: %d: vaUnmapBuffer call failed with code %d\n", __func__, __LINE__, status);
+    }
+
+ZeroInitCleanUp:
+    des_status = vaDestroyImage(va_dpy, image.image_id);
+    if (des_status != VA_STATUS_SUCCESS) {
+        e_Log->Error("%s: %d: vaDestroyImage call failed with code %d\n", __func__, __LINE__, des_status);
+        return (status == VA_STATUS_SUCCESS ? des_status: status); //Return code for first error
+    }
+
+    return status;
+}
+
 static irr_surface_t* create_surface_from_fd(irr_surface_info_t* surface_info)
 {
     VASurfaceAttrib va_attribs[2];
@@ -669,108 +726,102 @@ static irr_surface_t* create_surface_from_fd(irr_surface_info_t* surface_info)
     return surface;
 }
 
-static irr_surface_t* create_surface_from_buf(irr_surface_info_t* surface_info)
+static irr_surface_t* create_internal_surface(irr_surface_info_t* surface_info)
 {
-    irr_surface_t* surface = NULL;
-    // TODO: make create surface from buf workable
-
-#if 0
-    VAStatus vaStatus;
-    VAEntrypoint entrypoints[5];
-    int num_entrypoints, slice_entrypoint;
-    VAConfigAttrib attrib[2];
-    VAConfigID config_id;
-    // unused variable
-    //VASurfaceID surface_id;
-    unsigned char *usrbuf;
-
-    usrbuf = (unsigned char*)surface->pdata;
-
-    VASurfaceAttribExternalBuffers  vaSurfaceExternBuf;
-    VASurfaceAttrib attrib_list[VASurfaceAttribCount];
-
-    vaStatus = vaQueryConfigEntrypoints(va_dpy, VAProfileH264ConstrainedBaseline, entrypoints, &num_entrypoints);
-
-    for (slice_entrypoint = 0; slice_entrypoint < num_entrypoints; slice_entrypoint++) {
-        if (entrypoints[slice_entrypoint] == VAEntrypointEncSlice)
-            break;
-    }
-    if (slice_entrypoint == num_entrypoints) {
-        /* not find Slice entry point */
-        e_Log->Error("%s : %d : VAEntrypointEncSlice doesn't support!\n", __func__, __LINE__);
-        return vaStatus;
+    if(!irr_get_QSVSurfaceFlag()) {
+        e_Log->Error("%s: %d: Function supports only QSV path\n", __func__, __LINE__);
+        return nullptr;
     }
 
-    /* find out the format for the render target, and rate control mode */
-    attrib[0].type = VAConfigAttribRTFormat;
-    attrib[1].type = VAConfigAttribRateControl;
-    vaStatus = vaGetConfigAttributes(va_dpy, VAProfileH264ConstrainedBaseline, VAEntrypointEncSlice, &attrib[0], 2);
-
-    if ((attrib[0].value & VA_RT_FORMAT_RGB32) == 0) {
-        /* not find desired RGB32 RT format */
-        e_Log->Error("%s : %d : VA_RT_FORMAT_RGB32 doesn't support!\n", __func__, __LINE__);
-    }
-    if ((attrib[1].value & VA_RC_VBR) == 0) {
-        /* Can't find matched RC mode */
-        e_Log->Error("%s : %d : VBR mode doesn't support!\n", __func__, __LINE__);
-        return vaStatus;
+    irr_surface_t* surface = (irr_surface_t*)calloc(1, sizeof(irr_surface_t));
+    if (!surface) {
+        e_Log->Error("%s : %d : create_internal_surface failed!\n", __func__, __LINE__);
+        return nullptr;
     }
 
-    attrib[0].value = VA_RT_FORMAT_RGB32; /* set to desired RT format */
-    //attrib[1].value = VA_RC_VBR; /* set to desired RC mode */
-
-    vaStatus = vaCreateConfig(va_dpy, VAProfileH264ConstrainedBaseline, VAEntrypointEncSlice, &attrib[0], 1, &config_id);
-
-    attrib_list[1].type = (VASurfaceAttribType)VASurfaceAttribExternalBufferDescriptor;
-    attrib_list[0].type = (VASurfaceAttribType)VASurfaceAttribMemoryType;
-    unsigned int num_attribs = 2;
-    vaStatus = vaQuerySurfaceAttributes(va_dpy, config_id, attrib_list, &num_attribs);
-    if (vaStatus == VA_STATUS_SUCCESS || vaStatus == VA_STATUS_ERROR_MAX_NUM_EXCEEDED) {
-        e_Log->Debug("%s : %d : got the attribs!\n", __func__, __LINE__);
-    }
-    if (attrib_list[0].flags != VA_SURFACE_ATTRIB_NOT_SUPPORTED) {
-        e_Log->Debug("%s : %d : supported memory type:\n", __func__, __LINE__);
-        if (attrib_list[0].value.value.i & VA_SURFACE_ATTRIB_MEM_TYPE_VA)
-            e_Log->Debug("%s : %d : VA_SURFACE_ATTRIB_MEM_TYPE_VA\n", __func__, __LINE__);
-        if (attrib_list[0].value.value.i & VA_SURFACE_ATTRIB_MEM_TYPE_V4L2)
-            e_Log->Debug("%s : %d : VA_SURFACE_ATTRIB_MEM_TYPE_V4L2\n", __func__, __LINE__);
-        if (attrib_list[0].value.value.i & VA_SURFACE_ATTRIB_MEM_TYPE_USER_PTR)
-            e_Log->Debug("%s : %d : VA_SURFACE_ATTRIB_MEM_TYPE_USER_PTR\n", __func__, __LINE__);
-        if (attrib_list[0].value.value.i & VA_SURFACE_ATTRIB_MEM_TYPE_KERNEL_DRM)
-            e_Log->Debug("%s : %d : VA_SURFACE_ATTRIB_MEM_TYPE_KERNEL_DRM\n", __func__, __LINE__);
-        if (attrib_list[0].value.value.i & VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME)
-            e_Log->Debug("%s : %d : VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME\n", __func__, __LINE__);
+    mfxFrameSurface1* srf = (mfxFrameSurface1*)calloc(1, sizeof(mfxFrameSurface1));
+    if (!srf) {
+        free(surface);
+        e_Log->Error("%s : %d : create_internal_surface failed!\n", __func__, __LINE__);
+        return nullptr;
     }
 
-    if ((attrib_list[1].flags != VA_SURFACE_ATTRIB_NOT_SUPPORTED) &&
-        (attrib_list[0].value.value.i & VA_SURFACE_ATTRIB_MEM_TYPE_USER_PTR)) {
-        e_Log->Debug("%s : %d : vaCreateSurfaces from external usr pointer\n", __func__, __LINE__);
-
-        int bpp = 4; // only for RGBA, 32bits/4bytes
-
-        //vaSurfaceExternBuf.buffers = (unsigned long*)malloc(sizeof(unsigned int));
-        vaSurfaceExternBuf.buffers = (unsigned long*)surface->pdata;
-        vaSurfaceExternBuf.num_buffers = 1;
-        vaSurfaceExternBuf.width = surface->width;
-        vaSurfaceExternBuf.height = surface->height;
-        //vaSurfaceExternBuf.pitches[0] = surface->width * bpp;
-        vaSurfaceExternBuf.pitches[0] = vaSurfaceExternBuf.pitches[1] = vaSurfaceExternBuf.pitches[2] = surface->width;
-        vaSurfaceExternBuf.pixel_format = VA_FOURCC_BGRX; //VA_FOURCC_BGRX may need to change to VA_FOURCC_XBGR
-
-        attrib_list[1].flags = VA_SURFACE_ATTRIB_SETTABLE;
-        attrib_list[1].value.type = VAGenericValueTypePointer;
-        attrib_list[1].value.value.p = (void *)&vaSurfaceExternBuf;
-
-        attrib_list[0].flags = VA_SURFACE_ATTRIB_SETTABLE;
-        attrib_list[0].value.type = VAGenericValueTypeInteger;
-        attrib_list[0].value.value.i = VA_SURFACE_ATTRIB_MEM_TYPE_USER_PTR;
-
-        vaStatus = vaCreateSurfaces(va_dpy, VA_RT_FORMAT_RGB32, surface->width, surface->height, &surface->vaSurfaceID, 1, attrib_list, 2);
-        vaStatus = vaDestroyConfig(va_dpy, config_id);
+    mfxHDLPair* memid = (mfxHDLPair*)calloc(1, sizeof(mfxHDLPair));
+    if (!memid) {
+        e_Log->Error("%s : %d : create_internal_surface vaapi_memid failed!\n", __func__, __LINE__);
+        free(surface);
+        free(srf);
+        return nullptr;
     }
 
-    return vaStatus;
-#endif
+    surface->info = *surface_info;
+    surface->info.pdata = nullptr;
+    surface->info.data_size = 0;
+    surface->encode_type = QSVSURFACE_ID;
+
+    //Create a VA surface
+    VAStatus status = VA_STATUS_SUCCESS;
+    VASurfaceAttrib va_attrib;
+    const int numVaSurfaces = 1;
+
+    va_attrib.type          = VASurfaceAttribPixelFormat;
+    va_attrib.value.type    = VAGenericValueTypeInteger;
+    va_attrib.value.value.i = VA_FOURCC_NV12;
+    va_attrib.flags         = VA_SURFACE_ATTRIB_SETTABLE;
+
+    status = vaCreateSurfaces(va_dpy,
+                              VA_RT_FORMAT_YUV420,
+                              surface->info.width,
+                              surface->info.height,
+                              &surface->vaSurfaceID,
+                              numVaSurfaces,
+                              &va_attrib,
+                              1); //1 attribute argument
+
+    if (status != VA_STATUS_SUCCESS) {
+        e_Log->Error("%s : %d : vaCreateSurfaces call failed with code %d\n", __func__, __LINE__, status);
+        goto CreateIntSurface_CleanUp;
+    }
+
+    status = ZeroInitVASurface(surface);
+    if (status != VA_STATUS_SUCCESS) {
+        e_Log->Error("%s : %d : ZeroInitVASurface failed with code %d\n", __func__, __LINE__, status);
+
+        //Destroy surface
+        VAStatus des_status = vaDestroySurfaces(va_dpy, &(surface->vaSurfaceID), 1);
+        if (des_status != VA_STATUS_SUCCESS) {
+            e_Log->Error("%s : %d : vaDestroySurfaces failed with code %d\n", __func__, __LINE__, des_status);
+        }
+        goto CreateIntSurface_CleanUp;
+    }
+
+    // Populate MFX surface fields. This is what gets used later as we support only QSV path
+    // The mem-id fields use the same "Hack" that is implemented in create_surface_from_fd
+    memid->first = &surface->vaSurfaceID;
+    memid->second = (mfxMemId)MFX_INFINITE;
+
+    srf->Data.MemId = memid;
+    srf->Info.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
+    srf->Info.CropX = 0;
+    srf->Info.CropY = 0;
+    srf->Info.CropW = surface_info->width;
+    srf->Info.CropH = surface_info->height;
+    srf->Info.Width = (surface_info->width + 15) / 16 * 16;
+    srf->Info.Height = (surface_info->height + 15) / 16 * 16;
+    srf->Info.FourCC = MFX_FOURCC_RGB4;
+    srf->Info.ChromaFormat = MFX_CHROMAFORMAT_YUV444;
+
+    surface->mfxSurf = srf;
+
+CreateIntSurface_CleanUp:
+    if (status != VA_STATUS_SUCCESS)
+    {
+        //Free allocated variables and return nullptr
+        free(surface);
+        free(srf);
+        free(memid);
+        return nullptr;
+    }
 
     return surface;
 }
@@ -1097,9 +1148,12 @@ irr_surface_t* irr_encoder_create_surface(irr_surface_info_t* surface_info)
     if (surface_info->type == FD) {
         surface = create_surface_from_fd(surface_info);
     }
-    else if (surface_info->type == BUFFER)
-    {
-        surface = create_surface_from_buf(surface_info);    // Only for testing now. but it seem fail by VA_STATUS_ERROR_UNSUPPORTED_RT_FORMA
+    else if (surface_info->type == INTERNAL){
+        surface = create_internal_surface(surface_info);
+    }
+    else {
+        e_Log->Error("%s : %d : create surface failed, unsupported format %d\n",
+                     __func__, __LINE__, surface_info->type);
     }
 
     if(surface) {
@@ -1117,24 +1171,16 @@ irr_surface_t* irr_encoder_create_blank_surface(irr_surface_info_t* surface_info
 {
     e_Log->Debug("%s : %d : surface_info = %p\n", __func__, __LINE__, surface_info);
 
-    int iQSVSurface = irr_get_QSVSurfaceFlag();
-
-    irr_surface_t* surface = (irr_surface_t*)calloc(1, sizeof(irr_surface_t));
-    if (!surface) {
-        e_Log->Error("%s : %d : create blank surface failed!\n", __func__, __LINE__);
-        return NULL;
+    if (!(surface_info->width > 0 && surface_info->height > 0)) {
+        e_Log->Error("%s: %d: invalid dimensions provided: w=%d, h=%d\n", __func__, __LINE__,
+                     surface_info->width, surface_info->height);
     }
 
+    if (surface_info->type != INTERNAL) {
+        e_Log->Error("%s: %d: invalid surface type %d provided\n", __func__, __LINE__, surface_info->type);
+    }
 
-    surface->info = *surface_info;
-    surface->info.pdata = NULL;
-    surface->info.data_size = 0;
-
-    surface->vaSurfaceID = VA_INVALID_SURFACE;
-    surface->ref_count   = 1;
-    surface->encode_type = iQSVSurface ? QSVSURFACE_ID : VASURFACE_ID;
-
-    return surface;
+    return irr_encoder_create_surface(surface_info);
 }
 
 void irr_encoder_destroy_surface(irr_surface_t* surface)
@@ -1169,7 +1215,23 @@ void irr_encoder_destroy_surface(irr_surface_t* surface)
                 free(srf);
             }
 #endif
-        }
+        } //FD
+#ifdef ENABLE_QSV
+        else if (surface->info.type == INTERNAL) {
+            if(surface->vaSurfaceID != VA_INVALID_SURFACE) {
+                e_Log->Debug("%s : %d : vaDestroySurface, vaSurfaceID=%d\n", __func__, __LINE__, surface->vaSurfaceID);
+                vaDestroySurfaces(va_dpy, &(surface->vaSurfaceID), 1);
+            }
+            if(surface->mfxSurf) {
+                e_Log->Debug("free mfxSurface data\n");
+                mfxFrameSurface1* srf = (mfxFrameSurface1*)surface->mfxSurf;
+                if (srf->Data.MemId) {
+                    free(srf->Data.MemId);
+                }
+                free(srf);
+            }
+        } //Internal
+#endif
         free(surface);
     }
 }
