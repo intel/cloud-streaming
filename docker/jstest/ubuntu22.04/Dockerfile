@@ -29,7 +29,7 @@ RUN apt-get update && \
 ARG NODESOURCE_KEY_URL="https://deb.nodesource.com/gpgkey/nodesource.gpg.key"
 RUN local_key=/usr/share/keyrings/nodesource.gpg && \
   curl -s $NODESOURCE_KEY_URL | gpg --dearmor | tee $local_key >/dev/null && \
-  echo "deb [signed-by=$local_key] https://deb.nodesource.com/node_14.x jammy main" >> /etc/apt/sources.list && \
+  echo "deb [signed-by=$local_key] https://deb.nodesource.com/node_18.x jammy main" >> /etc/apt/sources.list && \
   apt-get update
 
 

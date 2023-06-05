@@ -33,7 +33,7 @@ include(begin.m4)
 include(ubuntu.m4)
 
 define(`NODESOURCE_URL',https://deb.nodesource.com)
-DECLARE(`NODE_VER',node_14.x)
+DECLARE(`NODE_VER',node_18.x)
 
 pushdef(`_install_ubuntu',`dnl
 INSTALL_PKGS(PKGS(curl ca-certificates gpg))
