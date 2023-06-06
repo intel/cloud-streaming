@@ -1176,17 +1176,7 @@ int IrrStreamer::InitBlankFramePacket(IrrPacket& pkt)
 
     Debug("Initializing Blank surface\n");
 
-    irr_surface_info_t info;
-    memset(&info, 0, sizeof(info));
-
-    info.type       = FD;
-    info.width      = getWidth();
-    info.height     = getHeight();
-    for (int i = 0; i < MAX_PLANE_NUM; i++) {
-        info.fd[i]  = -1;
-    }
-
-    m_blankSurface = irr_encoder_create_blank_surface(&info);
+    m_blankSurface = irr_encoder_create_blank_surface(getWidth(), getHeight());
     if(!m_blankSurface) {
         Error("%s : %d : irr_encoder_create_blank_surface failed\n", __func__, __LINE__);
         return -1;
