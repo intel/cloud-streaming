@@ -1167,20 +1167,26 @@ irr_surface_t* irr_encoder_create_surface(irr_surface_info_t* surface_info)
     return surface;
 }
 
-irr_surface_t* irr_encoder_create_blank_surface(irr_surface_info_t* surface_info)
+irr_surface_t* irr_encoder_create_blank_surface(int width, int height)
 {
-    e_Log->Debug("%s : %d : surface_info = %p\n", __func__, __LINE__, surface_info);
+    e_Log->Debug("%s : %d : w = %d, h = %d\n", __func__, __LINE__, width, height);
 
-    if (!(surface_info->width > 0 && surface_info->height > 0)) {
+    if (width <= 0 || height <= 0) {
         e_Log->Error("%s: %d: invalid dimensions provided: w=%d, h=%d\n", __func__, __LINE__,
-                     surface_info->width, surface_info->height);
+                     width, height);
     }
 
-    if (surface_info->type != INTERNAL) {
-        e_Log->Error("%s: %d: invalid surface type %d provided\n", __func__, __LINE__, surface_info->type);
+    irr_surface_info_t info;
+    memset(&info, 0, sizeof(info));
+
+    info.type       = INTERNAL;
+    info.width      = width;
+    info.height     = height;
+    for (int i = 0; i < MAX_PLANE_NUM; i++) {
+        info.fd[i]  = -1;
     }
 
-    return irr_encoder_create_surface(surface_info);
+    return irr_encoder_create_surface(&info);
 }
 
 void irr_encoder_destroy_surface(irr_surface_t* surface)

@@ -209,7 +209,7 @@ int irr_encoder_change_codec(AVCodecID codec_type);
  * @desc                        create the irr_surface according to the surface info
  */
 irr_surface_t* irr_encoder_create_surface(irr_surface_info_t* surface_info);
-irr_surface_t* irr_encoder_create_blank_surface(irr_surface_info_t* surface_info);
+irr_surface_t* irr_encoder_create_blank_surface(int width, int height);
 
 /**
  *
