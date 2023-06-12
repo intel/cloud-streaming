@@ -64,7 +64,7 @@ class OWT_EXPORT P2PClientObserver {
    */
   virtual void OnServerDisconnected(){}
 
-#ifdef OWT_CLOUD_GAMING
+#if defined(OWT_CG_SERVER) || defined(OWT_CLOUD_GAMING)
   /**
    @brief This function will be invoked when a PeerConnection with remote
    endpoint is closed. SDK will create a new PeerConnection if publish or send
@@ -260,6 +260,8 @@ class OWT_EXPORT P2PClient final
                                  const std::string& message);
   // Triggered when a new stream is added.
   virtual void OnStreamAdded(std::shared_ptr<owt::base::RemoteStream> stream);
+  // Triggered when the PeerConnection is closed.
+  virtual void OnPeerConnectionClosed(const std::string& remote_id);
 
  private:
   void Unpublish(const std::string& target_id,
