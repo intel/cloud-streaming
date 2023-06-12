@@ -30,7 +30,7 @@ dnl OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 dnl
 include(begin.m4)
 
-DECLARE(`OWT_GS_VER',9de4b0a) # tracking main branch
+DECLARE(`OWT_GS_VER',9ec5c2f) # tracking main branch
 DECLARE(`OWT_GS_SRC_REPO',https://github.com/open-webrtc-toolkit/owt-client-native.git)
 DECLARE(`DEPOT_TOOLS_VER',5b0c934) # tracking main branch
 
