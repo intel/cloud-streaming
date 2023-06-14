@@ -49,6 +49,7 @@ if host_machine.system() == 'windows'
     '-D__STDC_CONSTANT_MACROS',
     '-D__STDC_LIMIT_MACROS',
     ]
+
   cpp_args += cpp_public_args + '-DGA_LIB'
   core_deps += [
     cpp.find_library('dxgi'),
@@ -59,7 +60,7 @@ endif
 _libga = shared_library('ga', srcs,
   cpp_args: cpp_args,
   include_directories: include_directories('.'),
-  dependencies: [core_deps, dl_dep, thread_dep],
+  dependencies: [core_deps, dl_dep, thread_dep, titansdk_dep],
   install: true,
   )
 
@@ -67,5 +68,6 @@ ga_dep = declare_dependency(
   compile_args: cpp_public_args,
   include_directories: include_directories('.'),
   link_with: _libga,
+  dependencies: titansdk_dep,
 )
 

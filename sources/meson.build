@@ -14,8 +14,10 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-subdir('encoder')
+if host_machine.system() == 'linux'
+  subdir('encoder')
+endif
+
 if get_option('streamer').enabled()
   subdir('streamer')
 endif
-

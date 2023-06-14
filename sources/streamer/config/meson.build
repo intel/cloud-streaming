@@ -14,16 +14,20 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-usage = 'android-cg/'
-
-install_data(usage + 'server.desktop.webrtc.conf',
-  install_dir : get_option('sysconfdir') / 'ga')
-install_data(
-  usage + 'common/audio-pcm.conf',
-  usage + 'common/controller.conf',
-  usage + 'common/server-common.conf',
-  usage + 'common/video-x264.conf',
-  usage + 'common/video-x264-param.conf',
-  usage + 'common/camera.conf',
-  install_dir : get_option('sysconfdir') / 'ga' / 'common')
-
+if host_machine.system() == 'linux'
+  install_data(
+    files(
+      'android-cg/server.desktop.webrtc.conf',
+      ),
+    install_dir : get_option('sysconfdir') / 'ga')
+  install_data(
+    files(
+      'android-cg/common/audio-pcm.conf',
+      'android-cg/common/controller.conf',
+      'android-cg/common/server-common.conf',
+      'android-cg/common/video-x264.conf',
+      'android-cg/common/video-x264-param.conf',
+      'android-cg/common/camera.conf',
+      ),
+    install_dir : get_option('sysconfdir') / 'ga' / 'common')
+endif

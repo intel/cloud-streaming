@@ -20,7 +20,9 @@ else
   modules_install_dir = get_option('libdir') / 'ga'
 endif
 
-subdir('e2elatency')
-subdir('irrv-receiver')
-subdir('server-webrtc')
+if host_machine.system() == 'linux'
+  subdir('irrv-receiver')
+endif
 
+subdir('e2elatency')
+subdir('server-webrtc')

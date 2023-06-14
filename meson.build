@@ -60,16 +60,25 @@ if host_machine.system() != 'windows'
 endif
 thread_dep = dependency('threads')
 
-libdrm_dep = dependency('libdrm', required : get_option('encoder'))
-libvhal_dep = dependency('vhal-client',
-  required : get_option('encoder').enabled() or get_option('streamer').enabled())
-libvpl_dep = dependency('vpl', required : get_option('encoder'))
-libva_dep = dependency('libva', required : get_option('encoder'))
+if host_machine.system() == 'linux'
+  libdrm_dep = dependency('libdrm', required : get_option('encoder'))
+  libvhal_dep = dependency('vhal-client',
+    required : get_option('encoder').enabled() or get_option('streamer').enabled())
+  libvpl_dep = dependency('vpl', required : get_option('encoder'))
+  libva_dep = dependency('libva', required : get_option('encoder'))
 
-libavcodec_dep = dependency('libavcodec', required : get_option('encoder'))
-libavfilter_dep = dependency('libavfilter', required : get_option('encoder'))
-libavformat_dep = dependency('libavformat', required : get_option('encoder'))
-libavutil_dep = dependency('libavutil', required : get_option('encoder'))
+  libavcodec_dep = dependency('libavcodec', required : get_option('encoder'))
+  libavfilter_dep = dependency('libavfilter', required : get_option('encoder'))
+  libavformat_dep = dependency('libavformat', required : get_option('encoder'))
+  libavutil_dep = dependency('libavutil', required : get_option('encoder'))
+
+  titansdk_dep = null_dep
+endif
+
+if host_machine.system() == 'windows'
+  owt_dep = null_dep
+  titansdk_dep = null_dep
+endif
 
 nlohmann_json_dep = dependency('nlohmann_json', required : get_option('streamer'))
 
@@ -80,4 +89,3 @@ sioclient_dep = dependency('sioclient', required : get_option('streamer'))
 
 subdir('prebuilt')
 subdir('sources')
-
