@@ -34,6 +34,11 @@ cgver_file = configure_file(
     },
 )
 
+if host_machine.system() == 'windows' and build_machine.cpu_family() != 'x86'
+  subdir('drivers')
+  subdir('apps')
+endif
+
 if host_machine.system() == 'linux'
   subdir('encoder')
 endif
