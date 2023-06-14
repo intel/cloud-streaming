@@ -20,6 +20,9 @@ project('cloud-gaming', 'c', 'cpp',
     'cpp_std=c++17',
     'b_ndebug=if-release',
     'b_pie=true',
+    'b_vscrt=mt',
+    'c_winlibs=',
+    'cpp_winlibs=',
     ],
   )
 
@@ -44,6 +47,7 @@ add_project_link_arguments(c_link_args, language : ['cpp'])
 
 fs = import('fs')
 pkg = import('pkgconfig')
+windows = import('windows')
 
 m4 = find_program('m4', required : get_option('m4'))
 if m4.found()
@@ -76,8 +80,10 @@ if host_machine.system() == 'linux'
 endif
 
 if host_machine.system() == 'windows'
-  owt_dep = null_dep
-  titansdk_dep = null_dep
+  winres_args = []
+  if build_machine.cpu_family() == 'x86_64'
+    winres_args += '-D_WIN64'
+  endif
 endif
 
 nlohmann_json_dep = dependency('nlohmann_json', required : get_option('streamer'))

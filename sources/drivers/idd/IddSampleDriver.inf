@@ -1,0 +1,82 @@
+;
+; IddSampleDriver.inf
+;
+
+[Version]
+; DriverVer will be set by stampinf, see .vcxproj settings
+PnpLockDown=1
+Signature="$Windows NT$"
+ClassGUID = {4D36E968-E325-11CE-BFC1-08002BE10318}
+Class = Display
+ClassVer = 2.0
+Provider=%ManufacturerName%
+CatalogFile=IddSampleDriver.cat
+
+[Manufacturer]
+%ManufacturerName%=Standard, NT$ARCH$.10.0...18362
+
+[Standard.NT$ARCH$.10.0...18362]
+%DeviceName%=IddDevice_Install, Root\IddSampleDriver ; TODO: edit hw-id, this hardware id is used by Visual Studio remote debugging
+%DeviceName%=IddDevice_Install, IddSampleDriver      ; TODO: edit hw-id, this hardware id is used by the idd-setup-tool.exe
+
+[SourceDisksFiles]
+IddSampleDriver.dll=1
+
+[SourceDisksNames]
+1 = %DiskName%
+
+; =================== UMDF Device ==================================
+
+[IddDevice_Install.NT]
+CopyFiles=UMDriverCopy
+
+[IddDevice_Install.NT.hw]
+AddReg = IddDevice_HardwareDeviceSettings
+
+[IddDevice_HardwareDeviceSettings]
+HKR,, "UpperFilters",  %REG_MULTI_SZ%, "IndirectKmd"
+HKR, "WUDF", "DeviceGroupId", %REG_SZ%, "IddSampleDriverGroup" ; TODO: edit driver group name, see README.md for more info
+HKR,,"IddCustomControl",0x00010001,1 ; 1 - 1080p Monitor, 2 - 1440p Monitor, 4 - 2160p Monitor
+HKR,,"IddMonitorNumber",0x00010001,1 ; 1 - 1 monitor, 2 - 2 monitors
+HKR,,"IddCursorControl",0x00010001,0 ; 0 - Software Cursor, 1 - Hardware Cursor
+HKR,,Security,,"D:P(A;;GA;;;BA)(A;;GA;;;SY)(A;;GA;;;UD)(A;;GA;;;AU)"
+
+[IddDevice_Install.NT.Services]
+AddService=WUDFRd,0x000001fa,WUDFRD_ServiceInstall
+
+[IddDevice_Install.NT.Wdf]
+UmdfService=IddSampleDriver,IddSampleDriver_Install
+UmdfServiceOrder=IddSampleDriver
+UmdfKernelModeClientPolicy = AllowKernelModeClients
+
+[IddSampleDriver_Install]
+UmdfLibraryVersion=$UMDFVERSION$
+ServiceBinary=%12%\UMDF\IddSampleDriver.dll
+UmdfExtensions = IddCx0102
+
+[WUDFRD_ServiceInstall]
+DisplayName = %WudfRdDisplayName%
+ServiceType = 1
+StartType = 3
+ErrorControl = 1
+ServiceBinary = %12%\WUDFRd.sys
+
+[DestinationDirs]
+UMDriverCopy=12,UMDF ; copy to drivers\umdf
+
+[UMDriverCopy]
+IddSampleDriver.dll
+
+; =================== Generic ==================================
+
+[Strings]
+ManufacturerName="Intel Idd Sample Driver" ; TODO: Replace with your manufacturer name
+DiskName = "IddSampleDriver Installation Disk" ; TODO: Replace with driver disk name
+WudfRdDisplayName="Windows Driver Foundation - User-mode Driver Framework Reflector"
+DeviceName="Intel IddSampleDriver Device" ; TODO: Replace with correct device name
+
+
+REG_MULTI_SZ  = 0x00010000
+REG_SZ        = 0x00000000
+REG_EXPAND_SZ = 0x00020000
+REG_DWORD     = 0x00010001
