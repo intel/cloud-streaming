@@ -18,5 +18,7 @@ subdir('config')
 subdir('core')
 subdir('module')
 subdir('server')
-subdir('tests')
 
+if host_machine.system() == 'linux'
+  subdir('tests')
+endif

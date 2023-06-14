@@ -47,7 +47,6 @@ endif
 deps = [
   e2e_static_dep,
   ga_dep,
-  libvhal_dep,
   nlohmann_json_dep,
   owt_dep,
   protobuf_dep,
@@ -59,10 +58,11 @@ cpp_args = ['-DGA_MODULE', '-DOWT_CG_SERVER']
 inc_dirs = []
 if host_machine.system() == 'windows'
   cpp_args += ['-DWEBRTC_WIN']
-  deps += [cpp.find_library('iphlpapi')]
+  deps += cpp.find_library('iphlpapi')
 else
   cpp_args += ['-DWEBRTC_LINUX', '-DWEBRTC_POSIX']
   inc_dirs += include_directories('aic-vhal-client')
+  deps += libvhal_dep
 endif
 
 shared_library('server-webrtc', srcs,

@@ -14,5 +14,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-subdir('periodic')
-
+if host_machine.system() == 'linux'
+  subdir('periodic')
+endif
