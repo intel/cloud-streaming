@@ -1064,7 +1064,7 @@ pthread_cancel_handler(int s) {
 
 EXPORT
 bool
-ga_is_h264(std::string codec) {
+ga_is_h264(const std::string& codec) {
     if (codec == "avc" || codec == "h264")
         return true;
     return false;
@@ -1072,7 +1072,7 @@ ga_is_h264(std::string codec) {
 
 EXPORT
 bool
-ga_is_h265(std::string codec) {
+ga_is_h265(const std::string& codec) {
     if (codec == "hevc" || codec == "h265")
         return true;
     return false;
@@ -1080,7 +1080,7 @@ ga_is_h265(std::string codec) {
 
 EXPORT
 bool
-ga_is_av1(std::string codec) {
+ga_is_av1(const std::string& codec) {
     if (codec == "av1")
         return true;
     return false;
