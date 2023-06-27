@@ -34,6 +34,8 @@ class CFFFilter : public CFilter, private CTransLog {
 public:
     CFFFilter(CStreamInfo *in, CStreamInfo *out, bool bVASurface, bool bQSVSurface, bool isVaapiPlugin, bool isQSVPlugin, const int filter_nbthreads);
     ~CFFFilter();
+    CFFFilter(const CFFFilter& orig) = delete;
+    CFFFilter &operator= (const CFFFilter&) = delete;
     int push(AVFrame *frame);
     AVFrame* pop();
     int getNumFrames(void);

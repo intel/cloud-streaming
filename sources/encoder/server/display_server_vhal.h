@@ -25,6 +25,8 @@ class DisplayServerVHAL : public  DisplayServer {
 public:
     DisplayServerVHAL();
     virtual ~DisplayServerVHAL();
+    DisplayServerVHAL(const DisplayServerVHAL& orig) = delete;
+    DisplayServerVHAL &operator= (const DisplayServerVHAL&) = delete;
 
     virtual bool init(char *id, encoder_info_t *info) override;
     virtual void deinit() override;

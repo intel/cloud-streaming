@@ -26,6 +26,8 @@ class NetPred
 {
 public:
     NetPred();
+    NetPred(const NetPred& orig) = delete;
+    NetPred &operator= (const NetPred&) = delete;
     ~NetPred();
 
     void Clear();

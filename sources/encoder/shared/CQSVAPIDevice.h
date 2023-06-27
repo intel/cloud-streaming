@@ -35,6 +35,8 @@ public:
     public:
         Maintainer();
         ~Maintainer();
+        Maintainer(const Maintainer& orig) = delete;
+        Maintainer &operator= (const Maintainer&) = delete;
     };
 
 private:

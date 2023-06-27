@@ -34,6 +34,8 @@ class CFFEncoder : public CEncoder, private CTransLog {
 public:
     CFFEncoder(const char *pCodec, CStreamInfo *info, EncodePluginType plugin);
     CFFEncoder(AVCodecID id, CStreamInfo *info);
+    CFFEncoder(const CFFEncoder& orig) = delete;
+    CFFEncoder &operator= (const CFFEncoder&) = delete;
     void init(AVDictionary *pDict);
     ~CFFEncoder();
     int write(AVFrame *);

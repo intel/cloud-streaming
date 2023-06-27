@@ -38,6 +38,8 @@ class CIrrVideoDemux : public CDemux {
 public:
     CIrrVideoDemux(int w, int h, int format, float framerate, IrrPacket* pkt);
     ~CIrrVideoDemux();
+    CIrrVideoDemux(const CIrrVideoDemux& orig) = delete;
+    CIrrVideoDemux &operator= (const CIrrVideoDemux&) = delete;
 
     int getNumStreams();
     CStreamInfo* getStreamInfo(int strIdx);
