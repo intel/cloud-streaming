@@ -85,7 +85,7 @@ class ICSP2PClient : public owt::p2p::P2PClientObserver,
   void OnMute(TrackKind track_kind) {}
   void OnUnmute(TrackKind track_kind) {}
   virtual void OnError(std::unique_ptr<Exception> failure) {}
-  uint32_t GetConnectedClientCount() const { return connected_client_count; }
+  bool GetConnectedClientStatus() const { return connected_client_status; }
 #ifdef E2ELATENCY_TELEMETRY_ENABLED
   // E2Elatency
   IL::E2ELatencyServer * LatencyServer() {
@@ -171,8 +171,8 @@ private:
   bool startMsgs = false;
 #endif
   bool enable_render_drc = false;
-  uint32_t connected_client_count = 0;
-  std::function<void(uint32_t)> pHookClientStatus;
+  bool connected_client_status = false;
+  std::function<void(bool)> pHookClientStatus;
 };
 } // namespace webrtc
 } // namespace ga
