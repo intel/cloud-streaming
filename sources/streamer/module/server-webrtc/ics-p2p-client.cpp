@@ -483,9 +483,15 @@ void ICSP2PClient::OnMessageReceived(const std::string &remote_user_id,
 #ifdef WIN32
     audioGenerator->ClientConnectionStatus(true);
     if (pHookClientStatus == NULL) {
-      pHookClientStatus = [](uint32_t count) { ga_logger(Severity::INFO, "ics-p2p-client: Number of clients connected: %u.\n", count); };
+      pHookClientStatus = [](bool status) {
+        if (status) {
+          ga_logger(Severity::INFO, "hook-function: client connection message received.\n");
+        } else {
+          ga_logger(Severity::INFO, "hook-function: client disconnect message received.\n");
+        }
+      };
     }
-    pHookClientStatus(++connected_client_count);
+    pHookClientStatus(true);
 #endif
 
     if (local_audio_stream.get())
@@ -916,9 +922,15 @@ void ICSP2PClient::OnPeerConnectionClosed(const std::string& remote_user_id) {
 #endif
 #ifdef WIN32
     if (pHookClientStatus == NULL) {
-      pHookClientStatus = [](uint32_t count) { ga_logger(Severity::INFO, "ics-p2p-client: Number of clients connected: %u.\n", count); };
+        pHookClientStatus = [](bool status) {
+            if (status) {
+                ga_logger(Severity::INFO, "hook-function: client connection message received.\n");
+            } else {
+                ga_logger(Severity::INFO, "hook-function: client disconnect message received.\n");
+            }
+        };
     }
-    pHookClientStatus(--connected_client_count);
+    pHookClientStatus(false);
 #endif
 
     uint32_t client_clones = (uint32_t) ga_conf_readint("client-clones");

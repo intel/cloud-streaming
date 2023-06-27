@@ -84,7 +84,7 @@ struct ServerConfig {
     void *prect;
 #ifdef WIN32
     HWND(*pHookInput)(INPUT in, int size);
-    void(*pHookClientStatus)(uint32_t count);
+    void(*pHookClientStatus)(bool status);
 #endif
     void(*pRequestKeyCursor)(int event);
 };
