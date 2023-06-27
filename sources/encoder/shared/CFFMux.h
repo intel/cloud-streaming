@@ -28,6 +28,8 @@ class CFFMux : public CMux, private CTransLog {
 public:
     CFFMux(const char *url, const char *format = nullptr);
     ~CFFMux();
+    CFFMux(const CFFMux& orig) = delete;
+    CFFMux &operator= (const CFFMux&) = delete;
     int write(AVPacket *pkt);
     int write(uint8_t *data, size_t size, int type) {return 0;};
     int addStream(int idx, CStreamInfo *info);

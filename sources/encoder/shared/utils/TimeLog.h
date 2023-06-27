@@ -141,6 +141,8 @@ class TimeLog {
 public :
     TimeLog(const char* name, int mode = 0, unsigned long idx1 = 0,  unsigned long idx2 = 0);
     ~TimeLog();
+    TimeLog(const TimeLog&) = delete;
+    TimeLog& operator=(const TimeLog&) = delete;
 
     void begin(const char* name, unsigned long idx1 = 0,  unsigned long idx2 = 0);
     void end();

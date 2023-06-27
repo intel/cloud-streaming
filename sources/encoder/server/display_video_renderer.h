@@ -35,6 +35,8 @@ public :
     DisplayVideoRenderer();
     DisplayVideoRenderer(int id): DisplayVideoRenderer() { m_id = id; }
     virtual ~DisplayVideoRenderer();
+    DisplayVideoRenderer(const DisplayVideoRenderer& orig) = delete;
+    DisplayVideoRenderer &operator= (const DisplayVideoRenderer&) = delete;
 
     virtual bool init(char *name, encoder_info_t *info);
     virtual void deinit();

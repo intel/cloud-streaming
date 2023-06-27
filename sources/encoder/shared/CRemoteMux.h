@@ -41,6 +41,8 @@ class CRemoteMux : public CMux, private CTransLog {
                 rmWritePacket pWritePkt,
                 rmWriteHead pWriteHead);
         ~CRemoteMux();
+        CRemoteMux(const CRemoteMux& orig) = delete;
+        CRemoteMux &operator= (const CRemoteMux&) = delete;
         int addStream(int, CStreamInfo *);
         int write(AVPacket *);
 

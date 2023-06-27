@@ -32,6 +32,8 @@ public:
     };
 
     CTransLog(const char *name);
+    CTransLog(const CTransLog&) = delete;
+    CTransLog& operator=(const CTransLog&) = delete;
     ~CTransLog();
     static void SetLogLevel(LogLevel level);
     static void SetLogLevel(std::string logLevel);

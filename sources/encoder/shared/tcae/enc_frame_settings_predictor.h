@@ -104,6 +104,8 @@ class PredictorTcaeImpl
 public:
     PredictorTcaeImpl();
     ~PredictorTcaeImpl();
+    PredictorTcaeImpl(const PredictorTcaeImpl& orig) = delete;
+    PredictorTcaeImpl &operator= (const PredictorTcaeImpl&) = delete;
 
     tcaeStatus Start(TcaeInitParams_t* params);
     tcaeStatus SetFps(double fps);
@@ -113,7 +115,6 @@ public:
     tcaeStatus PredictEncSettings(FrameSettings_t* perFrameSettings);
     tcaeStatus Stop();
     void Reset();
-    PredictorTcaeImpl& operator=(const PredictorTcaeImpl&) = delete;
 private:
 
     tcaeStatus StartImpl(TcaeInitParams_t* params, StateLogger* log=nullptr);

@@ -95,6 +95,9 @@ public:
         ga_logger(Severity::DBG, "[video_capture] EncodedVideoDispatcher Destructor\n");
     }
 
+    EncodedVideoDispatcher(const EncodedVideoDispatcher& orig) = delete;
+    EncodedVideoDispatcher &operator= (const EncodedVideoDispatcher&) = delete;
+
     bool InitDecodeContext(owt::base::VideoCodec video_codec) override
     {
         ga_logger(Severity::INFO, "[video_capture] video_codec: %s\n",
