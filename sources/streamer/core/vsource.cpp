@@ -35,7 +35,6 @@
 #include "vsource.h"
 #include "ga-common.h"
 #include "ga-conf.h"
-#include "ga-crc.h"
 
 /**< Video buffer allocation alignment: should be 2^n */
 #define    VSOURCE_ALIGNMENT    16

@@ -19,7 +19,6 @@ set(srcs
   ga-conf.cpp
   ga-confvar.cpp
   ga-module.cpp
-  ga-crc.cpp
   dpipe.cpp
   vsource.cpp
   encoder-common.cpp
