@@ -188,8 +188,15 @@ CameraClientHandler::processClientCameraMsg(const std::string &json_message)
   return camera_info;
 }
 
-void CameraClientHandler::updateCameraInfo(const std::string &message){
+void CameraClientHandler::updateCameraInfo(const std::string &message)
+{
     auto hal_capability = video_sink_->GetCameraCapabilty();
+
+    if (!hal_capability) {
+        ga_logger(Severity::ERR, "[video_capture] Failed to get camara capabilities\n");
+        return;
+    }
+
     ga_logger(Severity::INFO, "[video_capture] Max number of cameras supported in the Android HAL is %d "
                 "and its capable codec_type = %d and resolution = %d\n", hal_capability->maxNumberOfCameras,
                 hal_capability->codec_type, hal_capability->resolution);
