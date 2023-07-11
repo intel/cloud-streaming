@@ -509,7 +509,14 @@ void ICSP2PClient::OnMessageReceived(const std::string &remote_user_id,
         //ga_logger(Severity::INFO, "Debugs: event type %s\n", event_type);
         if (j1["data"]["parameters"].is_object()) {
           json event_param = j1["data"]["parameters"];
-          if (event_param.size() == 5 &&
+#ifdef E2ELATENCY_TELEMETRY_ENABLED
+          // E2Elatency via framestats
+          if (event_param["E2ELatency"].is_number()) {
+            gClientTimestamp = event_param["E2ELatency"];
+            HandleLatencyMessage(message);
+          }
+#endif
+          if (event_param.size() >= 5 &&
               event_param["framets"].is_number() &&
               event_param["framesize"].is_number() &&
               event_param["framedelay"].is_number() &&
@@ -619,17 +626,9 @@ void ICSP2PClient::OnMessageReceived(const std::string &remote_user_id,
             ga_encoder_->SetClientEvent(tv);
         }
       }
-#ifdef E2ELATENCY_TELEMETRY_ENABLED
       else {
-        // E2Elatency via keyboard
         if (event_type == "keydown" &&
           (j["data"]["parameters"].is_object())) {
-          json event_param = j["data"]["parameters"];
-          if (event_param["E2ELatency"].is_number()) {
-            gClientTimestamp = event_param["E2ELatency"];
-            HandleLatencyMessage(message);
-          }
-
           if (ga_encoder_) {
             struct timeval tv;
             gettimeofday(&tv, NULL);
@@ -637,7 +636,6 @@ void ICSP2PClient::OnMessageReceived(const std::string &remote_user_id,
           }
         }
       }
-#endif
     }
 #endif
   }
