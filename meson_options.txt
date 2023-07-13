@@ -1,0 +1,6 @@
+option('m4',
+  type : 'feature',
+  value : 'auto',
+  description : 'Generate dockerfiles from m4 templates',
+)
+
