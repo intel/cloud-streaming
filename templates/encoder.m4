@@ -30,14 +30,14 @@ dnl OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 dnl
 include(begin.m4)
 
-DECLARE(`ENCODER_BUILD_SERVER',ON)
+DECLARE(`ENCODER_BUILD_SERVER',enabled)
 
-ifelse(ENCODER_BUILD_SERVER,ON,`dnl
+ifelse(ENCODER_BUILD_SERVER,enabled,`dnl
   define(`ENCODER_BUILD_DEPS',`dnl
-    cmake gcc g++ libdrm-dev dnl
+    gcc g++ libdrm-dev dnl
     ifdef(`BUILD_ONEVPL',,libvpl-dev) dnl
     ifdef(`BUILD_LIBVA2',,libva-dev) dnl
-    make patch pkg-config')
+    meson patch pkg-config')
 
   define(`ENCODER_INSTALL_DEPS',`dnl
     ifdef(`BUILD_ONEVPL',,libvpl2) dnl
@@ -45,28 +45,30 @@ ifelse(ENCODER_BUILD_SERVER,ON,`dnl
     ifdef(`BUILD_LIBVA2',,libva2 libva-drm2)')
 ')
 
-ifelse(ENCODER_BUILD_SERVER,OFF,`dnl
-  define(`ENCODER_BUILD_DEPS',`cmake gcc g++ make pkg-config')
+ifelse(ENCODER_BUILD_SERVER,disabled,`dnl
+  define(`ENCODER_BUILD_DEPS',`gcc g++ meson pkg-config')
   define(`ENCODER_INSTALL_DEPS',`')
 ')
 
 pushdef(`CFLAGS',`-D_FORTIFY_SOURCE=2 -fstack-protector-strong')
 
 define(`BUILD_ENCODER',
-COPY sources/encoder /opt/build/encoder
+COPY . /opt/build/encoder
 
-RUN cd BUILD_HOME/encoder \
-  && mkdir _build && cd _build \
-  && cmake \
-    -DBUILD_SERVER=ENCODER_BUILD_SERVER \
-    -DCMAKE_C_FLAGS="CFLAGS" \
-    -DCMAKE_CXX_FLAGS="CFLAGS" \
-    -DCMAKE_INSTALL_PREFIX=BUILD_PREFIX \
-    -DCMAKE_INSTALL_LIBDIR=BUILD_LIBDIR \
-    .. \
-  && make VERBOSE=1 -j $(nproc --all) \
-  && make install DESTDIR=BUILD_DESTDIR \
-  && make install
+RUN cd BUILD_HOME/encoder && \
+  meson setup \
+    --buildtype=release \
+    --prefix=BUILD_PREFIX \
+    --libdir=BUILD_LIBDIR \
+    --wrap-mode=nofallback \
+    -Dc_args="CFLAGS" \
+    -Dcpp_args="CFLAGS" \
+    -Dm4=disabled \
+    -Dencoder=ENCODER_BUILD_SERVER \
+    _build && \
+  meson compile -C _build -v && \
+  meson install -C _build && \
+  meson install -C _build --destdir=BUILD_DESTDIR
 ) dnl define(BUILD_ENCODER)
 
 popdef(`CFLAGS')

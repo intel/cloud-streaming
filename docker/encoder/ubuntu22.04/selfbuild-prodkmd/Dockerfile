@@ -268,28 +268,29 @@ RUN git clone $LIBVHAL_CLIENT_REPO /opt/build/libvhal-client && \
 
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    cmake \
     gcc \
     g++ \
     libdrm-dev \
-    make \
+    meson \
     patch \
     pkg-config && \
   rm -rf /var/lib/apt/lists/*
-COPY sources/encoder /opt/build/encoder
+COPY . /opt/build/encoder
 
-RUN cd /opt/build/encoder \
-  && mkdir _build && cd _build \
-  && cmake \
-    -DBUILD_SERVER=ON \
-    -DCMAKE_C_FLAGS="-D_FORTIFY_SOURCE=2 -fstack-protector-strong" \
-    -DCMAKE_CXX_FLAGS="-D_FORTIFY_SOURCE=2 -fstack-protector-strong" \
-    -DCMAKE_INSTALL_PREFIX=/opt \
-    -DCMAKE_INSTALL_LIBDIR=/opt/lib \
-    .. \
-  && make VERBOSE=1 -j $(nproc --all) \
-  && make install DESTDIR=/opt/dist \
-  && make install
+RUN cd /opt/build/encoder && \
+  meson setup \
+    --buildtype=release \
+    --prefix=/opt \
+    --libdir=/opt/lib \
+    --wrap-mode=nofallback \
+    -Dc_args="-D_FORTIFY_SOURCE=2 -fstack-protector-strong" \
+    -Dcpp_args="-D_FORTIFY_SOURCE=2 -fstack-protector-strong" \
+    -Dm4=disabled \
+    -Dencoder=enabled \
+    _build && \
+  meson compile -C _build -v && \
+  meson install -C _build && \
+  meson install -C _build --destdir=/opt/dist
 
 
 RUN echo "Start cleanup" && \
