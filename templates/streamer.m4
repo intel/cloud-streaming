@@ -36,7 +36,7 @@ dnl configured for the build), we will reuse what user has configured
 dnl already. If it's not defined, we will go with our minimal dependency on the
 dnl component which is just irrv protocol without server itself.
 ifdef(`BUILD_ENCODER',,`dnl
-  define(`ENCODER_BUILD_SERVER',OFF)
+  define(`ENCODER_BUILD_SERVER',disabled)
   include(encoder.m4)')
 
 define(`STREAMER_BUILD_DEPS',gcc g++ dnl
@@ -44,7 +44,7 @@ define(`STREAMER_BUILD_DEPS',gcc g++ dnl
 define(`STREAMER_INSTALL_DEPS',dnl
   openssl)
 
-pushdef(`CFLAGS',`-Wformat -Wformat-security -Wall -D_FORTIFY_SOURCE=2 -fstack-protector-strong')
+pushdef(`CFLAGS',`-D_FORTIFY_SOURCE=2 -fstack-protector-strong')
 
 define(`BUILD_STREAMER',
 COPY sources/streamer /opt/build/streamer

@@ -4,3 +4,9 @@ option('m4',
   description : 'Generate dockerfiles from m4 templates',
 )
 
+option('encoder',
+  type : 'feature',
+  value : 'enabled',
+  description : 'Build encoder service ingredients',
+)
+

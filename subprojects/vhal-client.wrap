@@ -1,0 +1,10 @@
+[wrap-git]
+directory = libvhal-client
+url = https://github.com/projectceladon/libvhal-client.git
+revision = 11aaedac268874f1741ccb3339f2c8478b76e099
+depth = 1
+patch_directory = libvhal-client
+
+[provide]
+dependency_names = vhal_client
+

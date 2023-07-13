@@ -112,26 +112,27 @@ RUN mkdir -p /opt/lib/pkgconfig && \
 
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    cmake \
     gcc \
     g++ \
-    make \
+    meson \
     pkg-config && \
   rm -rf /var/lib/apt/lists/*
-COPY sources/encoder /opt/build/encoder
+COPY . /opt/build/encoder
 
-RUN cd /opt/build/encoder \
-  && mkdir _build && cd _build \
-  && cmake \
-    -DBUILD_SERVER=OFF \
-    -DCMAKE_C_FLAGS="-D_FORTIFY_SOURCE=2 -fstack-protector-strong" \
-    -DCMAKE_CXX_FLAGS="-D_FORTIFY_SOURCE=2 -fstack-protector-strong" \
-    -DCMAKE_INSTALL_PREFIX=/opt \
-    -DCMAKE_INSTALL_LIBDIR=/opt/lib \
-    .. \
-  && make VERBOSE=1 -j $(nproc --all) \
-  && make install DESTDIR=/opt/dist \
-  && make install
+RUN cd /opt/build/encoder && \
+  meson setup \
+    --buildtype=release \
+    --prefix=/opt \
+    --libdir=/opt/lib \
+    --wrap-mode=nofallback \
+    -Dc_args="-D_FORTIFY_SOURCE=2 -fstack-protector-strong" \
+    -Dcpp_args="-D_FORTIFY_SOURCE=2 -fstack-protector-strong" \
+    -Dm4=disabled \
+    -Dencoder=disabled \
+    _build && \
+  meson compile -C _build -v && \
+  meson install -C _build && \
+  meson install -C _build --destdir=/opt/dist
 
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
@@ -151,8 +152,8 @@ ENV GAPATH=/opt/build
 RUN cd /opt/build/streamer && \
   mkdir build && cd build && \
   cmake  \
-    -DCMAKE_C_FLAGS="-Wformat -Wformat-security -Wall -D_FORTIFY_SOURCE=2 -fstack-protector-strong" \
-    -DCMAKE_CXX_FLAGS="-Wformat -Wformat-security -Wall -D_FORTIFY_SOURCE=2 -fstack-protector-strong" \
+    -DCMAKE_C_FLAGS="-D_FORTIFY_SOURCE=2 -fstack-protector-strong" \
+    -DCMAKE_CXX_FLAGS="-D_FORTIFY_SOURCE=2 -fstack-protector-strong" \
     -DCMAKE_INSTALL_PREFIX=/opt \
     -DCMAKE_INSTALL_LIBDIR=/opt/lib \
     -DCMAKE_VERBOSE_MAKEFILE=ON \
