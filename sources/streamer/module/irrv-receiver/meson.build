@@ -14,8 +14,19 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-subdir('encoder')
-if get_option('streamer').enabled()
-  subdir('streamer')
-endif
+srcs = files(
+  'CSendRecvMessage.cpp',
+  'irrv-receiver.cpp',
+  'sock_client.cpp',
+  )
+
+cpp_args = ['-DGA_MODULE', '-DHOST_BUILD']
+
+shared_library('irrv-receiver', srcs,
+  cpp_args : cpp_args,
+  dependencies : [ga_dep, irrv_dep, thread_dep],
+  name_prefix : '',
+  install: true,
+  install_dir : modules_install_dir,
+  )
 

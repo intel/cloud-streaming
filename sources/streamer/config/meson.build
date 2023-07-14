@@ -14,8 +14,16 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-subdir('encoder')
-if get_option('streamer').enabled()
-  subdir('streamer')
-endif
+usage = 'android-cg/'
+
+install_data(usage + 'server.desktop.webrtc.conf',
+  install_dir : get_option('sysconfdir') / 'ga')
+install_data(
+  usage + 'common/audio-pcm.conf',
+  usage + 'common/controller.conf',
+  usage + 'common/server-common.conf',
+  usage + 'common/video-x264.conf',
+  usage + 'common/video-x264-param.conf',
+  usage + 'common/camera.conf',
+  install_dir : get_option('sysconfdir') / 'ga' / 'common')
 

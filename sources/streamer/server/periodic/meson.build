@@ -14,8 +14,17 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-subdir('encoder')
-if get_option('streamer').enabled()
-  subdir('streamer')
+srcs = files('ga-server-periodic.cpp')
+
+if fs.is_absolute(get_option('libdir'))
+  cpp_args = ['-DGA_MODULE_PREFIX="' + get_option('libdir') + '/ga/"']
+else
+  cpp_args = ['-DGA_MODULE_PREFIX="' + get_option('prefix') + '/' + get_option('libdir') + '/ga/"']
 endif
+
+executable('ga-server-periodic', srcs,
+  cpp_args: cpp_args,
+  dependencies: [ga_dep, thread_dep],
+  install : true,
+  )
 

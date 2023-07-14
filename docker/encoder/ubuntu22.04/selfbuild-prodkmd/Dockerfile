@@ -287,6 +287,7 @@ RUN cd /opt/build/encoder && \
     -Dcpp_args="-D_FORTIFY_SOURCE=2 -fstack-protector-strong" \
     -Dm4=disabled \
     -Dencoder=enabled \
+    -Dstreamer=disabled \
     _build && \
   meson compile -C _build -v && \
   meson install -C _build && \
