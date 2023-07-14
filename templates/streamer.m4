@@ -40,28 +40,31 @@ ifdef(`BUILD_ENCODER',,`dnl
   include(encoder.m4)')
 
 define(`STREAMER_BUILD_DEPS',gcc g++ dnl
-  libssl-dev libgtest-dev make nlohmann-json3-dev pkg-config libprotobuf-dev protobuf-compiler)
+  libssl-dev libgtest-dev meson nlohmann-json3-dev pkg-config libprotobuf-dev protobuf-compiler)
 define(`STREAMER_INSTALL_DEPS',dnl
   openssl)
 
 pushdef(`CFLAGS',`-D_FORTIFY_SOURCE=2 -fstack-protector-strong')
 
 define(`BUILD_STREAMER',
-COPY sources/streamer /opt/build/streamer
+COPY . /opt/build/streamer
 
 ENV GAPATH=BUILD_HOME
 RUN cd BUILD_HOME/streamer && \
-  mkdir build && cd build && \
-  cmake  \
-    -DCMAKE_C_FLAGS="CFLAGS" \
-    -DCMAKE_CXX_FLAGS="CFLAGS" \
-    -DCMAKE_INSTALL_PREFIX=BUILD_PREFIX \
-    -DCMAKE_INSTALL_LIBDIR=BUILD_LIBDIR \
-    -DCMAKE_VERBOSE_MAKEFILE=ON \
-    .. && \
-  make -j$(nproc) && \
-  make install DESTDIR=BUILD_DESTDIR && \
-  make install
+  meson setup \
+    --buildtype=release \
+    --prefix=BUILD_PREFIX \
+    --libdir=BUILD_LIBDIR \
+    --wrap-mode=nofallback \
+    -Dc_args="CFLAGS" \
+    -Dcpp_args="CFLAGS" \
+    -Dm4=disabled \
+    -Dencoder=disabled \
+    -Dstreamer=enabled \
+    _build && \
+  meson compile -C _build -v && \
+  meson install -C _build && \
+  meson install -C _build --destdir=BUILD_DESTDIR
 ) dnl define(BUILD_STREAMER)
 
 popdef(`CFLAGS')

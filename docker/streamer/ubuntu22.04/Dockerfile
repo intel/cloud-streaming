@@ -129,6 +129,7 @@ RUN cd /opt/build/encoder && \
     -Dcpp_args="-D_FORTIFY_SOURCE=2 -fstack-protector-strong" \
     -Dm4=disabled \
     -Dencoder=disabled \
+    -Dstreamer=disabled \
     _build && \
   meson compile -C _build -v && \
   meson install -C _build && \
@@ -140,27 +141,30 @@ RUN apt-get update && \
     g++ \
     libssl-dev \
     libgtest-dev \
-    make \
+    meson \
     nlohmann-json3-dev \
     pkg-config \
     libprotobuf-dev \
     protobuf-compiler && \
   rm -rf /var/lib/apt/lists/*
-COPY sources/streamer /opt/build/streamer
+COPY . /opt/build/streamer
 
 ENV GAPATH=/opt/build
 RUN cd /opt/build/streamer && \
-  mkdir build && cd build && \
-  cmake  \
-    -DCMAKE_C_FLAGS="-D_FORTIFY_SOURCE=2 -fstack-protector-strong" \
-    -DCMAKE_CXX_FLAGS="-D_FORTIFY_SOURCE=2 -fstack-protector-strong" \
-    -DCMAKE_INSTALL_PREFIX=/opt \
-    -DCMAKE_INSTALL_LIBDIR=/opt/lib \
-    -DCMAKE_VERBOSE_MAKEFILE=ON \
-    .. && \
-  make -j$(nproc) && \
-  make install DESTDIR=/opt/dist && \
-  make install
+  meson setup \
+    --buildtype=release \
+    --prefix=/opt \
+    --libdir=/opt/lib \
+    --wrap-mode=nofallback \
+    -Dc_args="-D_FORTIFY_SOURCE=2 -fstack-protector-strong" \
+    -Dcpp_args="-D_FORTIFY_SOURCE=2 -fstack-protector-strong" \
+    -Dm4=disabled \
+    -Dencoder=disabled \
+    -Dstreamer=enabled \
+    _build && \
+  meson compile -C _build -v && \
+  meson install -C _build && \
+  meson install -C _build --destdir=/opt/dist
 
 
 RUN echo "Start cleanup" && \

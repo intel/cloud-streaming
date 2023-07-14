@@ -50,10 +50,19 @@ if m4.found()
   subdir('docker')
 endif
 
-thread_dep = dependency('threads', required : get_option('encoder'))
+null_dep = dependency('', required : false)
+
+dl_dep = null_dep
+if host_machine.system() != 'windows'
+  if not cc.has_function('dlopen')
+    dl_dep = cc.find_library('dl', required : true)
+  endif
+endif
+thread_dep = dependency('threads')
 
 libdrm_dep = dependency('libdrm', required : get_option('encoder'))
-libvhal_dep = dependency('vhal-client', required : get_option('encoder'))
+libvhal_dep = dependency('vhal-client',
+  required : get_option('encoder').enabled() or get_option('streamer').enabled())
 libvpl_dep = dependency('vpl', required : get_option('encoder'))
 libva_dep = dependency('libva', required : get_option('encoder'))
 
@@ -62,5 +71,13 @@ libavfilter_dep = dependency('libavfilter', required : get_option('encoder'))
 libavformat_dep = dependency('libavformat', required : get_option('encoder'))
 libavutil_dep = dependency('libavutil', required : get_option('encoder'))
 
+nlohmann_json_dep = dependency('nlohmann_json', required : get_option('streamer'))
+
+protoc = find_program('protoc', version : '>= 3', required : get_option('streamer'))
+protobuf_dep = dependency('protobuf', version : '>= 3', required : get_option('streamer'))
+
+sioclient_dep = dependency('sioclient', required : get_option('streamer'))
+
+subdir('prebuilt')
 subdir('sources')
 

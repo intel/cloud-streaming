@@ -14,8 +14,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-subdir('encoder')
-if get_option('streamer').enabled()
-  subdir('streamer')
+if host_machine.system() == 'linux'
+  owt_dep = declare_dependency(
+    include_directories : include_directories('owt/opt/include'),
+    dependencies : [
+      cc.find_library('owt', dirs : meson.current_source_dir() / 'owt/opt/lib'),
+      ],
+  )
 endif
 

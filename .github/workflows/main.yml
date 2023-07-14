@@ -17,6 +17,7 @@ jobs:
           --wrap-mode=nofallback \
           -Dm4=enabled \
           -Dencoder=disabled \
+          -Dstreamer=disabled \
           _build
         meson compile -C _build
         meson install -C _build

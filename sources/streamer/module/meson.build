@@ -14,8 +14,13 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-subdir('encoder')
-if get_option('streamer').enabled()
-  subdir('streamer')
+if host_machine.system() == 'windows'
+  modules_install_dir = get_option('bindir') / 'mod'
+else
+  modules_install_dir = get_option('libdir') / 'ga'
 endif
+
+subdir('e2elatency')
+subdir('irrv-receiver')
+subdir('server-webrtc')
 

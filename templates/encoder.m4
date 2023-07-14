@@ -65,6 +65,7 @@ RUN cd BUILD_HOME/encoder && \
     -Dcpp_args="CFLAGS" \
     -Dm4=disabled \
     -Dencoder=ENCODER_BUILD_SERVER \
+    -Dstreamer=disabled \
     _build && \
   meson compile -C _build -v && \
   meson install -C _build && \

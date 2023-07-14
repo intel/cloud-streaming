@@ -10,3 +10,9 @@ option('encoder',
   description : 'Build encoder service ingredients',
 )
 
+option('streamer',
+  type : 'feature',
+  value : 'enabled',
+  description : 'Build streamer service ingredients',
+)
+

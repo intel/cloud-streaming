@@ -1,0 +1,11 @@
+[wrap-git]
+directory = sioclient
+url = https://github.com/socketio/socket.io-client-cpp.git
+# tracking 2x-tls branch
+revision = 71897e8ed8f7c60214ac86c392c61bc1d7439c73
+depth = 1
+patch_directory = sioclient
+
+[provide]
+dependency_names = sioclient, sioclient_tls
+
