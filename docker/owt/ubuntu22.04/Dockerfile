@@ -97,24 +97,11 @@ RUN cd /opt/build/owt-gs/src && \
   cp dist/libs/* /opt/lib && \
   cp dist/libs/* /opt/dist//opt/lib
 
-RUN mkdir -p /opt/lib/pkgconfig && { \
-  echo "prefix=/opt"; \
-  echo "libdir=/opt/lib"; \
-  echo "includedir=/opt/include"; \
-  echo ""; \
-  echo "Name: OWT Game Streaming SDK"; \
-  echo "Description: OWT Game Streaming SDK"; \
-  echo "Version: 1.0"; \
-  echo ""; \
-  echo "Libs: -L\${libdir} -lowt"; \
-  echo "Cflags: -I\${includedir}"; \
-  } > /opt/lib/pkgconfig/owt-gs.pc
 RUN mkdir -p /opt/redist/owt//opt/include && \
-  mkdir -p /opt/redist/owt//opt/lib/pkgconfig && \
+  mkdir -p /opt/redist/owt//opt/lib/ && \
   cd /opt/build/owt-gs/src && \
   cp -rd dist/include /opt/redist/owt//opt && \
   cp dist/libs/* /opt/redist/owt//opt/lib && \
-  cp /opt/lib/pkgconfig/owt-gs.pc /opt/redist/owt//opt/lib/pkgconfig/ && \
   cd /opt/redist/ && \
   tar cJvf owt.tar.xz owt
 
