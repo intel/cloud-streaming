@@ -90,25 +90,12 @@ RUN cd BUILD_HOME/owt-gs/src && \
   cp dist/libs/* BUILD_LIBDIR && \
   cp dist/libs/* BUILD_DESTDIR/BUILD_LIBDIR
 
-RUN mkdir -p BUILD_LIBDIR/pkgconfig && { \
-  echo "prefix=BUILD_PREFIX"; \
-  echo "libdir=BUILD_LIBDIR"; \
-  echo "includedir=BUILD_PREFIX/include"; \
-  echo ""; \
-  echo "Name: OWT Game Streaming SDK"; \
-  echo "Description: OWT Game Streaming SDK"; \
-  echo "Version: 1.0"; \
-  echo ""; \
-  echo "Libs: -L\${libdir} -lowt"; \
-  echo "Cflags: -I\${includedir}"; \
-  } > BUILD_LIBDIR/pkgconfig/owt-gs.pc
 ifdef(`BUILD_REDIST',
 RUN mkdir -p BUILD_REDIST/owt/BUILD_PREFIX/include && \
-  mkdir -p BUILD_REDIST/owt/BUILD_LIBDIR/pkgconfig && \
+  mkdir -p BUILD_REDIST/owt/BUILD_LIBDIR/ && \
   cd BUILD_HOME/owt-gs/src && \
   cp -rd dist/include BUILD_REDIST/owt/BUILD_PREFIX && \
   cp dist/libs/* BUILD_REDIST/owt/BUILD_LIBDIR && \
-  cp BUILD_LIBDIR/pkgconfig/owt-gs.pc BUILD_REDIST/owt/BUILD_LIBDIR/pkgconfig/ && \
   cd BUILD_REDIST/ && \
   tar cJvf owt.tar.xz owt
 )dnl

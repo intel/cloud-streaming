@@ -114,31 +114,6 @@ RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     gcc \
     g++ \
-    meson \
-    pkg-config && \
-  rm -rf /var/lib/apt/lists/*
-COPY . /opt/build/encoder
-
-RUN cd /opt/build/encoder && \
-  meson setup \
-    --buildtype=release \
-    --prefix=/opt \
-    --libdir=/opt/lib \
-    --wrap-mode=nofallback \
-    -Dc_args="-D_FORTIFY_SOURCE=2 -fstack-protector-strong" \
-    -Dcpp_args="-D_FORTIFY_SOURCE=2 -fstack-protector-strong" \
-    -Dm4=disabled \
-    -Dencoder=disabled \
-    -Dstreamer=disabled \
-    _build && \
-  meson compile -C _build -v && \
-  meson install -C _build && \
-  meson install -C _build --destdir=/opt/dist
-
-RUN apt-get update && \
-  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    gcc \
-    g++ \
     libssl-dev \
     libgtest-dev \
     meson \
