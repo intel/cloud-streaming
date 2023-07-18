@@ -71,7 +71,6 @@ private:
     size_t          m_nFrames = 0;
     AVDictionary   *m_pDict = nullptr;
     CStreamInfo     m_Info;
-    EncodePluginType m_plugin;
 
 private:
     AVCompat_AVCodec *FindEncoder(AVCodecID id);
