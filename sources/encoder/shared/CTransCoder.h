@@ -270,9 +270,6 @@ private:
 
     void updateFrameSkipped();
 
-protected:
-    int publishStatusToResourceMonitor(uint32_t, void*);
-
 private:
     CDemux                   *m_pDemux = nullptr;
     std::map<int, CDecoder *> m_mDecoders;

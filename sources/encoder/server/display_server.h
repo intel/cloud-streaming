@@ -34,13 +34,11 @@ public:
     virtual bool run();
     virtual void deinit() = 0;
     static void signal_handler(int signum);
-    virtual int publishStatusToResourceMonitor_sync(uint32_t id, void * status);
 
 protected:
     int                             m_id;
     DisplayRenderer*                m_renderer;
     static int event_flag;
-    uint64_t m_statsStartTimeInMs = 0ULL;
 };
 
 #endif // _DISPLAY_SERVER_H_
