@@ -60,31 +60,35 @@ static map<ga_module_t *, HMODULE> mlist;
  */
 ga_module_t *
 ga_load_module(const char *modname, const char *prefix) {
-    char fn[1024];
+    std::string mod = modname;
     ga_module_t *m;
     HMODULE handle;
     ga_module_t * (*do_module_load)();
+
 #ifdef WIN32
-    snprintf(fn, sizeof(fn), "%s.dll", modname);
+    mod += ".dll";
 #elif defined __APPLE__
-    snprintf(fn, sizeof(fn), "%s.dylib", modname);
+    mod += ".dylib";
 #else
-    snprintf(fn, sizeof(fn), "%s.so", modname);
+    mod += ".so";
 #endif
-    //
-    if((handle = dlopen(fn, RTLD_NOW|RTLD_LOCAL)) == NULL) {
-        ga_logger(Severity::ERR, "ga_load_module: load module (%s) failed - %s.\n", fn, dlerror());
+
+    if((handle = dlopen(mod.c_str(), RTLD_NOW|RTLD_LOCAL)) == NULL) {
+        ga_logger(Severity::ERR, "ga_load_module: load module (%s) failed - %s.\n", mod.c_str(), dlerror());
         return NULL;
     }
     if((do_module_load = (ga_module_t * (*)()) dlsym(handle, "module_load")) == NULL) {
-        ga_logger(Severity::ERR, "ga_load_module: [%s] is not a valid module.\n", fn);
+        ga_logger(Severity::ERR, "ga_load_module: [%s] is not a valid module.\n", mod.c_str());
         dlclose(handle);
         return NULL;
     }
-    if((m = do_module_load()) != NULL) {
-        mlist[m] = handle;
+    if((m = do_module_load()) == NULL) {
+        ga_logger(Severity::ERR, "ga_load_module: failed to initialize module: %s\n", mod.c_str());
+        dlclose(handle);
+        return NULL;
     }
-    //
+    mlist[m] = handle;
+
     return m;
 }
 
