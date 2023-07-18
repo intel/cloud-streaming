@@ -55,14 +55,7 @@ public :
     virtual int getCropFlag() { return 0; }
     virtual void ChangeResolution(int width, int height);
 
-protected :
-    virtual int publishStatusToResourceMonitor(uint32_t id, void * status);
-
 private :
-    bool m_fpsStats = true;
-    int m_statsNumFrames = 0;
-    uint64_t m_statsStartTimeInMs = 0;
-
     uint64_t m_frameIdx;
     std::list<std::pair<uint64_t, disp_res_t*>>    m_deletedReses;
 

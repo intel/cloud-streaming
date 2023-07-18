@@ -215,18 +215,6 @@ void DisplayVideoRenderer::beginFrame()
 
 void DisplayVideoRenderer::endFrame()
 {
-    if(m_fpsStats) {
-        uint64_t currTimeInMs = getUs()/1000;
-        m_statsNumFrames++;
-        if (currTimeInMs - m_statsStartTimeInMs >= 1000) {
-            float dtInSec = (float) (currTimeInMs - m_statsStartTimeInMs) / 1000.0f;
-            float fps = (float)m_statsNumFrames / dtInSec;
-            m_statsStartTimeInMs = currTimeInMs;
-            m_statsNumFrames = 0;
-
-            publishStatusToResourceMonitor((uint32_t)m_id, &fps);
-        }
-    }
 }
 
 void DisplayVideoRenderer::retireFrame()
@@ -303,92 +291,6 @@ void DisplayVideoRenderer::flushDelayDelRes() {
 
         m_deletedReses.erase(iter++);
     }
-}
-
-#if BUILD_FOR_HOST
-#define ICRM_FIFO_PATH   "/tmp/icrm-fifo"
-#else
-#define ICRM_FIFO_PATH   "/ipc/icrm-fifo"
-#endif
-/*
- * @id: instance id
- */
-int DisplayVideoRenderer::publishStatusToResourceMonitor(uint32_t id, void * status) {
-    int fd, write_bytes = 0;
-    unsigned char write_buffer[128];
-    char fifo_path[50];
-    char *msg;
-    const char *dev_dri;
-    int data_len, gpuid, len_to_write = 0;
-    const int max_msg_len = sizeof(write_buffer) - 4;
-    //Currently, we only need to report fps
-    float fps = *(float *)status;
-    /* get the gpu id we are on */
-    dev_dri = getenv("VAAPI_DEVICE");
-    if (!dev_dri)
-        dev_dri = "/dev/dri/renderD128";
-    sscanf(dev_dri, "/dev/dri/renderD%d", &gpuid);
-    if (gpuid > 0 && gpuid <= 256)
-    {
-        gpuid -= 128;
-    }
-    else
-    {
-        return 0;
-    }
-    snprintf(fifo_path, sizeof(fifo_path), ICRM_FIFO_PATH "-gpu%02d", gpuid);
-    fifo_path[sizeof(fifo_path)-1] = '\0';
-    //We are fifo producer
-    if((fd = open(fifo_path, O_WRONLY | O_NONBLOCK)) <= 0) {
-        /*
-         * This can be a result that no ICR monitor instance is running
-         * or it is merely not interested in the local instance info
-         * (so that it's not waiting data coming out of the fifo)
-         */
-        return fd;
-    }
-    msg = (char *)write_buffer + 4;
-    /*
-     * Note: We need to make sure data len will not exeed 254,
-     *      Otherwise the package len may conflict with
-     *      the sync(start of msg) flag
-     *
-     * 0xff | id | len | msg
-     * e.g.
-     * 0xff | 1  |  11 | "gfps=30.00"
-     */
-    //start of msg
-    write_buffer[0] = 0xff;
-    /*
-     * id to be transmitted is truncated to 16 bit with MSB followed by LSB
-     */
-    write_buffer[1] = (unsigned char)((id >> 8) & 0xfful);
-    write_buffer[2] = (unsigned char)(id & 0xfful);
-    //snprintf will leave at least one byte for string ending character
-    snprintf(msg, max_msg_len, "gfps=%.2f", fps);
-    data_len = strlen(msg) + 1;
-    if(data_len + 1 >= 0xff) {
-        printf("IRR resource monitor frontend: msg lenth too long!!!\n");
-        fflush(stdout);
-        close(fd);
-        return 0;
-    }
-    write_buffer[3] = strlen(msg) + 1; //including '\0'
-    len_to_write = strlen(msg) + 5;
-#if 0
-    for(int i = 0; i < len_to_write; i++){
-        printf("%02x ",(unsigned int)write_buffer[i]);
-        fflush(stdout);
-    }
-    printf("\n");
-    fflush(stdout);
-#endif
-    write_bytes = write(fd, write_buffer, len_to_write);
-
-    close(fd);
-
-    return write_bytes;
-
 }
 
 void DisplayVideoRenderer::ChangeResolution(int width, int height)
