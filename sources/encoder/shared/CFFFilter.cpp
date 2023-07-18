@@ -190,6 +190,10 @@ CFFFilter::CFFFilter(CStreamInfo *in, CStreamInfo *out, bool bVASurface, bool bQ
             pHwDev = CVAAPIDevice::getInstance()->getVaapiDev();
         else if (is_pixqsv(m_SinkInfo.m_pCodecPars->format))
             pHwDev = CQSVAPIDevice::getInstance()->getQSVapiDev();
+        else {
+            Error("Unsupported pixel format\n");
+            return;
+        }
 
         for (unsigned idx = 0; idx < m_pGraph->nb_filters; idx++)
             m_pGraph->filters[idx]->hw_device_ctx = av_buffer_ref(pHwDev);
