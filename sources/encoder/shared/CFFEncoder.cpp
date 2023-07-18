@@ -28,6 +28,17 @@ extern "C" {
 
 using namespace std;
 
+static bool is_qsv_encoder(const char* name)
+{
+    if (std::string("av1_qsv") == name) return true;
+    if (std::string("h264_qsv") == name) return true;
+    if (std::string("hevc_qsv") == name) return true;
+    if (std::string("mjpeg_qsv") == name) return true;
+    if (std::string("mpeg2_qsv") == name) return true;
+    if (std::string("vp9_qsv") == name) return true;
+    return false;
+}
+
 CFFEncoder::CFFEncoder(const char *pCodec, CStreamInfo *info, EncodePluginType plugin) : CTransLog(__func__) {
     AVCompat_AVCodec *codec = avcodec_find_encoder_by_name(pCodec);
 
@@ -42,7 +53,6 @@ CFFEncoder::CFFEncoder(const char *pCodec, CStreamInfo *info, EncodePluginType p
 
     if (codec)
         m_Info.m_pCodecPars->codec_id = codec->id;
-    m_plugin = plugin;
 }
 
 CFFEncoder::CFFEncoder(AVCodecID id, CStreamInfo *info) : CTransLog(__func__) {
@@ -141,7 +151,7 @@ void CFFEncoder::init(AVDictionary *pDict) {
     m_pEnc->max_b_frames  = 0;
     m_pEnc->refs          = 1;
 
-    if (QSV_ENCODER == m_plugin) {
+    if (is_qsv_encoder(m_pEnc->codec->name)) {
         // for hevc, qsv-plugin receives level * 10, while vaapi-plugin receives level * 30
         if (m_Info.m_pCodecPars->codec_id == AV_CODEC_ID_HEVC)
              m_Info.m_pCodecPars->level /= 3;
