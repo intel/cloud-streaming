@@ -579,7 +579,7 @@ void CSendRecvMessage::recv_es_stream() {
                 ga_logger(Severity::DBG, LOG_PREFIX "data_size=%d, video_size=%d, alpha_size=%d, flags=%d\n",
                     frame.data_size, frame.video_size, frame.alpha_size, frame.flags);
 
-                if (!frame.data_size || frame.data_size < frame.video_size) {
+                if (!frame.data_size || frame.data_size < frame.video_size || frame.data_size > 4*m_width*m_height) {
                     ga_logger(Severity::ERR, "broken frame\n");
                     return;
                 }
