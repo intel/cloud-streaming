@@ -19,7 +19,7 @@ project('sioclient', 'cpp')
 asio_dep = dependency('asio')
 rapidjson_dep = dependency('rapidjson')
 websocketpp_dep = dependency('websocketpp')
-openssl_dep = dependency('openssl')
+openssl_dep = dependency('openssl', required : false)
 
 srcs = files(
   'src/sio_client.cpp',
