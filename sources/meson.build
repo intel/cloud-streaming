@@ -14,6 +14,26 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+cgvcs_tgt = vcs_tag(
+  command : [ 'git', 'rev-parse', '--short', 'HEAD'],
+  input : 'cg-vcs.h.in',
+  output : 'cg-vcs.h',
+  fallback : 'tarball',
+  )
+
+ver = meson.project_version().split('.')
+
+cgver_file = configure_file(
+  input : 'cg-version.h.in',
+  output : 'cg-version.h',
+  configuration : {
+    'VER_MAJOR' : ver[0],
+    'VER_MINOR' : ver[1],
+    'VER_MICRO' : ver[2],
+    'VER_REV'   : 0,
+    },
+)
+
 if host_machine.system() == 'linux'
   subdir('encoder')
 endif

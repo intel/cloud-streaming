@@ -14,7 +14,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-srcs = files(
+srcs = [cgver_file, cgvcs_tgt]
+srcs += files(
   'ga-common.cpp',
   'ga-conf.cpp',
   'ga-confvar.cpp',
@@ -68,5 +69,6 @@ ga_dep = declare_dependency(
   compile_args: cpp_public_args,
   include_directories: include_directories('.'),
   link_with: _libga,
+  sources: [cgver_file, cgvcs_tgt],
 )
 
