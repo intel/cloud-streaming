@@ -28,6 +28,7 @@
 #include <csignal>
 #include <mutex>
 
+#include "cg-version.h"
 #include "ga-common.h"
 #include "ga-conf.h"
 #include "ga-module.h"
@@ -163,6 +164,7 @@ void usage(const char* app) {
     printf("\n");
     printf("Global options:\n");
     printf("  -h, --help              Print this help\n");
+    printf("  --version               Print version\n");
     printf("  --loglevel <level>      Loglevel to use (default: %s)\n", default_loglevel);
     printf("              error         Only errors will be printed\n");
     printf("              warning       Errors and warnings will be printed\n");
@@ -273,6 +275,9 @@ main(int argc, const char *argv[]) {
         if (std::string("-h") == argv[config_idx] ||
             std::string("--help") == argv[config_idx]) {
             usage(argv[0]);
+            exit(0);
+        } else if (std::string("--version") == argv[config_idx]) {
+            printf("cgref %s\n", CG_VERSION);
             exit(0);
         } else if (std::string("-s") == argv[config_idx] ||
                    std::string("--server") == argv[config_idx]) {
