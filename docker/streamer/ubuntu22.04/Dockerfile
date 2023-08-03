@@ -73,7 +73,6 @@ RUN apt-get update && \
     g++ \
     git \
     libasio-dev \
-    libssl-dev \
     libwebsocketpp-dev \
     make \
     pkg-config \
