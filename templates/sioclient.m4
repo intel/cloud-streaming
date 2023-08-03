@@ -32,8 +32,8 @@ include(begin.m4)
 
 DECLARE(`SIOCLIENT_VER',2.0.0)
 
-define(`SIOCLIENT_BUILD_DEPS',cmake gcc g++ git libasio-dev libssl-dev libwebsocketpp-dev make pkg-config rapidjson-dev)
-define(`SIOCLIENT_INSTALL_DEPS',openssl)
+define(`SIOCLIENT_BUILD_DEPS',cmake gcc g++ git libasio-dev libwebsocketpp-dev make pkg-config rapidjson-dev)
+define(`SIOCLIENT_INSTALL_DEPS',)
 
 define(`BUILD_SIOCLIENT',`dnl
 ARG SIOCLIENT_REPO=https://github.com/socketio/socket.io-client-cpp.git
