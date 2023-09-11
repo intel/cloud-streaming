@@ -48,4 +48,6 @@
     int height = 0;                       /**< @brief Resolution height */
     int encode_width = 0;                 /**< @brief Encode width */
     int encode_height = 0 ;               /**< @brief Encode height */
+    bool enable_ltr = false;              /**< @brief LTR enable flag */
+    char ltr_interval[8] = {};            /**< @brief Distance between current and reference frames */
   };
