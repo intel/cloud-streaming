@@ -44,6 +44,8 @@ public:
    */
   typedef struct param_shared_s param_shared_s;
 
+  static const char* event_name_hook_ready;
+
 public:
   ga_param_shared(uint64_t pid, uint32_t desired_access);
   ~ga_param_shared();
@@ -81,6 +83,10 @@ public:
   LUID get_luid() const;
   bool set_tcae(const bool enable);
   bool get_tcae() const;
+  bool set_ltr(const bool enable);
+  bool get_ltr() const;
+  bool set_ltrinterval(const std::string ltr_interval);
+  std::string get_ltrinterval() const;
   bool set_present(const bool enable);
   bool get_present() const;
   bool set_width(const int width);
@@ -93,6 +99,8 @@ public:
   bool set_encode_height(const int encode_height);
   int get_encode_height() const;
   std::string get_video_bitrate() const;
+
+  static std::string get_event_name_with_pid(const char* event_name, int32_t pid);
 
 protected:
   bool create_param_shared_mem(const std::string named, uint32_t desired_access);

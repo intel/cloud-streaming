@@ -25,6 +25,8 @@
 
 #define LOG_PREFIX "ga-param-shared: "
 
+const char* ga_param_shared::event_name_hook_ready = "IntelHook_HookReady";
+
 /**
 * @brief ga_param_shared class constructor
 *
@@ -98,9 +100,11 @@ bool ga_param_shared::set_param_shared(const param_shared_s& params)
   strcpy_s(shared_param_->client_peer_id, _countof(shared_param_->client_peer_id), params.client_peer_id);
   strcpy_s(shared_param_->logfile, _countof(shared_param_->logfile), params.logfile);
   strcpy_s(shared_param_->video_bitrate, _countof(shared_param_->video_bitrate), params.video_bitrate);
+  strcpy_s(shared_param_->ltr_interval, _countof(shared_param_->ltr_interval), params.ltr_interval);
   shared_param_->loglevel = params.loglevel;
   shared_param_->luid = params.luid;
   shared_param_->enable_tcae = params.enable_tcae;
+  shared_param_->enable_ltr = params.enable_ltr;
   shared_param_->enable_present = params.enable_present;
   shared_param_->width = params.width;
   shared_param_->height = params.height;
@@ -514,6 +518,66 @@ bool ga_param_shared::get_tcae() const
 }
 
 /**
+ * @brief Set LTR enable flag to shared memory
+ *
+ * @param enable  Enable or disable LTR
+ *
+ * @return success return true, otherwise false
+ *
+ */
+bool ga_param_shared::set_ltr(const bool enable)
+{
+    if (shared_param_ == nullptr) {
+        ga_logger(Severity::ERR, LOG_PREFIX "Failed to set LTR enable flag!\n");
+        return false;
+    }
+
+    shared_param_->enable_ltr = enable;
+
+    return true;
+}
+/**
+ * @brief Get LTR enable flag from shared memory
+ *
+ * @return LTR enable flag
+ *
+ */
+bool ga_param_shared::get_ltr() const
+{
+    return shared_param_ ? shared_param_->enable_ltr : false;
+}
+
+/**
+ * @brief Set LTR interval to shared memory
+ *
+ * @param ltr_interval
+ *
+ * @return success return true, otherwise false
+ *
+ */
+bool ga_param_shared::set_ltrinterval(const std::string ltr_interval)
+{
+    if (shared_param_ == nullptr) {
+        ga_logger(Severity::ERR, LOG_PREFIX "Failed to set LTR enable flag!\n");
+        return false;
+    }
+
+    strcpy_s(shared_param_->ltr_interval, _countof(shared_param_->ltr_interval), ltr_interval.c_str());
+
+    return true;
+}
+/**
+ * @brief Get LTR enable flag from shared memory
+ *
+ * @return LTR enable flag
+ *
+ */
+std::string ga_param_shared::get_ltrinterval() const
+{
+    return shared_param_ ? shared_param_->ltr_interval : 0;
+}
+
+/**
  * @brief Set present enable flag to shared memory
  *
  * @param enable  Enable or disable present
@@ -725,4 +789,13 @@ bool ga_param_shared::set_encode_height(const int encode_height)
 int ga_param_shared::get_encode_height() const
 {
   return shared_param_ ? shared_param_->encode_height : 0;
+}
+
+std::string ga_param_shared::get_event_name_with_pid(const char* event_name, int32_t pid)
+{
+    if (event_name == nullptr)
+        return std::string("");
+
+    std::string result = std::string(event_name) + "_" + std::to_string(pid);
+    return result;
 }
