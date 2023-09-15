@@ -31,7 +31,7 @@ static struct sockaddr_in ctrlsin;
 queue<QosClientInfo> qosclientQueue;
 static std::mutex queue_mutex;
 static bool bRestartQosServer = false;
-//#define TCP 0
+
 //Below is the client implementation
 #ifdef WIN32
 static unsigned long
@@ -48,128 +48,7 @@ name_resolve(const char *hostname) {
     }
     return addr.s_addr;
 }
-#ifdef TCP
 
-// Main thread to handle the cursor data at client.
-DWORD __stdcall ProcessQosThreadClient(LPVOID params)
-{
-    int  ret = 0;
-
-    THREAD_INFO_S *pThreadInfo = (THREAD_INFO_S *)params;
-    if (NULL == pThreadInfo) {
-        ga_logger(Severity::ERR, "Invalid thread config\n");
-        return -1;
-    }
-
-    //Start to connect to server
-    WORD sockVersion = MAKEWORD(2, 2);
-    WSADATA data;
-    if (WSAStartup(sockVersion, &data) != 0)
-    {
-        ga_logger(Severity::ERR, "Failed to initialize Winsock\n");
-        return -1;
-    }
-    SOCKET  m_sclient = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (m_sclient == INVALID_SOCKET)
-    {
-        ga_logger(Severity::ERR, "Failed to create a socket");
-        return -1;
-    }
-    sockaddr_in serAddr;
-    serAddr.sin_family = AF_INET;
-    serAddr.sin_port = htons(pThreadInfo->conf.ctrlport2+1);// pThreadInfo->nPort);
-    if (pThreadInfo->conf.servername != NULL) {
-        serAddr.sin_addr.S_un.S_addr = name_resolve(pThreadInfo->conf.servername);
-        if (serAddr.sin_addr.S_un.S_addr == INADDR_NONE) {
-            ga_logger(Severity::ERR, "Name resolution failed: %s\n", pThreadInfo->conf.servername);
-            return -1;
-        }
-    }
-
-    if (connect(m_sclient, (sockaddr *)&serAddr, sizeof(serAddr)) == SOCKET_ERROR)
-    {
-        ga_logger(Severity::INFO, "connect error !\n");
-        closesocket(m_sclient);
-        return 0;
-    }
-    ga_logger(Severity::INFO, "\n Client connects to server success\n");
-    unsigned int    totalLen = 10 * 1024 * 1024;
-    unsigned char   *recvBuffer = (unsigned char *)malloc(totalLen);
-    unsigned int    datainBuff = 0;
-    unsigned int    offset = 0;
-    MSG_REP_INFO_S  *repInfo = NULL;
-    unsigned int nUpdated = 1;
-    int curIndex = 0;
-    while (1) {
-        //Receive request from client
-    start:
-
-        if ((totalLen - offset - datainBuff) == 0) {
-            memcpy(recvBuffer, recvBuffer + offset, datainBuff);
-            offset = 0;
-        }
-        if (datainBuff > sizeof(MSG_REP_INFO_S)) {
-            repInfo = (MSG_REP_INFO_S *)(recvBuffer + offset);
-            if (repInfo->magic == MAGIC_IO_CODE && ((repInfo->payloadLen + sizeof(MSG_REP_INFO_S)) <= datainBuff))
-            {
-                //A valid message found
-                goto processMessage;
-
-            }
-        }
-        ret = recv(m_sclient, (char *)(recvBuffer + offset + datainBuff), (totalLen - offset - datainBuff), 0);
-        if (ret > 0) {
-            datainBuff += ret;
-        }
-        goto start;
-        //TODO: now we get the cursor data, let's display it.
-    processMessage:
-            QosInfo *pQosInfo = (QosInfo *)((unsigned char *)(recvBuffer + offset + sizeof(MSG_REP_INFO_S)));
-
-            //std::cout << "Frame no: " << pQosInfo->frameno << "\n";
-            //std::cout << "Capture latency: " << pQosInfo->capturetime << " ms\n";
-            //std::cout << "Encode latency:  " << pQosInfo->encodetime << " ms\n";
-            //std::cout << "frame size:  " << pQosInfo->framesize << " ms\n";
-            //    std::cout << "Event: " << (cln_event_time2.tv_sec << "s " <<  cln_event_time2.tv_usec << " us\n";
-            //printf("YYYYYYYYYYYYYYYY report mouse event=%lds, %ldus\r\n", pQosInfo->eventime.tv_sec, pQosInfo->eventime.tv_usec);
-            QosInfoFull   qosInfoFull;
-            if (!qosclientQueue.empty()) {
-                QosClientInfo qosClientInfo;
-                {
-                    std::lock_guard<std::mutex> lock(queue_mutex);
-                    qosClientInfo = qosclientQueue.front();
-                    qosclientQueue.pop();
-                }
-                qosInfoFull.capturetime = pQosInfo->capturetime;
-                qosInfoFull.encodetime = pQosInfo->encodetime;
-                qosInfoFull.frameno = pQosInfo->frameno;
-                qosInfoFull.framesize = pQosInfo->framesize;
-                qosInfoFull.netlatency = qosClientInfo.netlatency;
-                qosInfoFull.decodeSubmit = qosClientInfo.decodeSubmit;
-                qosInfoFull.eventtime = pQosInfo->eventime;
-
-            }
-            // Enqueue the cursor into display thread;
-            dpipe_buffer_t *data = NULL;
-            unsigned char *dstframe = NULL;
-            dpipe_t *pipeQos = dpipe_lookup("Qos-0");
-            if (pipeQos) {
-                data = dpipe_get(pipeQos);
-                dstframe = (unsigned char *)data->pointer;
-                memcpy(dstframe,&qosInfoFull, sizeof(QosInfoFull));
-                dpipe_store(pipeQos, data);
-            }
-
-        offset += sizeof(MSG_REP_INFO_S) + repInfo->payloadLen;
-        datainBuff -= (sizeof(MSG_REP_INFO_S) + repInfo->payloadLen);
-
-    }
-    closesocket(m_sclient);
-    WSACleanup();
-    ga_logger(Severity::INFO, "Exit current customer\n");
-    return 0;
-}
-#else
 // Main thread to handle the cursor data at client.
 DWORD __stdcall ProcessQosThreadClient(LPVOID params)
 {
@@ -329,7 +208,7 @@ restart:
     ga_logger(Severity::INFO, "Exit current customer\n");
     return 0;
 }
-#endif
+
 THREAD_INFO_S qosThreadClientInfo;
 int start_qos_client(struct RTSPConf *conf)
 {
@@ -352,92 +231,6 @@ void queue_qos_client_info(QosClientInfo qosClientInfo)
     qosclientQueue.push(qosClientInfo);
 }
 
-#ifdef TCP
-DWORD __stdcall ProcessQosServerThread(LPVOID params)
-{
-    int ret = 0;
-    THREAD_INFO_S *pThreadInfo = (THREAD_INFO_S *)params;
-    if (NULL == pThreadInfo) {
-        ga_logger(Severity::ERR, "ProcessThread: invalid ThreadInfomation\n");
-        return -1;
-    }
-
-    //Initialize winSocket
-    WORD sockVersion = MAKEWORD(2, 2);
-    WSADATA wsaData;
-    if (WSAStartup(sockVersion, &wsaData) != 0)
-    {
-        ga_logger(Severity::ERR, "ProcessThread: WSAStartup failed\n");
-        return -1;
-    }
-
-    //Create Socket
-    SOCKET slisten = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (slisten == INVALID_SOCKET)
-    {
-        ga_logger(Severity::ERR, "Failed to create socket for cursor service!");
-        return -1;
-    }
-
-    //bind IP/PORT
-    sockaddr_in sin;
-    sin.sin_family = AF_INET;
-    sin.sin_port = htons(pThreadInfo->conf.ctrlport2+1);  //TODO:read from configuration file
-    sin.sin_addr.S_un.S_addr = INADDR_ANY;
-    if (bind(slisten, (LPSOCKADDR)&sin, sizeof(sin)) == SOCKET_ERROR)
-    {
-        ga_logger(Severity::ERR, "Failed to bind error !");
-        return -1;
-    }
-
-    // start to listen on client connection
-    if (listen(slisten, 5) == SOCKET_ERROR)
-    {
-        ga_logger(Severity::INFO, "Failed to listen error !");
-        return 0;
-    }
-
-    // handle cursor data
-    SOCKET sClient;
-    sockaddr_in remoteAddr;
-    int nAddrlen = sizeof(remoteAddr);
-
-    ga_logger(Severity::INFO, "Qos_SRV: waiting for a new connection...\n");
-    sClient = accept(slisten, (SOCKADDR *)&remoteAddr, &nAddrlen);
-    if (sClient == INVALID_SOCKET)
-    {
-        ga_logger(Severity::INFO, "accept error !");
-        return -1;
-    }
-    ga_logger(Severity::INFO, "Qos_SRV: A new client connected...\n");
-    unsigned char *pMessage = (unsigned char *)malloc(1024 * 1024);
-    while (1) {
-        //Receive request from client
-        MSG_REQ_INFO_S reqInfo;
-        MSG_REP_INFO_S repInfo;
-        memset(&reqInfo, 0, sizeof(reqInfo));
-        //ga_logger(Severity::INFO, "start to wait a new frame ...\n");
-        dpipe_buffer_t *data = dpipe_load(pQosPipe, nullptr);
-        //ga_logger(Severity::INFO, "Get a new frame ...\n");
-        QosInfo *pQosInfo = (QosInfo *)(data->pointer);
-        repInfo.msgHdr     = HANDSHAKE_RESP;
-        repInfo.magic      = MAGIC_IO_CODE;
-        repInfo.payloadLen = sizeof(QosInfo) ;// 32 * 32 * 4;
-
-        memcpy(pMessage, (unsigned char *)&repInfo, sizeof(repInfo));
-        memcpy(pMessage + sizeof(repInfo), data->pointer, repInfo.payloadLen);
-
-        dpipe_put(pQosPipe, data);
-        //ga_logger(Severity::INFO, "Sent a new frame ... lent\n");
-        send(sClient, (char *)(pMessage), sizeof(repInfo) + repInfo.payloadLen, 0);
-    }
-    closesocket(sClient);
-    closesocket(slisten);
-    WSACleanup();
-    printf("Exit current customer\r\n");
-    return 0;
-}
-#else
 DWORD __stdcall ProcessQosServerThread(LPVOID params)
 {
     int ret = 0;
@@ -581,7 +374,6 @@ restart:
     return 0;
 }
 
-#endif
 THREAD_INFO_S qosThreadServerInfo;
 // Start a cursor service
 int start_qos_service(struct RTSPConf *conf)

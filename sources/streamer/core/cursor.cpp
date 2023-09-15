@@ -33,7 +33,7 @@ static bool bNeedNewCursorShape = false;
 static unsigned int CursorReceiveSeqID = 0;
 static bool bRestartCursorServer = false;
 SOCKET slisten = -1;
-#define TCP 0
+
 //Below is the client implementation
 #ifdef WIN32
 static unsigned long
@@ -50,99 +50,8 @@ name_resolve(const char *hostname) {
     }
     return addr.s_addr;
 }
-#if TCP
-// Main thread to handle the cursor data at client.
-DWORD __stdcall ProcessThreadClient(LPVOID params)
-{
-    int  ret = 0;
 
-    THREAD_INFO_S *pThreadInfo = (THREAD_INFO_S *)params;
-    if (NULL == pThreadInfo) {
-        ga_logger(Severity::ERR, "Invalid thread config\n");
-        return -1;
-    }
 
-    //Start to connect to server
-    WORD sockVersion = MAKEWORD(2, 2);
-    WSADATA data;
-    if (WSAStartup(sockVersion, &data) != 0)
-    {
-        ga_logger(Severity::ERR, "Failed to initialize Winsock\n");
-        return -1;
-    }
-    SOCKET  m_sclient = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (m_sclient == INVALID_SOCKET)
-    {
-        ga_logger(Severity::ERR, "Failed to create a socket");
-        return -1;
-    }
-    sockaddr_in serAddr;
-    serAddr.sin_family = AF_INET;
-    serAddr.sin_port = htons(pThreadInfo->conf.ctrlport2);// pThreadInfo->nPort);
-    if (pThreadInfo->conf.servername != NULL) {
-        serAddr.sin_addr.S_un.S_addr = name_resolve(pThreadInfo->conf.servername);
-        if (serAddr.sin_addr.S_un.S_addr == INADDR_NONE) {
-            ga_logger(Severity::ERR, "Name resolution failed: %s\n", pThreadInfo->conf.servername);
-            return -1;
-        }
-    }
-
-    if (connect(m_sclient, (sockaddr *)&serAddr, sizeof(serAddr)) == SOCKET_ERROR)
-    {
-        ga_logger(Severity::ERR, "connect error !\n");
-        closesocket(m_sclient);
-        return 0;
-    }
-    ga_logger(Severity::INFO, "Client connects to server success\n");
-    unsigned int    totalLen = 10 * 1024 * 1024;
-    unsigned char   *recvBuffer = (unsigned char *)malloc(totalLen);
-    unsigned int    datainBuff = 0;
-    unsigned int    offset = 0;
-    MSG_REP_INFO_S  *repInfo = NULL;
-    unsigned int nUpdated = 1;
-    int curIndex = 0;
-    while (1) {
-        //Receive request from client
-    start:
-
-        if ((totalLen - offset - datainBuff) == 0) {
-            memcpy(recvBuffer, recvBuffer+offset, datainBuff);
-            offset = 0;
-        }
-        if (datainBuff > sizeof(MSG_REP_INFO_S)) {
-            repInfo = (MSG_REP_INFO_S *)(recvBuffer + offset);
-            if (repInfo->magic == MAGIC_IO_CODE && ((repInfo->payloadLen + sizeof(MSG_REP_INFO_S)) <= datainBuff))
-            {
-                //A valid message found
-                goto processMessage;
-
-            }
-        }
-        ret = recv(m_sclient, (char *)(recvBuffer+offset+ datainBuff), (totalLen - offset - datainBuff), 0);
-        if (ret > 0) {
-            datainBuff += ret;
-        }
-        goto start;
-        //TODO: now we get the cursor data, let's display it.
-
-    processMessage:
-        CURSOR_INFO *pCursorInfo = (CURSOR_INFO *)((unsigned char *)(recvBuffer + offset + sizeof(MSG_REP_INFO_S)));
-        if (pCursorInfo->lenOfCursor) {
-            memcpy(gCursorData, (unsigned char *)(recvBuffer + offset + sizeof(MSG_REP_INFO_S) + sizeof(CURSOR_INFO)), pCursorInfo->lenOfCursor);
-        }
-        cursorX = pCursorInfo->pos_x;
-        cursorY = pCursorInfo->pos_y;
-
-        offset += sizeof(MSG_REP_INFO_S) + repInfo->payloadLen;
-        datainBuff -= (sizeof(MSG_REP_INFO_S) + repInfo->payloadLen);
-
-    }
-    closesocket(m_sclient);
-    WSACleanup();
-    ga_logger(Severity::INFO, "Exit current customer\n");
-    return 0;
-}
-#else
 // Main thread to handle the cursor data at client.
 DWORD __stdcall ProcessThreadClient(LPVOID params)
 {
@@ -265,7 +174,7 @@ restart:
     ga_logger(Severity::INFO, "Exit current customer\n");
     return 0;
 }
-#endif
+
 THREAD_INFO_S threadClientInfo;
 int start_cursor_client(struct RTSPConf *conf)
 {
@@ -307,106 +216,7 @@ int set_cursor_data(unsigned char *pBuffer, unsigned int len)
 {
     return 0;
 }
-#if TCP
-DWORD __stdcall ProcessServerThread(LPVOID params)
-{
-    int ret = 0;
-    THREAD_INFO_S *pThreadInfo = (THREAD_INFO_S *)params;
-    if (NULL == pThreadInfo) {
-        ga_logger(Severity::ERR, "ProcessThread: invalid ThreadInfomation\n");
-        return -1;
-    }
 
-    //Initialize winSocket
-    WORD sockVersion = MAKEWORD(2, 2);
-    WSADATA wsaData;
-    if (WSAStartup(sockVersion, &wsaData) != 0)
-    {
-        ga_logger(Severity::ERR, "ProcessThread: WSAStartup failed\n");
-        return -1;
-    }
-
-    //Create Socket
-    SOCKET slisten = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (slisten == INVALID_SOCKET)
-    {
-        ga_logger(Severity::ERR, "Failed to create socket for cursor service!");
-        return -1;
-    }
-
-    //bind IP/PORT
-    sockaddr_in sin;
-    sin.sin_family = AF_INET;
-    sin.sin_port = htons(pThreadInfo->conf.ctrlport2);  //TODO:read from configuration file
-    sin.sin_addr.S_un.S_addr = INADDR_ANY;
-    if (bind(slisten, (LPSOCKADDR)&sin, sizeof(sin)) == SOCKET_ERROR)
-    {
-        ga_logger(Severity::ERR, "Failed to bind error !");
-        return -1;
-    }
-
-    // start to listen on client connection
-    if (listen(slisten, 5) == SOCKET_ERROR)
-    {
-        ga_logger(Severity::INFO, "Failed to listen error !");
-        return 0;
-    }
-
-    // handle cursor data
-    SOCKET sClient;
-    sockaddr_in remoteAddr;
-    int nAddrlen = sizeof(remoteAddr);
-    unsigned char *pMessage = (unsigned char *)malloc(1024*1024);
-restart:
-    memset(pMessage, 0, 1024*1024);
-    bIsReadyforSend = false;
-    ga_logger(Severity::INFO, "CURSOR_SRV:waiting for a new connection...\n");
-    sClient = accept(slisten, (SOCKADDR *)&remoteAddr, &nAddrlen);
-    if (sClient == INVALID_SOCKET)
-    {
-        ga_logger(Severity::ERR, "accept error !");
-        return -1;
-    }
-    ga_logger(Severity::INFO, "CURSOR_SRV: A new client connected...\n");
-
-    ga_module_t *m = encoder_get_vencoder();
-    ga_ioctl_buffer_t mb;
-    int err = 0;
-    if ((err = ga_module_ioctl(m, GA_IOCTL_REQUEST_NEW_CURSOR, sizeof(mb), &mb)) < 0) {
-        ga_logger(Severity::INFO, "Failed to insert a key frame%s, err=%d\n", m->name, err);
-    }
-    bIsReadyforSend = true;
-    while (1) {
-        //Receive request from client
-        MSG_REQ_INFO_S reqInfo;
-        MSG_REP_INFO_S repInfo;
-        memset(&reqInfo, 0, sizeof(reqInfo));
-        //ga_logger(Severity::INFO, "start to wait a new frame ...\n");
-        dpipe_buffer_t *data = dpipe_load(pCursorPipe, nullptr);
-        //ga_logger(Severity::INFO, "Get a new frame ...\n");
-        CURSOR_INFO *pCursorInfo = (CURSOR_INFO *)(data->pointer);
-        repInfo.msgHdr     = HANDSHAKE_RESP;
-        repInfo.magic      = MAGIC_IO_CODE;
-        repInfo.payloadLen = sizeof(CURSOR_INFO) + pCursorInfo->lenOfCursor;// 32 * 32 * 4;
-
-        memcpy(pMessage, (unsigned char *)&repInfo, sizeof(repInfo));
-        memcpy(pMessage+ sizeof(repInfo), data->pointer, repInfo.payloadLen);
-
-        dpipe_put(pCursorPipe, data);
-        //ga_logger(Severity::INFO, "Sent a new frame ... lent\n");
-        int error = send(sClient, (char *)(pMessage), sizeof(repInfo) + repInfo.payloadLen, 0);
-        if (error <= 0) {
-            closesocket(sClient);
-            goto restart;
-        }
-    }
-
-    closesocket(slisten);
-    WSACleanup();
-    printf("Exit current customer\n");
-    return 0;
-}
-#else
 DWORD __stdcall ProcessServerThread(LPVOID params)
 {
     int ret = 0;
@@ -559,7 +369,6 @@ restart:
     return 0;
 }
 
-#endif
 THREAD_INFO_S threadServerInfo;
 // Start a cursor service
 int start_cursor_service(struct RTSPConf *conf)
