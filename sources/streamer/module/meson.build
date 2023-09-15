@@ -24,5 +24,4 @@ if host_machine.system() == 'linux'
   subdir('irrv-receiver')
 endif
 
-subdir('e2elatency')
 subdir('server-webrtc')

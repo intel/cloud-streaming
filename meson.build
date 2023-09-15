@@ -88,9 +88,6 @@ endif
 
 nlohmann_json_dep = dependency('nlohmann_json', required : get_option('streamer'))
 
-protoc = find_program('protoc', version : '>= 3', required : get_option('streamer'))
-protobuf_dep = dependency('protobuf', version : '>= 3', required : get_option('streamer'))
-
 sioclient_dep = dependency('sioclient', required : get_option('streamer'))
 
 subdir('prebuilt')
