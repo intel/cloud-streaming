@@ -84,16 +84,9 @@ typedef struct _CursorData {
 #endif
     unsigned char  cursorData[MAX_CURSOR_SIZE];
 }CURSOR_DATA;
+
 #ifdef WIN32
-EXPORT int start_cursor_client(struct RTSPConf *conf);
-EXPORT int set_cursor_pos(CURSOR_POS curpos);
-EXPORT int get_cursor_pos(CURSOR_POS *pcurpos);
-EXPORT unsigned char *get_cursor_data();
-EXPORT int set_cursor_data(unsigned char *pBuffer, unsigned int len);
-EXPORT void stop_cursor_service();
-EXPORT void restart_cursor_service();
 EXPORT int queue_cursor(qcsCursorInfoData ciStruct, unsigned char *pBuffer, int nLen, int waitforvideo);
-EXPORT int start_cursor_service(struct RTSPConf *conf);
 #endif
 
 #endif
