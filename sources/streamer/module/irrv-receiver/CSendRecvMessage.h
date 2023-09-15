@@ -20,6 +20,7 @@
 #include <condition_variable>
 #include <mutex>
 #include <thread>
+#include <vector>
 
 #include "sock_client.h"
 #include "irrv/irrv_protocol.h"

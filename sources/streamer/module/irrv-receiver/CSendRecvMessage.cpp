@@ -23,7 +23,9 @@
 #include <sstream>
 
 #include <unistd.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 
 #include "ga-conf.h"
 #include "ga-common.h"

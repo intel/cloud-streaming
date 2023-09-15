@@ -14,20 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef __INTEL_CURSOR_H__
-#define __INTEL_CURSOR_H__
+#ifndef __CURSOR_H__
+#define __CURSOR_H__
 
-#include <iostream>
-#ifdef WIN32
-#include <winsock2.h>
-#endif
 #include "ga-common.h"
-#include "dpipe.h"
-#include "rtspconf.h"
 #ifdef WIN32
 #include "qcscursorcapture.h"
 #endif
-#define    CURSOR_POOLSIZE    4
 
 #define MAX_CURSOR_WIDTH  64
 #define MAX_CURSOR_HEIGHT 64
@@ -89,4 +82,3 @@ EXPORT int queue_cursor(qcsCursorInfoData ciStruct, unsigned char *pBuffer, int 
 #endif
 
 #endif
-

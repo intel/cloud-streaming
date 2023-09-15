@@ -14,6 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+#include <memory>
+
 #include "cursor.h"
 #include "ga-common.h"
 #include "encoder-common.h"
