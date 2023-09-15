@@ -21,7 +21,6 @@
 #include "ga-common.h"
 #include "dpipe.h"
 #include "rtspconf.h"
-#include "ga-msg.h"
 #define    QOS_POOLSIZE      4
 
 /**
