@@ -59,13 +59,6 @@ typedef struct _QosInfoFull
     unsigned int captureFps;
 }QosInfoFull;
 
-EXPORT int start_qos_client(struct RTSPConf *conf);
-EXPORT void restart_qos_service();
-EXPORT unsigned char *get_qos_data();
-EXPORT int set_qos_data(unsigned char *pBuffer, unsigned int len);
-EXPORT void stop_qos_service();
 EXPORT int queue_qos(QosInfo qosInfo);
-EXPORT int start_qos_service(struct RTSPConf *conf);
-EXPORT void queue_qos_client_info(QosClientInfo qosClientInfo);
 
 #endif
