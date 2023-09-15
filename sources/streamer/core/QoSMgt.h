@@ -14,14 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef __INTEL_QOS_H__
-#define __INTEL_QOS_H__
+#ifndef __QOS_MGT_H__
+#define __QOS_MGT_H__
 
-#include <iostream>
 #include "ga-common.h"
-#include "dpipe.h"
-#include "rtspconf.h"
-#define    QOS_POOLSIZE      4
 
 /**
 * Struct: IRD_CURSOR_INFO
@@ -38,25 +34,6 @@ typedef struct _QosInfo
     double         encodetime;
     unsigned int   estimated_bw;
 } QosInfo;
-
-typedef struct _QosClintInfo
-{
-    unsigned int   framesize;
-    struct   timeval decodeSubmit;
-    double         netlatency;
-} QosClientInfo;
-typedef struct _QosInfoFull
-{
-    unsigned int   frameno;
-    unsigned int   framesize;
-    unsigned int   bitrate;
-    double         capturetime;
-    double         encodetime;
-    struct   timeval         decodeSubmit;
-    double         netlatency;
-    struct   timeval         eventtime;
-    unsigned int captureFps;
-}QosInfoFull;
 
 EXPORT int queue_qos(QosInfo qosInfo);
 

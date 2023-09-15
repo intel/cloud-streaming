@@ -24,6 +24,7 @@
 #include <unistd.h>
 #endif
 
+#include <condition_variable>
 #include <csignal>
 #include <mutex>
 
