@@ -37,7 +37,12 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <chrono>
 #include "nlohmann/json.hpp"
+
+using std::chrono::duration_cast;
+using std::chrono::system_clock;
+using std::chrono::milliseconds;
 
 #ifdef WIN32
 #pragma comment(lib, "d3d11.lib")
@@ -51,10 +56,6 @@
 #endif
 
 using namespace ga::webrtc;
-#ifdef E2ELATENCY_TELEMETRY_ENABLED
-//Latency message using google protobuf
-IL::E2ELatencyServer * gLatencyServerInstance = nullptr;
-#endif
 
 // If send fails 100 times consecutively, block sending
 // cursor and QoS info until receiving further message from
@@ -200,32 +201,18 @@ void ICSP2PClient::RegisterCallbacks() {
 }
 
 #ifdef E2ELATENCY_TELEMETRY_ENABLED
-//E2ELatency tracks frame number
-uint32_t ICSP2PClient::frame_number_ = 0;
-
-void ICSP2PClient::HandleLatencyMessage(const std::string &message) {
-  ga_logger(Severity::DBG, "ics-p2p-client: HandleLatencyMessage: latency message: %s\n",
-      message.c_str());
-
-  if (client_time_stamp_ > 0 && gLatencyServerInstance != nullptr) {
-    if (e2e_telemetry_message_) {
-      return;
-    }
-
-    e2e_telemetry_message_ = gLatencyServerInstance->ParseMessage(message);
-    gLatencyServerInstance->SetClientInputTime(e2e_telemetry_message_, client_time_stamp_);
-    gLatencyServerInstance->SetReceivedTime(e2e_telemetry_message_);
-
-    current_frame_number_ = GetFrameNumber();
-    start_e2e_latency_ = true;
-    if (Severity::DBG == ga_get_loglevel()) {
-      gLatencyServerInstance->SetLastProcessedFrameId(e2e_telemetry_message_, current_frame_number_);
-    }
-
-    std::string msgString = gLatencyServerInstance->PrintMessage(e2e_telemetry_message_);
-    ga_logger(Severity::DBG, "ics-p2p-client: HandleLatencyMessage: Frame %lu, Latency message: %s\n",
-        current_frame_number_, msgString.c_str());
+void ICSP2PClient::HandleLatencyMessage(uint64_t latency_send_time_ms) {
+  // If we have latency we are waiting to send out, dont update with new values.
+  if (HasClientStats()) {
+    return;
   }
+
+  // This stat must use system_clock since its used for calculating a statistic across systems.
+  // high_resolution_clock does not account for time zone differences and so reports erroneous values.
+  // Other stats which are purely local should still use high_resolution_clock.
+  client_latency_.received_time_ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+  client_latency_.send_time_ms = latency_send_time_ms;
+  client_latency_.received_frame_number = GetFrameNumber();
 }
 #endif
 
@@ -233,21 +220,6 @@ int32_t ICSP2PClient::Init(void *arg) {
   memset(cursor_shape_, 0, sizeof(cursor_shape_));
   first_cursor_info_ = true;
   streaming_ = false;
-
-#ifdef E2ELATENCY_TELEMETRY_ENABLED
-  //E2ELatency server instance
-  if (gLatencyServerInstance == nullptr) {
-      gLatencyServerInstance = LatencyServer();
-      if (gLatencyServerInstance == nullptr) {
-          // No latency server instance - proceed, but don't use latency messages
-          ga_logger(Severity::WARNING, "ics-p2p-client: Init: failed to create latency server instance.\n");
-      }
-      else {
-          ga_logger(Severity::INFO, "ics-p2p-client: Init: created latency server instance.\n");
-      }
-  }
-  //end E2ELatency
-#endif
 
   uint16_t game_width = 1280;
   uint16_t game_height = 720;
@@ -411,13 +383,6 @@ int32_t ICSP2PClient::Init(void *arg) {
 
 void ICSP2PClient::Deinit()
 {
-#ifdef E2ELATENCY_TELEMETRY_ENABLED
-    //E2ELatency
-    if (gLatencyServerInstance) {
-        ga_logger(Severity::INFO, "ics-p2p-client: Deinit: Deleting server instance.\n");
-        ReleaseServer(gLatencyServerInstance);
-    }
-#endif
   if (stream_provider_)
     stream_provider_->DeRegisterEncoderObserver(*this);
   if (publication_)
@@ -511,8 +476,7 @@ void ICSP2PClient::OnMessageReceived(const std::string &remote_user_id,
 #ifdef E2ELATENCY_TELEMETRY_ENABLED
           // E2Elatency via framestats
           if (event_param["E2ELatency"].is_number()) {
-            client_time_stamp_ = event_param["E2ELatency"];
-            HandleLatencyMessage(message);
+            HandleLatencyMessage(event_param["E2ELatency"]);
           }
 #endif
           if (event_param.size() >= 5 &&
@@ -594,8 +558,7 @@ void ICSP2PClient::OnMessageReceived(const std::string &remote_user_id,
       } else if (event_type == "touch") {
         nlohmann::json event_param = j1["data"]["parameters"];
         if (event_param["E2ELatency"].is_number()) {
-          client_time_stamp_ = event_param["E2ELatency"];
-          HandleLatencyMessage(message);
+          HandleLatencyMessage(event_param["E2ELatency"]);
         }
 #endif
 #endif
@@ -742,13 +705,8 @@ void ICSP2PClient::InsertFrame(ga_packet_t* packet) {
   meta_data.picture_id = 0;
 #endif
 
-#ifdef E2ELATENCY_TELEMETRY_ENABLED
-  static uint64_t prev_time = 0;
-#endif
-
-  uint64_t current_time = clock_->TimeInMilliseconds();
   meta_data.last_fragment = (side_data->last_slice);
-  meta_data.capture_timestamp = current_time;
+  meta_data.capture_timestamp = clock_->TimeInMilliseconds();
 
   meta_data.encoding_start = meta_data.capture_timestamp +
       side_data->encode_start_ms -
@@ -757,78 +715,100 @@ void ICSP2PClient::InsertFrame(ga_packet_t* packet) {
       side_data->encode_end_ms -
       side_data->capture_time_ms;
 
-  ga_logger(Severity::DBG, "ics-p2p-client: Frame Number = %lu packet->flags = %d\n", frame_number_, packet->flags);
+  ga_logger(Severity::DBG, "ics-p2p-client: packet->flags = %d\n", packet->flags);
 
 #ifdef E2ELATENCY_TELEMETRY_ENABLED
-  //E2ELatency
-  meta_data.picture_id = UpdateFrameNumber();
-  if (gLatencyServerInstance) {
-      // form the message
-      void* e2e_telemetry_message = e2e_telemetry_message_; // e2e_telemetry_message_ should come from OnMessageReceived
-      int32_t frameToSend = GetFrameNumber();
-      bool sendServerStat = false;
-      uint32_t encode_time = (uint32_t)(meta_data.encoding_end - meta_data.encoding_start);
+  // E2ELatency
+  meta_data.picture_id   = UpdateFrameNumber();
+  uint32_t frame_to_send = GetFrameNumber();
 
-      if (e2e_telemetry_message != nullptr) {
-          gLatencyServerInstance->SetSendTime(e2e_telemetry_message);
-          uint64_t server_send_time_ms = gLatencyServerInstance->GetSendTime(e2e_telemetry_message) / (uint64_t)1000000;
-          uint64_t server_received_time_ms = gLatencyServerInstance->GetReceivedTime(e2e_telemetry_message) / (uint64_t)1000000;
-          uint64_t server_render_time = server_send_time_ms - server_received_time_ms - encode_time;
-          if (server_render_time <= 0) {
-              // The message was received after the beginning of encoding, should wait until next InsertFrame call
-              frame_delay_++;
-              ga_logger(Severity::DBG, "changing frame_delay to %lu\n", frame_delay_);
-          } else {
-              gLatencyServerInstance->SetRenderTime(e2e_telemetry_message, (uint64)server_render_time);
-          }
-      }
-    
-      if (start_e2e_latency_ && (e2e_telemetry_message == nullptr || frameToSend != current_frame_number_ + frame_delay_)) {
-          ga_logger(Severity::DBG, "ics-p2p-client: InsertFrame: Creating server statistics msg to send Frame %ld (previous latency frame was %lu, frame delay is %lu)\n", frameToSend, current_frame_number_, frame_delay_);
-          e2e_telemetry_message = gLatencyServerInstance->CreateLatencyMsg();
-          gLatencyServerInstance->SetClientInputTime(e2e_telemetry_message, 0);  // 0 tells client this is purely a server statistics msg
-          sendServerStat = true;
-      }
+  struct {
+    uint64_t encode_time_ms = 0; // Time taken by server to encode the frame.
+    uint64_t render_time_ms = 0; // Time taken by server to produce a frame with client input.
+                                 // NOTE: we assume that the next frame encoded after receiving
+                                 // client input does contain an update triggered by the client.
+    uint64_t send_time_ms = 0;   // Time server sends latency message to server.
+  } server_latency_;
 
-      if (e2e_telemetry_message != nullptr) {
-          gLatencyServerInstance->SetProcessingFrameId(e2e_telemetry_message, frameToSend);
-          gLatencyServerInstance->SetEncodeTime(e2e_telemetry_message, encode_time);
-          if (sendServerStat) {
-              gLatencyServerInstance->SetSendTime(e2e_telemetry_message);
-          }
+  server_latency_.encode_time_ms = (uint64_t)(meta_data.encoding_end - meta_data.encoding_start);
+  server_latency_.send_time_ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+  
+  // There are 2 cases:
+  //
+  // 1. We are about to send the frame which contains update requested by client
+  //                                                         server sends
+  //                                                         frame
+  //                                                         ^
+  //                                                         |
+  // ---------------------------[ frame encoding...  ]------------------------> time
+  //    ^                    ^
+  //    |                    |
+  //  key pressed           key event received
+  //  on client side        on server side
+  //
+  // 2. We are about to send the frame which we started to encode before we
+  //    received client input and it does not contain update requested by client.
+  //    For such a frame we send only encode_time_ms.
+  //                                                         server sends
+  //                                                         frame
+  //                                                         ^
+  //                                                         |
+  // -------[ frame encoding...  ]---[ frame encoding...  ]-------------------> time
+  //    ^                    ^
+  //    |                    |
+  //  key pressed           key event received
+  //  on client side        on server side
+  //
+  // NOTE: E2E latency is not driven by real key presses.
+  //       E2E latency is calculated using a dummy "key press" that occurs at most once per rendered frame.
+  //       Actual frequency will be lower if E2E latency is greater than frame time.
+  //
 
-          int64_t timediff = current_time - prev_time;
-          ga_logger(Severity::DBG, "ics-p2p-client: InsertFrame: timediff from prev InsertFrame call: %lld ms\n",
-              timediff);
-
-          std::string msgString = gLatencyServerInstance->PrintMessage(e2e_telemetry_message);
-          // copy message to meta data
-          if (!msgString.empty()) {
-              // allocate memory for latency message
-              meta_data.encoded_image_sidedata_new(msgString.size());
-              uint8_t* p_latency_message = meta_data.encoded_image_sidedata_get();
-              size_t latency_message_size = meta_data.encoded_image_sidedata_size();
-              // copy the message
-              if (msgString.size() > 0 && p_latency_message) {
-                  memcpy(p_latency_message, msgString.data(), msgString.size());
-              }
-              ga_logger(Severity::DBG, "ics-p2p-client: InsertFrame: Frame delay is %lu, Frame %lu: msg_size %zu: Latency message sent from server: %s\n",
-                  frame_delay_, frameToSend, latency_message_size, msgString.c_str());
-          }
-          if (sendServerStat){
-              gLatencyServerInstance->FreeMessage(e2e_telemetry_message);
-          }
-          else {
-              gLatencyServerInstance->FreeMessage(e2e_telemetry_message_);
-              e2e_telemetry_message_ = nullptr;
-              frame_delay_ = 1;
-          }
-      }
+  //                                 (                 Amount of time we received client input before rendering ended                 );
+  //                                 (                 Time rendering ended                          -    Time received client input  );
+  //                                 (     Time encoding ended     -   Time taken to encode frame  ) - (  Time received client input  );
+  int64_t render_client_input_time = (server_latency_.send_time_ms - server_latency_.encode_time_ms) - client_latency_.received_time_ms;
+  if (render_client_input_time <= 0) {
+    // The message was received after the beginning of encoding, should wait until next InsertFrame call
+    frame_delay_++;
+    ga_logger(Severity::DBG, "changing frame_delay to %lu\n", frame_delay_);
+  } else {
+    server_latency_.render_time_ms = (uint64_t)render_client_input_time;
   }
 
-  // previous frame time
-  prev_time = current_time;
-  // end of E2ELatency
+  bool send_e2e_latency_stats = HasClientStats() && (frame_to_send == client_latency_.received_frame_number + frame_delay_);
+  
+  nlohmann::json output_message;
+  if (send_e2e_latency_stats) {
+    output_message["clientSendLatencyTime"]       = client_latency_.send_time_ms;
+    output_message["serverReceivedLatencyTime"]   = client_latency_.received_time_ms;
+    output_message["serverRenderClientInputTime"] = server_latency_.render_time_ms;
+  }
+  output_message["serverEncodeFrameTime"]         = server_latency_.encode_time_ms;
+
+  std::string latency_msg_string = output_message.dump();
+  // copy message to meta data
+  if (!latency_msg_string.empty()) {
+    // allocate memory for latency message
+    meta_data.encoded_image_sidedata_new(latency_msg_string.size());
+    uint8_t* p_latency_message = meta_data.encoded_image_sidedata_get();
+    size_t latency_message_size = meta_data.encoded_image_sidedata_size();
+    // copy the message
+    if (latency_msg_string.size() > 0 && p_latency_message) {
+      memcpy(p_latency_message, latency_msg_string.data(), latency_msg_string.size());
+    }
+    ga_logger(Severity::DBG, "ics-p2p-client: InsertFrame: Frame delay is %lu, Frame %lu: msg_size %zu: Latency message sent from server: %s\n",
+      frame_delay_, frame_to_send, latency_message_size, latency_msg_string.c_str());
+
+    if (send_e2e_latency_stats) {
+      client_latency_.send_time_ms          = 0;
+      client_latency_.received_time_ms      = 0;
+      client_latency_.received_frame_number = 0;
+
+      frame_delay_ = 1;
+    }
+  }
+  // End of E2ELatency
 #endif
 
   std::vector<uint8_t> buffer;

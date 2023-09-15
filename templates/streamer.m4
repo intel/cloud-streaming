@@ -32,7 +32,7 @@ include(begin.m4)
 
 include(sioclient.m4)
 define(`STREAMER_BUILD_DEPS',gcc g++ dnl
-  libssl-dev libgtest-dev meson nlohmann-json3-dev pkg-config libprotobuf-dev protobuf-compiler)
+  libssl-dev libgtest-dev meson nlohmann-json3-dev pkg-config)
 define(`STREAMER_INSTALL_DEPS',dnl
   openssl)
 

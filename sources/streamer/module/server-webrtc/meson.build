@@ -45,11 +45,9 @@ if host_machine.system() == 'linux'
 endif
 
 deps = [
-  e2e_static_dep,
   ga_dep,
   nlohmann_json_dep,
   owt_dep,
-  protobuf_dep,
   sioclient_dep,
   thread_dep,
   ]

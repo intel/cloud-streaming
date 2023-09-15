@@ -117,9 +117,7 @@ RUN apt-get update && \
     libgtest-dev \
     meson \
     nlohmann-json3-dev \
-    pkg-config \
-    libprotobuf-dev \
-    protobuf-compiler && \
+    pkg-config && \
   rm -rf /var/lib/apt/lists/*
 COPY . /opt/build/streamer
 

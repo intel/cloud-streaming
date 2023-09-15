@@ -42,8 +42,6 @@
 #include "owt/base/globalconfiguration.h"
 #include "owt/p2p/p2pclient.h"
 #ifdef E2ELATENCY_TELEMETRY_ENABLED
-#include "E2ELatencyServer.h"
-#include "E2ELatencyFactory.h"
 #ifndef WIN32
 #include <climits>
 #endif
@@ -87,17 +85,6 @@ class ICSP2PClient : public owt::p2p::P2PClientObserver,
   virtual void OnError(std::unique_ptr<Exception> failure) {}
 #ifdef E2ELATENCY_TELEMETRY_ENABLED
   // E2Elatency
-  IL::E2ELatencyServer * LatencyServer() {
-    return reinterpret_cast<IL::E2ELatencyServer*>(CreateE2ELatencyServer());
-  }
-
-  void ReleaseServer(IL::E2ELatencyServer * latencyServerInstance) {
-    if (latencyServerInstance) {
-      delete latencyServerInstance;
-      latencyServerInstance = nullptr;
-    }
-  }
-
   uint32_t UpdateFrameNumber() {
     if (frame_number_ > ((1ULL << sizeof(uint32_t) * CHAR_BIT) - 1))
       frame_number_ = 0; // roll-over
@@ -107,11 +94,11 @@ class ICSP2PClient : public owt::p2p::P2PClientObserver,
     return frame_number_;
   }
 
-  uint32_t GetFrameNumber() {
+  uint32_t GetFrameNumber() const {
     return frame_number_;
   }
 
-  void HandleLatencyMessage(const std::string &message);
+  void     HandleLatencyMessage(uint64_t latency_send_time_ms);
 #endif
 protected:
   virtual void OnMessageReceived(const std::string &remote_user_id,
@@ -161,12 +148,21 @@ private:
   bool        send_blocked_      = true;
 #ifdef E2ELATENCY_TELEMETRY_ENABLED
   // E2ELatency
-  static uint32_t frame_number_;
-  void*           e2e_telemetry_message_ = nullptr;
-  uint64_t        client_time_stamp_     = 0;
-  uint32_t        current_frame_number_  = 0;
-  uint32_t        frame_delay_           = 1;
-  bool            start_e2e_latency_     = false;
+  bool HasClientStats() const { return client_latency_.send_time_ms != 0; }
+
+  uint32_t frame_number_;     // Current frame number that we are processing.
+  uint32_t frame_delay_ = 1;  // Delay latency response to client input.
+                              // Attempts to ensure result of the client input is "included" in the rendered frame.
+
+  struct {
+    uint64_t send_time_ms          = 0;  // Time client sent latency message to server.
+                                         // Measured in miliseconds since the epoch.
+
+    uint64_t received_time_ms      = 0;  // Time when server received latency message from client.
+                                         // Measured in miliseconds since the epoch.
+
+    uint32_t received_frame_number = 0;  // Frame number when latency info was received from client.
+  } client_latency_;
 #endif
   bool enable_render_drc_       = false;
 
