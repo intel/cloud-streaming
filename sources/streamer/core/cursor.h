@@ -28,7 +28,6 @@
 #include "qcscursorcapture.h"
 #endif
 #define    CURSOR_POOLSIZE    4
-#include "ga-msg.h"
 
 #define MAX_CURSOR_WIDTH  64
 #define MAX_CURSOR_HEIGHT 64
