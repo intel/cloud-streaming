@@ -60,7 +60,7 @@ endif
 _libga = shared_library('ga', srcs,
   cpp_args: cpp_args,
   include_directories: include_directories('.'),
-  dependencies: [core_deps, dl_dep, thread_dep, titansdk_dep],
+  dependencies: [core_deps, dl_dep, thread_dep],
   install: true,
   )
 
@@ -68,6 +68,5 @@ ga_dep = declare_dependency(
   compile_args: cpp_public_args,
   include_directories: include_directories('.'),
   link_with: _libga,
-  dependencies: titansdk_dep,
 )
 

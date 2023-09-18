@@ -18,67 +18,47 @@
 #define __CURSOR_H__
 
 #include "ga-common.h"
-#ifdef WIN32
-#include "qcscursorcapture.h"
-#endif
 
 #define MAX_CURSOR_WIDTH  64
 #define MAX_CURSOR_HEIGHT 64
 #define MAX_CURSOR_SIZE (MAX_CURSOR_WIDTH * MAX_CURSOR_HEIGHT *4)
-typedef unsigned long       UL32;
-typedef long                L32;
 
-typedef struct {
-    L32  left;
-    L32  top;
-    L32  right;
-    L32  bottom;
-} Rect;
-
-typedef struct {
-    L32  x;
-    L32  y;
-} Point;
-
-typedef struct _cursorInfo
+struct Rect
 {
-#ifdef WIN32
-    BYTE  type; //1: MonoChrome;2 Color 3 Masked Color
-    BYTE  isVisible;
-    BYTE  waitforvideo;
-    BYTE  reserved;
-#else
-    unsigned int  isVisible;
-#endif
-    long  pos_x;
-    long  pos_y;
-    long  hotSpot_x;
-    long  hotSpot_y;
-    Rect srcRect;
-    Rect dstRect;
-    unsigned int width;
-    unsigned int height;
-    unsigned int pitch;
-    unsigned int lenOfCursor;
-} CURSOR_INFO;
+    int32_t left;
+    int32_t top;
+    int32_t right;
+    int32_t bottom;
+};
 
-typedef struct _cursorpos
+struct Point
 {
-    long  pos_x;
-    long  pos_y;
-} CURSOR_POS;
+    int32_t x;
+    int32_t y;
+} ;
 
-typedef struct _CursorData {
-    CURSOR_INFO    cursorInfo;
-    unsigned int   cursorDataUpdate;
-#ifdef WIN32
-    unsigned int   cursorSeqID;  /* track the shape change ID */
-#endif
-    unsigned char  cursorData[MAX_CURSOR_SIZE];
-}CURSOR_DATA;
+struct CURSOR_INFO
+{
+    bool     isVisible;
+    bool     isColored;
+    Point    pos;
+    Point    hotSpot;
+    Rect     srcRect;
+    Rect     dstRect;
+    uint32_t width;
+    uint32_t height;
+    uint32_t pitch;
+};
+
+struct CURSOR_DATA {
+    CURSOR_INFO cursorInfo;
+    bool        cursorDataUpdate;
+    uint32_t    lenOfCursor;
+    uint8_t     cursorData[MAX_CURSOR_SIZE];
+};
 
 #ifdef WIN32
-EXPORT int queue_cursor(qcsCursorInfoData ciStruct, unsigned char *pBuffer, int nLen, int waitforvideo);
+EXPORT int queue_cursor(const CURSOR_INFO& info, uint8_t *pBuffer, uint32_t nLen);
 #endif
 
 #endif
