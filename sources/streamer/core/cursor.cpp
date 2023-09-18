@@ -21,40 +21,15 @@
 #include "encoder-common.h"
 
 // Queue the cursor data into the server
-int queue_cursor(qcsCursorInfoData ciStruct, unsigned char *pBuffer, int nLen, int waitForvideo)
+int queue_cursor(const CURSOR_INFO& info, uint8_t *pBuffer, uint32_t nLen)
 {
-    CURSOR_INFO          cursorInfo{};
-    cursorInfo.isVisible = (BYTE)ciStruct.isVisible;
-    cursorInfo.type = (BYTE)ciStruct.isColored? 2: 1;
-    cursorInfo.pos_x     = ciStruct.framePos.x;
-    cursorInfo.pos_y     = ciStruct.framePos.y;
-    cursorInfo.hotSpot_x = ciStruct.hotSpot.x;
-    cursorInfo.hotSpot_y = ciStruct.hotSpot.y;
-    cursorInfo.width     = ciStruct.width;
-    cursorInfo.height    = ciStruct.height;
-    cursorInfo.pitch     = ciStruct.pitch;
-
-    cursorInfo.srcRect.left = ciStruct.srcRect.left;
-    cursorInfo.srcRect.right = ciStruct.srcRect.right;
-    cursorInfo.srcRect.top = ciStruct.srcRect.top;
-    cursorInfo.srcRect.bottom = ciStruct.srcRect.bottom;
-
-    cursorInfo.dstRect.left = ciStruct.dstRect.left;
-    cursorInfo.dstRect.right = ciStruct.dstRect.right;
-    cursorInfo.dstRect.top = ciStruct.dstRect.top;
-    cursorInfo.dstRect.bottom = ciStruct.dstRect.bottom;
-    cursorInfo.waitforvideo = waitForvideo;
-
-    //cursorInfo.src
-    cursorInfo.lenOfCursor = nLen;
-
     std::shared_ptr<CURSOR_DATA> cursorData = std::make_shared<CURSOR_DATA>();
-    cursorData->cursorInfo = CURSOR_INFO(cursorInfo);  // Copy cursor info for WebRTC channel.
+    cursorData->cursorInfo = info;
     if (pBuffer) {
         memcpy(cursorData->cursorData, pBuffer, nLen);
+        cursorData->lenOfCursor      = nLen;
         cursorData->cursorDataUpdate = true;
-    }
-    else {
+    } else {
         cursorData->cursorDataUpdate = false;
     }
     encoder_send_cursor(cursorData, nullptr);
