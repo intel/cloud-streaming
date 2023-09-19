@@ -38,6 +38,9 @@ void PeerConnection::Init(const std::string &session_token) {
   GlobalConfiguration::SetLowLatencyStreamingEnabled(true);
   if (FLAGS_streamdump)
     GlobalConfiguration::SetPreDecodeDumpEnabled(true);
+  if (FLAGS_enable_rext)
+    GlobalConfiguration::SetRangeExtensionEnabled(true);
+
   owt::p2p::P2PClientConfiguration configuration_;
   owt::base::IceServer icesvr;
   icesvr.urls.push_back(FLAGS_stunsvr);

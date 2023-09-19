@@ -61,6 +61,11 @@ Options:
     Dump incoming video bitstream to current directory. Output file name
     pattern: ``webrtc_receive_stream_*.ivf``.
 
+--enable-sw-hevc-decoder
+    Enable SW decoder to support HEVC REXT profiles.
+    Option is incompatible with other codecs: use it only
+    with HEVC encoded bitstream.
+
 Build prerequisites
 -------------------
 

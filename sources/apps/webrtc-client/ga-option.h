@@ -94,6 +94,7 @@ extern std::string FLAGS_clientid;
 extern bool FLAGS_show_statistics;
 extern bool FLAGS_logging;
 extern bool FLAGS_streamdump;
+extern bool FLAGS_enable_rext;
 extern bool FLAGS_verbose;
 extern std::string FLAGS_stunsvr;
 
