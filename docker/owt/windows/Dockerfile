@@ -4,7 +4,7 @@ FROM $IMAGE
 WORKDIR C:/buildhome
 
 RUN git clone https://github.com/open-webrtc-toolkit/owt-client-native.git src && cd src && \
-  git checkout 8ae3944d
+  git checkout 4fb6299b
 
 RUN ( \
   echo solutions = [ & \

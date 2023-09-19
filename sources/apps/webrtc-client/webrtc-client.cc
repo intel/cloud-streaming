@@ -29,6 +29,7 @@ bool FLAGS_show_statistics = false;
 bool FLAGS_logging = false;
 bool FLAGS_streamdump = false;
 bool FLAGS_verbose = false;
+bool FLAGS_enable_rext = false;
 std::string FLAGS_stunsvr = "stun:stun.l.google.com:19302";
 
 void Usage(std::string cmd)
@@ -68,6 +69,8 @@ void ParseCommandLineFlags(int argc, char** argv)
     } else if (std::string("--stunsvr") == argv[idx]) {
       if (++idx >= argc) break;
       FLAGS_stunsvr = argv[idx];
+    } else if (std::string("--enable-sw-hevc-decoder") == argv[idx]) {
+      FLAGS_enable_rext = true;
     } else {
       break;
     }
