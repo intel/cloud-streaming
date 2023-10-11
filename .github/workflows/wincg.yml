@@ -1,0 +1,50 @@
+name: wincg
+
+on: [push, pull_request]
+
+jobs:
+  idd:
+    runs-on: windows-2022
+    steps:
+    - uses: actions/checkout@v3
+    - run: '.github\workflows\EnterDevShell.ps1 amd64'
+      shell: pwsh
+    - name: 'msbuild clean'
+      run: MSBuild.exe "sources\drivers\idd\IddSampleDriver.sln" -t:clean "/p:Configuration=Release;Platform=x64" -v:normal -m
+    - name: 'msbuild rebuild'
+      run: MSBuild.exe "sources\drivers\idd\IddSampleDriver.sln" -t:Rebuild "/p:Configuration=Release;Platform=x64" -v:normal -m
+
+  meson-ninja:
+    runs-on: windows-2022
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+    - run: pip install meson
+    - run: '.github\workflows\EnterDevShell.ps1 amd64'
+      shell: pwsh
+    - name: 'Configure'
+      run: meson setup _build --wrap-mode=forcefallback -Dstreamer=disabled
+    - name: 'Build'
+      run: meson compile -C _build
+    - name: 'Install'
+      run: meson install -C _build
+
+  meson-msbuild:
+    runs-on: windows-2022
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+    - run: pip install meson
+    - run: '.github\workflows\EnterDevShell.ps1 amd64'
+      shell: pwsh
+    - name: 'Configure'
+      run: meson setup _build --backend=vs --wrap-mode=forcefallback -Dstreamer=disabled
+    - name: 'Build'
+      run: meson compile -C _build
+    - name: 'Install'
+      run: meson install -C _build
+
