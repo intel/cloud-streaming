@@ -45,6 +45,13 @@ cpp_link_args = cpp.get_supported_link_arguments(_trial_link)
 add_project_link_arguments(c_link_args, language : ['c'])
 add_project_link_arguments(c_link_args, language : ['cpp'])
 
+if host_machine.system() == 'windows'
+  winres_args = []
+  if build_machine.cpu_family() == 'x86_64'
+    winres_args += '-D_WIN64'
+  endif
+endif
+
 fs = import('fs')
 pkg = import('pkgconfig')
 windows = import('windows')
@@ -77,13 +84,6 @@ if host_machine.system() == 'linux'
   libavutil_dep = dependency('libavutil', required : get_option('encoder'))
 
   titansdk_dep = null_dep
-endif
-
-if host_machine.system() == 'windows'
-  winres_args = []
-  if build_machine.cpu_family() == 'x86_64'
-    winres_args += '-D_WIN64'
-  endif
 endif
 
 nlohmann_json_dep = dependency('nlohmann_json', required : get_option('streamer'))
