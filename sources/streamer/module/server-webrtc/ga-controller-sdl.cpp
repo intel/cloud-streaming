@@ -129,21 +129,15 @@ static std::map<int, std::pair<SDL_Keycode, unsigned short>> key_map = {
 ga::webrtc::Controller::MousePosition
 CalcuateMousePosition(
   int32_t mouse_x, int32_t mouse_y,
-  uint32_t screen_width, uint32_t screen_height,
   int32_t display_width, int32_t display_height) {
 
   ga::webrtc::Controller::MousePosition p;
 
-  if (screen_height == 0 || screen_width == 0) {
-    p.x = 0;
-    p.y = 0;
-    return p;
-  }
   ga_logger(Severity::DBG, "[AUTO] Mouse Position from client: mouse_x = %d mouse_y = %d\n", mouse_x, mouse_y);
 
   //client uses absolute cursor position
-  p.x = (mouse_x * display_width) / screen_width;
-  p.y = (mouse_y * display_height) / screen_height;
+  p.x = (int32_t) (((double) mouse_x / 32767) * display_width);
+  p.y = (int32_t) (((double) mouse_y / 32767) * display_height);
 
   ga_logger(Severity::DBG, "[AUTO] Mouse Position from server: mouse_x = %d mouse_y = %d\n", p.x, p.y);
 
@@ -208,7 +202,7 @@ ga::webrtc::SdlController::ConvertToSdlMessage(const std::string &json_message, 
       int32_t my = event_param["movementY"];
       return sdlmsg_mousemotion(m, 0, 0, mx, my, 0, 1);
     } else {
-        MousePosition p = CalcuateMousePosition(x, y, renderer_width_, renderer_height_, display_width_, display_height_);
+        MousePosition p = CalcuateMousePosition(x, y, display_width_, display_height_);
         return sdlmsg_mousemotion(m, p.x, p.y, 0, 0, 0, 0);
     }
   } else if (event_type == "mouseup" || event_type == "mousedown") {
@@ -219,7 +213,7 @@ ga::webrtc::SdlController::ConvertToSdlMessage(const std::string &json_message, 
       return nullptr;
     int32_t x = event_param["x"];
     int32_t y = event_param["y"];
-    MousePosition p = CalcuateMousePosition(x, y, renderer_width_, renderer_height_, display_width_, display_height_);
+    MousePosition p = CalcuateMousePosition(x, y, display_width_, display_height_);
     UpdateMousePosition(p);
     unsigned int which = event_param["which"];  // Pressed key returns from JavaScript side is the same as SDL defines. 1 for left, 2 for middle and 3 for right.
     mouse_is_pressed_ = (event_type == "mousedown") ? true : false;
