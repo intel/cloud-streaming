@@ -102,13 +102,13 @@ void ICSP2PClient::RegisterCallbacks() {
               RemoteStreamHandler::startAudioRecMsg.c_str());
 
     } else if (cmd == vhal::client::audio::Command::kClose &&
-               mRemoteStreamHandler->HasActiveStream()) {
+               remote_stream_handler_->HasActiveStream()) {
       p2pclient_->Send(remote_user_id_, RemoteStreamHandler::stopAudioRecMsg.c_str(),
                        nullptr, nullptr);
-      mRemoteStreamHandler->unSubscribeForAudio();
-      mRemoteStreamHandler->resetStream();
+      remote_stream_handler_->unSubscribeForAudio();
+      remote_stream_handler_->resetStream();
       ga_logger(Severity::INFO, "RemoteCmd Send message: %s\n",
-              RemoteStreamHandler::stopAudioRecMsg.c_str());
+                RemoteStreamHandler::stopAudioRecMsg.c_str());
     } else if (cmd == vhal::client::audio::Command::kStartstream) {
       p2pclient_->Send(remote_user_id_, RemoteStreamHandler::startAudioPlayMsg.c_str(),
                        nullptr, nullptr);
@@ -122,14 +122,14 @@ void ICSP2PClient::RegisterCallbacks() {
               RemoteStreamHandler::stopAudioPlayMsg.c_str());
     } else if (cmd == (uint32_t)vhal::client::VideoSink::camera_cmd_t::CMD_OPEN) {
       ga_logger(Severity::INFO, "RemoteCmd Send message: %s\n",
-              mCameraClientHandler->startPreviewStreamMsg.c_str());
-      p2pclient_->Send(remote_user_id_, mCameraClientHandler->startPreviewStreamMsg.c_str(),
+                camera_client_handler_->startPreviewStreamMsg.c_str());
+      p2pclient_->Send(remote_user_id_, camera_client_handler_->startPreviewStreamMsg.c_str(),
                        nullptr, nullptr);
 
     } else if (cmd == (uint32_t)vhal::client::VideoSink::camera_cmd_t::CMD_CLOSE) {
       ga_logger(Severity::INFO, "RemoteCmd Send message: %s\n",
-              mCameraClientHandler->stopPreviewStreamMsg.c_str());
-      p2pclient_->Send(remote_user_id_, mCameraClientHandler->stopPreviewStreamMsg.c_str(),
+                camera_client_handler_->stopPreviewStreamMsg.c_str());
+      p2pclient_->Send(remote_user_id_, camera_client_handler_->stopPreviewStreamMsg.c_str(),
                        nullptr, nullptr);
 
     } else if (cmd == SensorHandler::Command::kSensorStart) {
@@ -165,18 +165,18 @@ void ICSP2PClient::RegisterCallbacks() {
     AudioFrameGenerator::Create(get_android_session(), cmd_handler));
   GlobalConfiguration::SetCustomizedAudioInputEnabled(true,
                                                       std::move(generator));
-  mRemoteStreamHandler = std::make_shared<RemoteStreamHandler>(session, cmd_handler);
+  remote_stream_handler_ = std::make_shared<RemoteStreamHandler>(session, cmd_handler);
   ga_logger(Severity::INFO, "RemoteStreamHandler Created !!!.\n");
-  mSensorHandler = std::make_unique<SensorHandler>(session, cmd_handler);
+  sensor_handler_ = std::make_unique<SensorHandler>(session, cmd_handler);
   ga_logger(Severity::INFO, "SensorHandler Created !!!.\n");
 
   vhal::client::TcpConnectionInfo conn_info = { android::ip() };
 
-  mVirtualGpsReceiver = std::make_unique<VirtualGpsReceiver>(conn_info, cmd_handler);
+  virtual_gps_receiver_ = std::make_unique<VirtualGpsReceiver>(conn_info, cmd_handler);
   ga_logger(Severity::INFO, "VirtualGpsReceiver Created !!!.\n");
 
   auto encodedVideoDispatcher = std::make_unique<EncodedVideoDispatcher>(session, cmd_handler);
-  mCameraClientHandler = encodedVideoDispatcher->GetCameraClientHandler();
+  camera_client_handler_ = encodedVideoDispatcher->GetCameraClientHandler();
   GlobalConfiguration::SetCustomizedVideoDecoderEnabled(std::move(encodedVideoDispatcher));
   ga_logger(Severity::INFO, "SetCustomizedVideoDecoderEnabled !!!.\n");
 
@@ -194,37 +194,37 @@ void ICSP2PClient::RegisterCallbacks() {
     p2pclient_->Send(remote_user_id_, msg_json.c_str(),
                      nullptr, nullptr);
   };
-  mCommandChannelHandler =
+  command_channel_handler_ =
     std::make_unique<CommandChannelHandler>(session, cmd_channel_msg_handler);
 #endif
 }
 
 #ifdef E2ELATENCY_TELEMETRY_ENABLED
 //E2ELatency tracks frame number
-unsigned int ICSP2PClient::frameNumber = 0;
+unsigned int ICSP2PClient::frame_number_ = 0;
 
 void ICSP2PClient::HandleLatencyMessage(const std::string &message) {
   ga_logger(Severity::DBG, "ics-p2p-client: HandleLatencyMessage: latency message: %s\n",
       message.c_str());
 
-  if (gClientTimestamp > 0 && gLatencyServerInstance != nullptr) {
-    if (gpMsg) {
+  if (client_time_stamp_ > 0 && gLatencyServerInstance != nullptr) {
+    if (e2e_telemetry_message_) {
       return;
     }
 
-    gpMsg = gLatencyServerInstance->ParseMessage(message);
-    gLatencyServerInstance->SetClientInputTime(gpMsg, gClientTimestamp);
-    gLatencyServerInstance->SetReceivedTime(gpMsg);
+    e2e_telemetry_message_ = gLatencyServerInstance->ParseMessage(message);
+    gLatencyServerInstance->SetClientInputTime(e2e_telemetry_message_, client_time_stamp_);
+    gLatencyServerInstance->SetReceivedTime(e2e_telemetry_message_);
 
-    currentFrame = getFrameNumber();
-    startMsgs = true;
+    current_frame_number_ = getFrameNumber();
+    start_e2e_latency_ = true;
     if (Severity::DBG == ga_get_loglevel()) {
-      gLatencyServerInstance->SetLastProcessedFrameId(gpMsg, currentFrame);
+      gLatencyServerInstance->SetLastProcessedFrameId(e2e_telemetry_message_, current_frame_number_);
     }
 
-    std::string msgString = gLatencyServerInstance->PrintMessage(gpMsg);
+    std::string msgString = gLatencyServerInstance->PrintMessage(e2e_telemetry_message_);
     ga_logger(Severity::DBG, "ics-p2p-client: HandleLatencyMessage: Frame %u, Latency message: %s\n",
-        currentFrame, msgString.c_str());
+        current_frame_number_, msgString.c_str());
   }
 }
 #endif
@@ -255,7 +255,7 @@ int ICSP2PClient::Init(void *arg) {
   if (arg != NULL) {
     struct ServerConfig *webrtcCfg = (struct ServerConfig*) arg;
     if (webrtcCfg->pHookClientStatus != NULL) {
-      pHookClientStatus = webrtcCfg->pHookClientStatus;
+      hook_client_status_function_ = webrtcCfg->pHookClientStatus;
     }
     struct gaRect *rect = (struct gaRect*) webrtcCfg->prect;
     game_width = rect->right - rect->left + 1;
@@ -404,7 +404,7 @@ int ICSP2PClient::Init(void *arg) {
     dump_file_ = fopen(dumpFileName, "wb");
   }
 
-  enable_render_drc = (ga_conf_readint("enable-render-drc") > 0)? true: false;
+  enable_render_drc_ = (ga_conf_readint("enable-render-drc") > 0)? true: false;
 
   return 0;
 }
@@ -429,8 +429,8 @@ void ICSP2PClient::Deinit()
   }
   if (local_stream_)
     local_stream_->Close();
-  if (local_audio_stream)
-    local_audio_stream->Close();
+  if (local_audio_stream_)
+    local_audio_stream_->Close();
 
 #ifndef WIN32
   if (ga_conf_readbool("measure-latency", 0) == 1) {
@@ -476,8 +476,8 @@ void ICSP2PClient::OnMessageReceived(const std::string &remote_user_id,
 
 #ifdef WIN32
     audioGenerator->ClientConnectionStatus(true);
-    if (pHookClientStatus == NULL) {
-      pHookClientStatus = [](bool status) {
+    if (hook_client_status_function_ == NULL) {
+      hook_client_status_function_ = [](bool status) {
         if (status) {
           ga_logger(Severity::INFO, "hook-function: client connection message received.\n");
         } else {
@@ -485,11 +485,11 @@ void ICSP2PClient::OnMessageReceived(const std::string &remote_user_id,
         }
       };
     }
-    pHookClientStatus(true);
+    hook_client_status_function_(true);
 #endif
 
-    if (local_audio_stream.get())
-      p2pclient_->Publish(remote_user_id, local_audio_stream, nullptr, nullptr);
+    if (local_audio_stream_.get())
+      p2pclient_->Publish(remote_user_id, local_audio_stream_, nullptr, nullptr);
 
     if (ga_conf_readbool("enable-multi-user", 0) != 0) {
       int userId = ga_conf_readint("user");
@@ -511,7 +511,7 @@ void ICSP2PClient::OnMessageReceived(const std::string &remote_user_id,
 #ifdef E2ELATENCY_TELEMETRY_ENABLED
           // E2Elatency via framestats
           if (event_param["E2ELatency"].is_number()) {
-            gClientTimestamp = event_param["E2ELatency"];
+            client_time_stamp_ = event_param["E2ELatency"];
             HandleLatencyMessage(message);
           }
 #endif
@@ -541,9 +541,9 @@ void ICSP2PClient::OnMessageReceived(const std::string &remote_user_id,
         ga_logger(Severity::INFO, "Received camera capability info from client\n");
         // Update camera_info to complete negotiation
         // protocol between client and Android vHAL.
-        mCameraClientHandler->updateCameraInfo(message);
+        camera_client_handler_->updateCameraInfo(message);
         return;
-      } else if (enable_render_drc && event_type == "sizechange") {
+      } else if (enable_render_drc_ && event_type == "sizechange") {
         if (j1["data"]["parameters"].is_object()) {
           nlohmann::json event_param = j1["data"]["parameters"];
           if (event_param["rendererSize"].is_object()) {
@@ -572,29 +572,29 @@ void ICSP2PClient::OnMessageReceived(const std::string &remote_user_id,
         }
         return;
       } else if (event_type == "sensorcheck") {
-        mSensorHandler->configureClientSensors();
-        mSensorHandler->setClientRequestFlag(true);
+        sensor_handler_->configureClientSensors();
+        sensor_handler_->setClientRequestFlag(true);
         return;
       } else if (event_type == "sensordata") {
-        mSensorHandler->processClientMsg(message);
+        sensor_handler_->processClientMsg(message);
         return;
       } else if (event_type == "gps") {
         nlohmann::json event_param = j1["data"]["parameters"];
         std::string data = event_param["data"];
         ssize_t sts = 0;
         std::string err;
-        std::tie(sts, err) = mVirtualGpsReceiver->Write((uint8_t *)data.c_str(), data.length());
+        std::tie(sts, err) = virtual_gps_receiver_->Write((uint8_t *)data.c_str(), data.length());
         if (sts < 0)
           ga_logger(Severity::ERR, "Failed to write GPS data: %s\n", err.c_str());
         return;
       } else if (event_type == "cmdchannel") {
-        mCommandChannelHandler->processClientMsg(message);
+        command_channel_handler_->processClientMsg(message);
         return;
 #ifdef E2ELATENCY_TELEMETRY_ENABLED
       } else if (event_type == "touch") {
         nlohmann::json event_param = j1["data"]["parameters"];
         if (event_param["E2ELatency"].is_number()) {
-          gClientTimestamp = event_param["E2ELatency"];
+          client_time_stamp_ = event_param["E2ELatency"];
           HandleLatencyMessage(message);
         }
 #endif
@@ -683,7 +683,7 @@ void ICSP2PClient::CreateStream() {
   local_stream_ = LocalStream::Create(std::move(lcsp), stream_provider_);
   if (audio_enabled && !av_bundle) {
     owt::base::LocalCameraStreamParameters lcspc(true, false);
-    local_audio_stream = LocalStream::Create(lcspc, error_code);
+    local_audio_stream_ = LocalStream::Create(lcspc, error_code);
   }
 }
 
@@ -757,51 +757,51 @@ void ICSP2PClient::InsertFrame(ga_packet_t* packet) {
       side_data->encode_end_ms -
       side_data->capture_time_ms;
 
-  ga_logger(Severity::DBG, "ics-p2p-client: frameNumber = %d packet->flags = %d\n", frameNumber, packet->flags);
+  ga_logger(Severity::DBG, "ics-p2p-client: Frame Number = %d packet->flags = %d\n", frame_number_, packet->flags);
 
 #ifdef E2ELATENCY_TELEMETRY_ENABLED
   //E2ELatency
   meta_data.picture_id = updateFrameNumber();
   if (gLatencyServerInstance) {
       // form the message
-      void* pMsg = gpMsg; // gpMsg should come from OnMessageReceived
+      void* e2e_telemetry_message = e2e_telemetry_message_; // e2e_telemetry_message_ should come from OnMessageReceived
       unsigned int frameToSend = getFrameNumber();
       bool sendServerStat = false;
       uint32_t encode_time = (uint32_t)(meta_data.encoding_end - meta_data.encoding_start);
 
-      if (pMsg != nullptr) {
-          gLatencyServerInstance->SetSendTime(pMsg);
-          uint64_t server_send_time_ms = gLatencyServerInstance->GetSendTime(pMsg) / (uint64_t)1000000;
-          uint64_t server_received_time_ms = gLatencyServerInstance->GetReceivedTime(pMsg) / (uint64_t)1000000;
+      if (e2e_telemetry_message != nullptr) {
+          gLatencyServerInstance->SetSendTime(e2e_telemetry_message);
+          uint64_t server_send_time_ms = gLatencyServerInstance->GetSendTime(e2e_telemetry_message) / (uint64_t)1000000;
+          uint64_t server_received_time_ms = gLatencyServerInstance->GetReceivedTime(e2e_telemetry_message) / (uint64_t)1000000;
           uint64_t server_render_time = server_send_time_ms - server_received_time_ms - encode_time;
           if (server_render_time <= 0) {
               // The message was received after the beginning of encoding, should wait until next InsertFrame call
-              frame_delay++;
-              ga_logger(Severity::DBG, "changing frame_delay to %d\n", frame_delay);
+              frame_delay_++;
+              ga_logger(Severity::DBG, "changing frame_delay to %d\n", frame_delay_);
           } else {
-              gLatencyServerInstance->SetRenderTime(pMsg, (uint64)server_render_time);
+              gLatencyServerInstance->SetRenderTime(e2e_telemetry_message, (uint64)server_render_time);
           }
       }
     
-      if (startMsgs && (pMsg == nullptr || frameToSend != currentFrame + frame_delay)) {
-          ga_logger(Severity::DBG, "ics-p2p-client: InsertFrame: Creating server statistics msg to send Frame %d (previous latency frame was %d, frame delay is %d)\n", frameToSend, currentFrame, frame_delay);
-          pMsg = gLatencyServerInstance->CreateLatencyMsg();
-          gLatencyServerInstance->SetClientInputTime(pMsg, 0);  // 0 tells client this is purely a server statistics msg
+      if (start_e2e_latency_ && (e2e_telemetry_message == nullptr || frameToSend != current_frame_number_ + frame_delay_)) {
+          ga_logger(Severity::DBG, "ics-p2p-client: InsertFrame: Creating server statistics msg to send Frame %d (previous latency frame was %d, frame delay is %d)\n", frameToSend, current_frame_number_, frame_delay_);
+          e2e_telemetry_message = gLatencyServerInstance->CreateLatencyMsg();
+          gLatencyServerInstance->SetClientInputTime(e2e_telemetry_message, 0);  // 0 tells client this is purely a server statistics msg
           sendServerStat = true;
       }
 
-      if (pMsg != nullptr) {
-          gLatencyServerInstance->SetProcessingFrameId(pMsg, frameToSend);
-          gLatencyServerInstance->SetEncodeTime(pMsg, encode_time);
+      if (e2e_telemetry_message != nullptr) {
+          gLatencyServerInstance->SetProcessingFrameId(e2e_telemetry_message, frameToSend);
+          gLatencyServerInstance->SetEncodeTime(e2e_telemetry_message, encode_time);
           if (sendServerStat) {
-              gLatencyServerInstance->SetSendTime(pMsg);
+              gLatencyServerInstance->SetSendTime(e2e_telemetry_message);
           }
 
           int64_t timediff = current_time - prev_time;
           ga_logger(Severity::DBG, "ics-p2p-client: InsertFrame: timediff from prev InsertFrame call: %lld ms\n",
               timediff);
 
-          std::string msgString = gLatencyServerInstance->PrintMessage(pMsg);
+          std::string msgString = gLatencyServerInstance->PrintMessage(e2e_telemetry_message);
           // copy message to meta data
           if (!msgString.empty()) {
               // allocate memory for latency message
@@ -813,15 +813,15 @@ void ICSP2PClient::InsertFrame(ga_packet_t* packet) {
                   memcpy(p_latency_message, msgString.data(), msgString.size());
               }
               ga_logger(Severity::DBG, "ics-p2p-client: InsertFrame: Frame delay is %u, Frame %u: msg_size %zu: Latency message sent from server: %s\n",
-                  frame_delay, frameToSend, latency_message_size, msgString.c_str());
+                  frame_delay_, frameToSend, latency_message_size, msgString.c_str());
           }
           if (sendServerStat){
-              gLatencyServerInstance->FreeMessage(pMsg);
+              gLatencyServerInstance->FreeMessage(e2e_telemetry_message);
           }
           else {
-              gLatencyServerInstance->FreeMessage(gpMsg);
-              gpMsg = nullptr;
-              frame_delay = 1;
+              gLatencyServerInstance->FreeMessage(e2e_telemetry_message_);
+              e2e_telemetry_message_ = nullptr;
+              frame_delay_ = 1;
           }
       }
   }
@@ -872,8 +872,8 @@ void ICSP2PClient::OnStreamAdded(
     std::shared_ptr<owt::base::RemoteStream> stream) {
 #ifndef WIN32
   ga_logger(Severity::INFO, "OnStreamAdded\n");
-  mRemoteStreamHandler->setStream(std::move(stream));
-  mRemoteStreamHandler->subscribeForAudio();
+  remote_stream_handler_->setStream(std::move(stream));
+  remote_stream_handler_->subscribeForAudio();
 #endif
 }
 
@@ -887,7 +887,7 @@ void ICSP2PClient::OnStopped() {
   capturer_started_ = false;
   streaming_ = false;
 #ifndef WIN32
-  mSensorHandler->setClientRequestFlag(false);
+  sensor_handler_->setClientRequestFlag(false);
 #endif
 }
 
@@ -903,8 +903,8 @@ void ICSP2PClient::OnEnded() {
 
 void ICSP2PClient::OnPeerConnectionClosed(const std::string& remote_user_id) {
 #ifdef WIN32
-    if (pHookClientStatus == NULL) {
-        pHookClientStatus = [](bool status) {
+    if (hook_client_status_function_ == NULL) {
+        hook_client_status_function_ = [](bool status) {
             if (status) {
                 ga_logger(Severity::INFO, "hook-function: client connection message received.\n");
             } else {
@@ -912,7 +912,7 @@ void ICSP2PClient::OnPeerConnectionClosed(const std::string& remote_user_id) {
             }
         };
     }
-    pHookClientStatus(false);
+    hook_client_status_function_(false);
 #endif
 
     uint32_t client_clones = (uint32_t) ga_conf_readint("client-clones");

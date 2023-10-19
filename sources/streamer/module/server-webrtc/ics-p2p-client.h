@@ -85,7 +85,7 @@ class ICSP2PClient : public owt::p2p::P2PClientObserver,
   void OnMute(TrackKind track_kind) {}
   void OnUnmute(TrackKind track_kind) {}
   virtual void OnError(std::unique_ptr<Exception> failure) {}
-  bool GetConnectedClientStatus() const { return connected_client_status; }
+  bool GetConnectedClientStatus() const { return connected_client_status_; }
 #ifdef E2ELATENCY_TELEMETRY_ENABLED
   // E2Elatency
   IL::E2ELatencyServer * LatencyServer() {
@@ -100,16 +100,16 @@ class ICSP2PClient : public owt::p2p::P2PClientObserver,
     }
 
     unsigned int updateFrameNumber() {
-        if (frameNumber > ((1ULL << sizeof(unsigned int) * CHAR_BIT) - 1))
-            frameNumber = 0; // roll-over
+        if (frame_number_ > ((1ULL << sizeof(unsigned int) * CHAR_BIT) - 1))
+            frame_number_ = 0; // roll-over
         else
-            ++frameNumber; // increment
+            ++frame_number_; // increment
 
-        return frameNumber;
+        return frame_number_;
     }
 
     unsigned int getFrameNumber() {
-        return frameNumber;
+        return frame_number_;
     }
 
     void HandleLatencyMessage(const std::string &message);
@@ -127,48 +127,52 @@ private:
   void CreateStream();
   void RequestCursorShape();
 
-  std::shared_ptr<owt::p2p::P2PClient> p2pclient_;
+  std::shared_ptr<owt::p2p::P2PClient>    p2pclient_;
   std::shared_ptr<owt::base::LocalStream> local_stream_;
-  std::shared_ptr<owt::base::LocalStream> local_audio_stream;
-  std::shared_ptr<owt::p2p::Publication> publication_;
+  std::shared_ptr<owt::base::LocalStream> local_audio_stream_;
+  std::shared_ptr<owt::p2p::Publication>   publication_;
 #ifndef WIN32
-  std::shared_ptr<RemoteStreamHandler> mRemoteStreamHandler;
-  std::unique_ptr<SensorHandler> mSensorHandler;
-  std::shared_ptr<CameraClientHandler> mCameraClientHandler;
-  std::unique_ptr<VirtualGpsReceiver> mVirtualGpsReceiver;
-  std::unique_ptr<CommandChannelHandler> mCommandChannelHandler;
+  std::shared_ptr<RemoteStreamHandler>   remote_stream_handler_;
+  std::unique_ptr<SensorHandler>         sensor_handler_;
+  std::shared_ptr<CameraClientHandler>   camera_client_handler_;
+  std::unique_ptr<VirtualGpsReceiver>    virtual_gps_receiver_;
+  std::unique_ptr<CommandChannelHandler> command_channel_handler_;
 #endif
   std::shared_ptr<owt::base::EncodedStreamProvider> stream_provider_;
-  std::promise<int> connect_status_;
-  std::shared_ptr<GAVideoEncoder> ga_encoder_;
-  std::unique_ptr<Controller> controller_;
-  int64_t bytes_sent_on_last_stat_call_ = 0;
+  std::promise<int>                                 connect_status_;
+  std::shared_ptr<GAVideoEncoder>                   ga_encoder_;
+  std::unique_ptr<Controller>                       controller_;
+
+  int64_t bytes_sent_on_last_stat_call_   = 0;
   int64_t bytes_sent_on_last_credit_call_ = 0;
-  int64_t credit_bytes_ = 0;
-  int64_t current_available_bandwidth_ = 0;
-  std::string remote_user_id_;
-  bool streaming_ = false;
-  unsigned char cursor_shape_[4096];  // The latest cursor shape.
-  bool first_cursor_info_ = false;
-  bool capturer_started_ = false;
+  int64_t credit_bytes_                   = 0;
+  int64_t current_available_bandwidth_    = 0;
+
   std::unique_ptr<owt::base::Clock> clock_;
-  bool enable_dump_ = false;
-  FILE* dump_file_ = nullptr;
-  uint64_t last_timestamp_ = 0;
-  uint64_t send_failures_ = 0;
-  bool send_blocked_ = true;
+
+  std::string   remote_user_id_;
+  bool          streaming_         = false;
+  unsigned char cursor_shape_[4096];  // The latest cursor shape.
+  bool          first_cursor_info_ = false;
+  bool          capturer_started_  = false;
+  bool          enable_dump_       = false;
+  FILE*         dump_file_         = nullptr;
+  uint64_t      last_timestamp_    = 0;
+  uint64_t      send_failures_     = 0;
+  bool          send_blocked_      = true;
 #ifdef E2ELATENCY_TELEMETRY_ENABLED
   // E2ELatency
-  void* gpMsg = nullptr;
-  static unsigned int frameNumber;
-  uint64_t gClientTimestamp = 0;
-  unsigned int currentFrame = 0;
-  unsigned int frame_delay = 1;
-  bool startMsgs = false;
+  static unsigned int frame_number_;
+  void*               e2e_telemetry_message_ = nullptr;
+  uint64_t            client_time_stamp_     = 0;
+  unsigned int        current_frame_number_  = 0;
+  unsigned int        frame_delay_           = 1;
+  bool                start_e2e_latency_     = false;
 #endif
-  bool enable_render_drc = false;
-  bool connected_client_status = false;
-  std::function<void(bool)> pHookClientStatus;
+  bool enable_render_drc_       = false;
+  bool connected_client_status_ = false;
+
+  std::function<void(bool)> hook_client_status_function_;
 };
 } // namespace webrtc
 } // namespace ga
