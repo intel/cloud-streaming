@@ -108,6 +108,14 @@ if host_machine.system() == 'windows'
       include_directories : include_directories(prebuilt_path / 'include'),
       ))
 
+    meson.override_dependency('vpl', declare_dependency(
+      dependencies : cc.find_library('vpl.dll', dirs : prebuilt_path_abs / 'lib'),
+      include_directories : include_directories(
+        prebuilt_path / 'include',
+        prebuilt_path / 'include' / 'vpl',
+        ),
+      ))
+
     # Install required binaries to run project targets.
     if not fs.is_samepath(get_option('prefix') / get_option('bindir'), prebuilt_path_abs / 'bin')
       install_data(
@@ -123,6 +131,11 @@ if host_machine.system() == 'windows'
           # openssl
           prebuilt_path_abs / 'bin' / 'libcrypto-3-x64.dll',
           prebuilt_path_abs / 'bin' / 'libssl-3-x64.dll',
+          # vpl
+          prebuilt_path_abs / 'bin' / 'libvpl.dll',
+          # C++ deps
+          prebuilt_path_abs / 'bin' / 'libgcc_s_seh-1.dll',
+          prebuilt_path_abs / 'bin' / 'libstdc++-6.dll',
           ),
         install_dir : get_option('bindir'))
     endif
