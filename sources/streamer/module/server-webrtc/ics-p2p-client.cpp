@@ -50,7 +50,6 @@
 #pragma comment(lib, "wmcodecdspuuid.lib")
 #endif
 
-using json = nlohmann::json;
 using namespace ga::webrtc;
 #ifdef E2ELATENCY_TELEMETRY_ENABLED
 //Latency message using google protobuf
@@ -499,7 +498,7 @@ void ICSP2PClient::OnMessageReceived(const std::string &remote_user_id,
     }
   } else {
     // Set client event for round trip delay calculation feature
-    json j1 = json::parse(message);
+    nlohmann::json j1 = nlohmann::json::parse(message);
     if (j1["type"].is_string() &&
       (j1["type"].get<std::string>() == "control") &&
       (j1["data"].is_object()) &&
@@ -508,7 +507,7 @@ void ICSP2PClient::OnMessageReceived(const std::string &remote_user_id,
       if (event_type == "framestats") {
         //ga_logger(Severity::INFO, "Debugs: event type %s\n", event_type);
         if (j1["data"]["parameters"].is_object()) {
-          json event_param = j1["data"]["parameters"];
+          nlohmann::json event_param = j1["data"]["parameters"];
 #ifdef E2ELATENCY_TELEMETRY_ENABLED
           // E2Elatency via framestats
           if (event_param["E2ELatency"].is_number()) {
@@ -546,7 +545,7 @@ void ICSP2PClient::OnMessageReceived(const std::string &remote_user_id,
         return;
       } else if (enable_render_drc && event_type == "sizechange") {
         if (j1["data"]["parameters"].is_object()) {
-          json event_param = j1["data"]["parameters"];
+          nlohmann::json event_param = j1["data"]["parameters"];
           if (event_param["rendererSize"].is_object()) {
             if (event_param["rendererSize"].size()== 2 &&
                 event_param["rendererSize"]["width"].is_number() &&
@@ -561,7 +560,7 @@ void ICSP2PClient::OnMessageReceived(const std::string &remote_user_id,
         return;
       } else if (event_type == "videoalpha") {
         if (j1["data"]["parameters"].is_object()) {
-          json event_param = j1["data"]["parameters"];
+          nlohmann::json event_param = j1["data"]["parameters"];
           if (event_param["action"].is_number()) {
             uint32_t action = event_param["action"];
             if (ga_encoder_) {
@@ -580,7 +579,7 @@ void ICSP2PClient::OnMessageReceived(const std::string &remote_user_id,
         mSensorHandler->processClientMsg(message);
         return;
       } else if (event_type == "gps") {
-        json event_param = j1["data"]["parameters"];
+        nlohmann::json event_param = j1["data"]["parameters"];
         std::string data = event_param["data"];
         ssize_t sts = 0;
         std::string err;
@@ -593,7 +592,7 @@ void ICSP2PClient::OnMessageReceived(const std::string &remote_user_id,
         return;
 #ifdef E2ELATENCY_TELEMETRY_ENABLED
       } else if (event_type == "touch") {
-        json event_param = j1["data"]["parameters"];
+        nlohmann::json event_param = j1["data"]["parameters"];
         if (event_param["E2ELatency"].is_number()) {
           gClientTimestamp = event_param["E2ELatency"];
           HandleLatencyMessage(message);
@@ -605,7 +604,7 @@ void ICSP2PClient::OnMessageReceived(const std::string &remote_user_id,
     controller_->PushClientEvent(message);
 
 #ifdef WIN32
-    json j = json::parse(message);
+    nlohmann::json j = nlohmann::json::parse(message);
     // Data validation.
     if (j["type"].is_string() &&
         (j["type"].get<std::string>() == "control") &&
@@ -615,7 +614,7 @@ void ICSP2PClient::OnMessageReceived(const std::string &remote_user_id,
       if ((event_type == "mousemove") &&
           (j["data"]["parameters"].is_object())) {
         // Mouse motion.
-        json event_param = j["data"]["parameters"];
+        nlohmann::json event_param = j["data"]["parameters"];
         if (event_param.size() > 4 &&
             event_param["eventTimeSec"].is_number() &&
             event_param["eventTimeUsec"].is_number()) {
