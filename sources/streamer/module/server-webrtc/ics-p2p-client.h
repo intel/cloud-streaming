@@ -66,53 +66,52 @@ class ICSP2PClient : public owt::p2p::P2PClientObserver,
   GAAudioFrameGenerator* audioGenerator;
 #endif
 
-  int Init(void *arg);
-  void Deinit();
-  int Start();
-  void InsertFrame(ga_packet_t *packet);
-  void SendCursor(std::shared_ptr<CURSOR_DATA> cursor_data);
-  void SendQoS(std::shared_ptr<QosInfo> qos_info);
+  int32_t      Init(void *arg);
+  void         Deinit();
+  int32_t      Start();
+  void         InsertFrame(ga_packet_t *packet);
+  void         SendCursor(std::shared_ptr<CURSOR_DATA> cursor_data);
+  void         SendQoS(std::shared_ptr<QosInfo> qos_info);
   // Returns the bytes sent by the server since last call.
-  int64_t GetCreditBytes();
-  int64_t GetMaxBitrate();
+  int64_t      GetCreditBytes();
+  int64_t      GetMaxBitrate();
   //Encoder observer impl.
-  void OnStarted();
-  void OnStopped();
-  void OnKeyFrameRequest();
-  void OnRateUpdate(uint64_t bitrate_bps, uint32_t frame_rate);
+  void         OnStarted();
+  void         OnStopped();
+  void         OnKeyFrameRequest();
+  void         OnRateUpdate(uint64_t bitrate_bps, uint32_t frame_rate);
   // Publication observer
-  void OnEnded();
-  void OnMute(TrackKind track_kind) {}
-  void OnUnmute(TrackKind track_kind) {}
+  void         OnEnded();
+  void         OnMute(TrackKind track_kind) {}
+  void         OnUnmute(TrackKind track_kind) {}
   virtual void OnError(std::unique_ptr<Exception> failure) {}
-  bool GetConnectedClientStatus() const { return connected_client_status_; }
 #ifdef E2ELATENCY_TELEMETRY_ENABLED
   // E2Elatency
   IL::E2ELatencyServer * LatencyServer() {
-      return reinterpret_cast<IL::E2ELatencyServer*>(CreateE2ELatencyServer());
+    return reinterpret_cast<IL::E2ELatencyServer*>(CreateE2ELatencyServer());
   }
 
-    void ReleaseServer(IL::E2ELatencyServer * latencyServerInstance) {
-        if (latencyServerInstance) {
-            delete latencyServerInstance;
-            latencyServerInstance = nullptr;
-        }
+  void ReleaseServer(IL::E2ELatencyServer * latencyServerInstance) {
+    if (latencyServerInstance) {
+      delete latencyServerInstance;
+      latencyServerInstance = nullptr;
     }
+  }
 
-    unsigned int updateFrameNumber() {
-        if (frame_number_ > ((1ULL << sizeof(unsigned int) * CHAR_BIT) - 1))
-            frame_number_ = 0; // roll-over
-        else
-            ++frame_number_; // increment
+  uint32_t UpdateFrameNumber() {
+    if (frame_number_ > ((1ULL << sizeof(uint32_t) * CHAR_BIT) - 1))
+      frame_number_ = 0; // roll-over
+    else
+      ++frame_number_; // increment
 
-        return frame_number_;
-    }
+    return frame_number_;
+  }
 
-    unsigned int getFrameNumber() {
-        return frame_number_;
-    }
+  uint32_t GetFrameNumber() {
+    return frame_number_;
+  }
 
-    void HandleLatencyMessage(const std::string &message);
+  void HandleLatencyMessage(const std::string &message);
 #endif
 protected:
   virtual void OnMessageReceived(const std::string &remote_user_id,
@@ -139,7 +138,7 @@ private:
   std::unique_ptr<CommandChannelHandler> command_channel_handler_;
 #endif
   std::shared_ptr<owt::base::EncodedStreamProvider> stream_provider_;
-  std::promise<int>                                 connect_status_;
+  std::promise<int32_t>                             connect_status_;
   std::shared_ptr<GAVideoEncoder>                   ga_encoder_;
   std::unique_ptr<Controller>                       controller_;
 
@@ -150,27 +149,26 @@ private:
 
   std::unique_ptr<owt::base::Clock> clock_;
 
-  std::string   remote_user_id_;
-  bool          streaming_         = false;
-  unsigned char cursor_shape_[4096];  // The latest cursor shape.
-  bool          first_cursor_info_ = false;
-  bool          capturer_started_  = false;
-  bool          enable_dump_       = false;
-  FILE*         dump_file_         = nullptr;
-  uint64_t      last_timestamp_    = 0;
-  uint64_t      send_failures_     = 0;
-  bool          send_blocked_      = true;
+  std::string remote_user_id_;
+  bool        streaming_         = false;
+  uint8_t     cursor_shape_[4096];  // The latest cursor shape.
+  bool        first_cursor_info_ = false;
+  bool        capturer_started_  = false;
+  bool        enable_dump_       = false;
+  FILE*       dump_file_         = nullptr;
+  uint64_t    last_timestamp_    = 0;
+  uint64_t    send_failures_     = 0;
+  bool        send_blocked_      = true;
 #ifdef E2ELATENCY_TELEMETRY_ENABLED
   // E2ELatency
-  static unsigned int frame_number_;
-  void*               e2e_telemetry_message_ = nullptr;
-  uint64_t            client_time_stamp_     = 0;
-  unsigned int        current_frame_number_  = 0;
-  unsigned int        frame_delay_           = 1;
-  bool                start_e2e_latency_     = false;
+  static uint32_t frame_number_;
+  void*           e2e_telemetry_message_ = nullptr;
+  uint64_t        client_time_stamp_     = 0;
+  uint32_t        current_frame_number_  = 0;
+  uint32_t        frame_delay_           = 1;
+  bool            start_e2e_latency_     = false;
 #endif
   bool enable_render_drc_       = false;
-  bool connected_client_status_ = false;
 
   std::function<void(bool)> hook_client_status_function_;
 };
