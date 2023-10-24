@@ -35,7 +35,7 @@ public:
   std::string startPreviewStreamMsg =
     "{ \"key\" : \"start-camera-preview\", \
        \"cameraRes\" : \"0\", \
-       \"cameraId\" : \"0\" \" \
+       \"cameraId\" : \"0\" \
      }";
   static const std::string stopPreviewStreamMsg;
 
