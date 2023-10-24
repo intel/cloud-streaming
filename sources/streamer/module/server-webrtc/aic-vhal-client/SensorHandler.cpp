@@ -31,9 +31,9 @@ using json = nlohmann::json;
 
 // Proto-type for command to be send to client app
 std::string SensorHandler::sensorStartMsg =
-    "{ \"key\" : \"sensor-start\" , \"type\" : \"0\" \"}";
+    "{ \"key\" : \"sensor-start\" , \"type\" : \"0\"}";
 std::string SensorHandler::sensorStopMsg =
-    "{ \"key\" : \"sensor-stop\" , \"type\" : \"0\" \"}";
+    "{ \"key\" : \"sensor-stop\" , \"type\" : \"0\"}";
 
 SensorHandler::SensorHandler(int instanceId, CommandHandler cmdHandler)
 {

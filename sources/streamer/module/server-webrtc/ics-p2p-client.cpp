@@ -190,7 +190,7 @@ void ICSP2PClient::RegisterCallbacks() {
     if (type == vhal::client::MsgType::kActivityMonitor) {
       msg_json = "{\"key\":\"activity-switch\",\"val\":\"" + msg + "\"}";
     } else if (type == vhal::client::MsgType::kAicCommand) {
-      msg_json = "{\"key\":\"cmd-output\",\"val\":" + msg + "}";
+      msg_json = "{\"key\":\"cmd-output\",\"val\":\"" + msg + "\"}";
     }
     p2pclient_->Send(remote_user_id_, msg_json.c_str(),
                      nullptr, nullptr);
