@@ -97,13 +97,13 @@ RUN cd /opt/build/owt-gs/src && \
   cp dist/libs/* /opt/lib && \
   cp dist/libs/* /opt/dist//opt/lib
 
-RUN mkdir -p /opt/redist/owt//opt/include && \
-  mkdir -p /opt/redist/owt//opt/lib/ && \
+RUN mkdir -p /opt/redist/linux-x86_64//opt/include && \
+  mkdir -p /opt/redist/linux-x86_64//opt/lib/ && \
   cd /opt/build/owt-gs/src && \
-  cp -rd dist/include /opt/redist/owt//opt && \
-  cp dist/libs/* /opt/redist/owt//opt/lib && \
+  cp -rd dist/include /opt/redist/linux-x86_64//opt && \
+  cp dist/libs/* /opt/redist/linux-x86_64//opt/lib && \
   cd /opt/redist/ && \
-  tar cJvf owt.tar.xz owt
+  tar cJvf owt.tar.xz linux-x86_64
 
 RUN echo "Start cleanup" && \
     rm -rf /opt/dist//opt/share/man && \
