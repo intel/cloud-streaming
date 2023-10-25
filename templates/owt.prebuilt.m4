@@ -39,9 +39,9 @@ define(`BUILD_OWT_GS_BIN',`dnl
 # sources weigh ~9GB. So, while its quite possible to build OWT from sources and
 # we provide such a process in dedicated dockerfile, its more convenient to
 # use a prebuilt OWT to build dependent projects.
-COPY prebuilt/owt BUILD_HOME/owt
-RUN cp -rd BUILD_HOME/owt/* BUILD_DESTDIR && \
-    cp -rd BUILD_HOME/owt/* /
+COPY prebuilt/linux-x86_64 BUILD_HOME/linux-x86_64
+RUN cp -rd BUILD_HOME/linux-x86_64/* BUILD_DESTDIR && \
+    cp -rd BUILD_HOME/linux-x86_64/* /
 
 ')
 

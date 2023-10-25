@@ -36,9 +36,9 @@ RUN apt-get update && \
 # sources weigh ~9GB. So, while its quite possible to build OWT from sources and
 # we provide such a process in dedicated dockerfile, its more convenient to
 # use a prebuilt OWT to build dependent projects.
-COPY prebuilt/owt /opt/build/owt
-RUN cp -rd /opt/build/owt/* /opt/dist && \
-    cp -rd /opt/build/owt/* /
+COPY prebuilt/linux-x86_64 /opt/build/linux-x86_64
+RUN cp -rd /opt/build/linux-x86_64/* /opt/dist && \
+    cp -rd /opt/build/linux-x86_64/* /
 
 
 RUN apt-get update && \

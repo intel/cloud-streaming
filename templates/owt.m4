@@ -91,13 +91,13 @@ RUN cd BUILD_HOME/owt-gs/src && \
   cp dist/libs/* BUILD_DESTDIR/BUILD_LIBDIR
 
 ifdef(`BUILD_REDIST',
-RUN mkdir -p BUILD_REDIST/owt/BUILD_PREFIX/include && \
-  mkdir -p BUILD_REDIST/owt/BUILD_LIBDIR/ && \
+RUN mkdir -p BUILD_REDIST/linux-x86_64/BUILD_PREFIX/include && \
+  mkdir -p BUILD_REDIST/linux-x86_64/BUILD_LIBDIR/ && \
   cd BUILD_HOME/owt-gs/src && \
-  cp -rd dist/include BUILD_REDIST/owt/BUILD_PREFIX && \
-  cp dist/libs/* BUILD_REDIST/owt/BUILD_LIBDIR && \
+  cp -rd dist/include BUILD_REDIST/linux-x86_64/BUILD_PREFIX && \
+  cp dist/libs/* BUILD_REDIST/linux-x86_64/BUILD_LIBDIR && \
   cd BUILD_REDIST/ && \
-  tar cJvf owt.tar.xz owt
+  tar cJvf owt.tar.xz linux-x86_64
 )dnl
 ') # define(BUILD_OWT_GS)
 

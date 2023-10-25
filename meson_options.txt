@@ -16,3 +16,7 @@ option('streamer',
   description : 'Build streamer service ingredients',
 )
 
+option('prebuilt-path',
+  type : 'string',
+  value : '',
+  description : 'Path to prebuilt binaries')
