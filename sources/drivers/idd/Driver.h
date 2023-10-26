@@ -101,7 +101,7 @@ namespace Microsoft
 
             void InitAdapter();
             void FinishInit(UINT ConnectorIndex);
-            NTSTATUS CheckandSetRenderAdapter(LUID RenderAdapter);
+            NTSTATUS CheckAndSetRenderAdapter(LUID RenderAdapter);
             NTSTATUS UpdateLUID(PIDD_UPDATE_LUID Param);
         protected:
             WDFDEVICE m_WdfDevice;
