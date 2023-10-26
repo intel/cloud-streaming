@@ -21,18 +21,24 @@ using namespace Microsoft::WRL;
 
 //
 // This device Interface Guid for IddSampleDriver device class.
-//    is used in SetupDiEnumDeviceInterfaces to enumrates all registered interfaces
+//    is used in SetupDiEnumDeviceInterfaces to enumerates all registered interfaces
 //
 const GUID GUID_DEVINTERFACE_IDD_DEVICE = \
-{ 0x881EF630, 0x82B2, 0x81d2, { 0x88, 0x82,  0x80,  0x80,  0x8E,  0x8F,  0x82,  0x82 } };
+{
+    0x881EF630,
+    0x82B2,
+    0x81d2,
+    { 0x88, 0x82,  0x80,  0x80,  0x8E,  0x8F,  0x82,  0x82 }
+};
 
+// If monitor count > ARRAYSIZE(s_SampleMonitors), we create edid-less monitors
+static constexpr DWORD IDD_SAMPLE_MONITOR_COUNT = 2;
 
-static constexpr DWORD IDD_SAMPLE_MONITOR_COUNT = 2; // If monitor count > ARRAYSIZE(s_SampleMonitors), we create edid-less monitors
-ULONG MonitorNumberRegsitryValue = 0; // Will be used to get the numbert of monitors
-ULONG MonitorTypeRegsitryValue = 0; // Will be used to get the type of monitor 1080p,1440p,2160p
-ULONG MonitorCursorRegsitryValue = 0; // Will be used to set software or hardware cursor.
-ULONG AdapterLUIDLowPart = 0; // Will be used to set the preferred render adapter.
-WDFDEVICE g_Device = nullptr;
+ULONG MonitorNumberRegistryValue = 0; // Will be used to get the number of monitors
+ULONG MonitorTypeRegistryValue   = 0; // Will be used to get the type of monitor 1080p,1440p,2160p
+ULONG MonitorCursorRegistryValue = 0; // Will be used to set software or hardware cursor.
+ULONG AdapterLUIDLowPart         = 0; // Will be used to set the preferred render adapter.
+WDFDEVICE g_Device               = nullptr;
 
 // Default modes reported for edid-less monitors. The first mode is set as preferred
 static const struct IndirectSampleMonitor::SampleMonitorMode s_SampleDefaultModes[] =
@@ -57,7 +63,8 @@ static const struct IndirectSampleMonitor s_SampleMonitors[] =
             0x30,0x38,0x30,0x70,0x4D,0x6F,0x6E,0x69,0x74,0x6F,0x72,0x0A,0x00,0x00,0x00,0xFD,
             0x00,0x30,0x3E,0x0E,0x46,0x0F,0x00,0x0A,0x20,0x20,0x20,0x20,0x20,0x20,0x00,0x36
         },
-        { //SampleMonitorMode
+        // SampleMonitorMode
+        {
             { 1920, 1080,  60 },
             { 1600,  900,  60 },
             { 1024,  768,  60 },
@@ -76,7 +83,8 @@ static const struct IndirectSampleMonitor s_SampleMonitors[] =
             0x34,0x34,0x30,0x70,0x4D,0x6F,0x6E,0x69,0x74,0x6F,0x72,0x0A,0x00,0x00,0x00,0xFD,
             0x00,0x28,0x9B,0xFA,0xFA,0x40,0x01,0x0A,0x20,0x20,0x20,0x20,0x20,0x20,0x00,0xE6
         },
-        { //SampleMonitorMode
+        // SampleMonitorMode
+        {
             { 2560, 1440,  60 },
             { 2048, 1536,  60 },
             { 1920, 1080,  60 },
@@ -96,7 +104,8 @@ static const struct IndirectSampleMonitor s_SampleMonitors[] =
             0x29,0x50,0x30,0x20,0x35,0x00,0x55,0x50,0x21,0x00,0x00,0x1A,0x00,0x00,0x00,0xFC,
             0x00,0x32,0x31,0x36,0x30,0x4D,0x6F,0x6E,0x69,0x74,0x6F,0x72,0x0A,0x20,0x00,0x5A
         },
-        { //SampleMonitorMode
+        // SampleMonitorMode
+        {
             { 1920, 1080,  60 },
             { 3840, 2160,  60 },
             { 2048, 1536,  60 },
@@ -110,7 +119,6 @@ static const struct IndirectSampleMonitor s_SampleMonitors[] =
 
 #pragma region helpers
 
-
 static inline void FillSignalInfo(DISPLAYCONFIG_VIDEO_SIGNAL_INFO& Mode, DWORD Width, DWORD Height, DWORD VSync, bool bMonitorMode)
 {
     Mode.totalSize.cx = Mode.activeSize.cx = Width;
@@ -118,24 +126,22 @@ static inline void FillSignalInfo(DISPLAYCONFIG_VIDEO_SIGNAL_INFO& Mode, DWORD W
 
     // See https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_video_signal_info
     Mode.AdditionalSignalInfo.vSyncFreqDivider = bMonitorMode ? 0 : 1;
-    Mode.AdditionalSignalInfo.videoStandard = 255;
-
-    Mode.vSyncFreq.Numerator = VSync;
-    Mode.vSyncFreq.Denominator = 1;
-    Mode.hSyncFreq.Numerator = VSync * Height;
-    Mode.hSyncFreq.Denominator = 1;
-
-    Mode.scanLineOrdering = DISPLAYCONFIG_SCANLINE_ORDERING_PROGRESSIVE;
-
-    Mode.pixelRate = ((UINT64)VSync) * ((UINT64)Width) * ((UINT64)Height);
+    Mode.AdditionalSignalInfo.videoStandard    = 255;
+    Mode.vSyncFreq.Numerator                   = VSync;
+    Mode.vSyncFreq.Denominator                 = 1;
+    Mode.hSyncFreq.Numerator                   = VSync * Height;
+    Mode.hSyncFreq.Denominator                 = 1;
+    Mode.scanLineOrdering                      = DISPLAYCONFIG_SCANLINE_ORDERING_PROGRESSIVE;
+    Mode.pixelRate                             = ((UINT64)VSync) * ((UINT64)Width) * ((UINT64)Height);
 }
 
 static IDDCX_MONITOR_MODE CreateIddCxMonitorMode(DWORD Width, DWORD Height, DWORD VSync, IDDCX_MONITOR_MODE_ORIGIN Origin = IDDCX_MONITOR_MODE_ORIGIN_DRIVER)
 {
     IDDCX_MONITOR_MODE Mode = {};
 
-    Mode.Size = sizeof(Mode);
+    Mode.Size   = sizeof(Mode);
     Mode.Origin = Origin;
+
     FillSignalInfo(Mode.MonitorVideoSignalInfo, Width, Height, VSync, true);
 
     return Mode;
@@ -146,6 +152,7 @@ static IDDCX_TARGET_MODE CreateIddCxTargetMode(DWORD Width, DWORD Height, DWORD 
     IDDCX_TARGET_MODE Mode = {};
 
     Mode.Size = sizeof(Mode);
+
     FillSignalInfo(Mode.TargetVideoSignalInfo.targetVideoSignalInfo, Width, Height, VSync, false);
 
     return Mode;
@@ -157,7 +164,7 @@ ULONG IddReadRegistryDword(WDFDEVICE Device, PCUNICODE_STRING ValueName)
     ULONG RegistryValue = 0, Length, ValueType;
     WDFKEY Regkey;
 
-    // Read and update the registry values to select the type of monitor and preferred render adpater.
+    // Read and update the registry values to select the type of monitor and preferred render adapter.
     Status = WdfDeviceOpenRegistryKey(Device, PLUGPLAY_REGKEY_DEVICE, PLUGPLAY_REGKEY_DEVICE, WDF_NO_OBJECT_ATTRIBUTES, &Regkey);
     Status = WdfRegistryQueryValue(
         Regkey,
@@ -175,24 +182,20 @@ ULONG IddReadRegistryDword(WDFDEVICE Device, PCUNICODE_STRING ValueName)
     return RegistryValue;
 }
 
-
 #pragma endregion
 
 extern "C" DRIVER_INITIALIZE DriverEntry;
 
-EVT_IDD_CX_DEVICE_IO_CONTROL      IddSampleAdapterIoDeviceControl;
-EVT_WDF_DRIVER_DEVICE_ADD IddSampleDeviceAdd;
-EVT_WDF_DEVICE_D0_ENTRY IddSampleDeviceD0Entry;
-
-EVT_IDD_CX_ADAPTER_INIT_FINISHED IddSampleAdapterInitFinished;
-EVT_IDD_CX_ADAPTER_COMMIT_MODES IddSampleAdapterCommitModes;
-
-EVT_IDD_CX_PARSE_MONITOR_DESCRIPTION IddSampleParseMonitorDescription;
+EVT_IDD_CX_DEVICE_IO_CONTROL                     IddSampleAdapterIoDeviceControl;
+EVT_WDF_DRIVER_DEVICE_ADD                        IddSampleDeviceAdd;
+EVT_WDF_DEVICE_D0_ENTRY                          IddSampleDeviceD0Entry;
+EVT_IDD_CX_ADAPTER_INIT_FINISHED                 IddSampleAdapterInitFinished;
+EVT_IDD_CX_ADAPTER_COMMIT_MODES                  IddSampleAdapterCommitModes;
+EVT_IDD_CX_PARSE_MONITOR_DESCRIPTION             IddSampleParseMonitorDescription;
 EVT_IDD_CX_MONITOR_GET_DEFAULT_DESCRIPTION_MODES IddSampleMonitorGetDefaultModes;
-EVT_IDD_CX_MONITOR_QUERY_TARGET_MODES IddSampleMonitorQueryModes;
-
-EVT_IDD_CX_MONITOR_ASSIGN_SWAPCHAIN IddSampleMonitorAssignSwapChain;
-EVT_IDD_CX_MONITOR_UNASSIGN_SWAPCHAIN IddSampleMonitorUnassignSwapChain;
+EVT_IDD_CX_MONITOR_QUERY_TARGET_MODES            IddSampleMonitorQueryModes;
+EVT_IDD_CX_MONITOR_ASSIGN_SWAPCHAIN              IddSampleMonitorAssignSwapChain;
+EVT_IDD_CX_MONITOR_UNASSIGN_SWAPCHAIN            IddSampleMonitorUnassignSwapChain;
 
 struct IndirectDeviceContextWrapper
 {
@@ -218,7 +221,6 @@ struct IndirectMonitorContextWrapper
 
 // This macro creates the methods for accessing an IndirectDeviceContextWrapper as a context for a WDF object
 WDF_DECLARE_CONTEXT_TYPE(IndirectDeviceContextWrapper);
-
 WDF_DECLARE_CONTEXT_TYPE(IndirectMonitorContextWrapper);
 
 extern "C" BOOL WINAPI DllMain(
@@ -247,15 +249,15 @@ extern "C" BOOL WINAPI DllMain(
 ULONG GetMonitorIdx()
 {
     // TBD : Need to check if this () is required, can be replaced with macro
-    if (MonitorTypeRegsitryValue & MONITOR_1080p)
+    if (MonitorTypeRegistryValue & MONITOR_1080p)
     {
         return 2;
     }
-    else if (MonitorTypeRegsitryValue & MONITOR_1440p)
+    else if (MonitorTypeRegistryValue & MONITOR_1440p)
     {
         return 2;
     }
-    else if (MonitorTypeRegsitryValue & MONITOR_2160p)
+    else if (MonitorTypeRegistryValue & MONITOR_2160p)
     {
        return 2;
     }
@@ -265,15 +267,18 @@ ULONG GetMonitorIdx()
 
 ULONG GetMonitorNumber()
 {
-    if (!MonitorNumberRegsitryValue || MonitorNumberRegsitryValue > 2)
+    if (!MonitorNumberRegistryValue || MonitorNumberRegistryValue > 2)
+    {
         return 1; // if the value read from registry is not proper, return 1.
+    }
 
-    return MonitorNumberRegsitryValue;
+    return MonitorNumberRegistryValue;
 }
 
 ULONG GetMonitorCursor()
 {
-    if (MonitorCursorRegsitryValue == CURSOR_HARDWARE) {
+    if (MonitorCursorRegistryValue == CURSOR_HARDWARE)
+    {
         return CURSOR_HARDWARE;
     }
     return CURSOR_SOFTWARE;
@@ -291,9 +296,7 @@ extern "C" NTSTATUS DriverEntry(
     WDF_OBJECT_ATTRIBUTES Attributes;
     WDF_OBJECT_ATTRIBUTES_INIT(&Attributes);
 
-    WDF_DRIVER_CONFIG_INIT(&Config,
-        IddSampleDeviceAdd
-    );
+    WDF_DRIVER_CONFIG_INIT(&Config, IddSampleDeviceAdd);
 
     Status = WdfDriverCreate(pDriverObject, pRegistryPath, &Attributes, &Config, WDF_NO_HANDLE);
     if (!NT_SUCCESS(Status))
@@ -325,14 +328,14 @@ NTSTATUS IddSampleDeviceAdd(WDFDRIVER Driver, PWDFDEVICE_INIT pDeviceInit)
     // redirects IoDeviceControl requests to an internal queue. This sample does not need this.
     // IddConfig.EvtIddCxDeviceIoControl = IddSampleIoDeviceControl;
 
-    IddConfig.EvtIddCxAdapterInitFinished = IddSampleAdapterInitFinished;
-    IddConfig.EvtIddCxDeviceIoControl     = IddSampleAdapterIoDeviceControl;
-    IddConfig.EvtIddCxParseMonitorDescription = IddSampleParseMonitorDescription;
+    IddConfig.EvtIddCxAdapterInitFinished               = IddSampleAdapterInitFinished;
+    IddConfig.EvtIddCxDeviceIoControl                   = IddSampleAdapterIoDeviceControl;
+    IddConfig.EvtIddCxParseMonitorDescription           = IddSampleParseMonitorDescription;
     IddConfig.EvtIddCxMonitorGetDefaultDescriptionModes = IddSampleMonitorGetDefaultModes;
-    IddConfig.EvtIddCxMonitorQueryTargetModes = IddSampleMonitorQueryModes;
-    IddConfig.EvtIddCxAdapterCommitModes = IddSampleAdapterCommitModes;
-    IddConfig.EvtIddCxMonitorAssignSwapChain = IddSampleMonitorAssignSwapChain;
-    IddConfig.EvtIddCxMonitorUnassignSwapChain = IddSampleMonitorUnassignSwapChain;
+    IddConfig.EvtIddCxMonitorQueryTargetModes           = IddSampleMonitorQueryModes;
+    IddConfig.EvtIddCxAdapterCommitModes                = IddSampleAdapterCommitModes;
+    IddConfig.EvtIddCxMonitorAssignSwapChain            = IddSampleMonitorAssignSwapChain;
+    IddConfig.EvtIddCxMonitorUnassignSwapChain          = IddSampleMonitorUnassignSwapChain;
 
     Status = IddCxDeviceInitConfig(pDeviceInit, &IddConfig);
     if (!NT_SUCCESS(Status))
@@ -358,9 +361,10 @@ NTSTATUS IddSampleDeviceAdd(WDFDRIVER Driver, PWDFDEVICE_INIT pDeviceInit)
     {
         return Status;
     }
-    MonitorTypeRegsitryValue = IddReadRegistryDword(Device, &MonitorTypeName);
-    MonitorNumberRegsitryValue = IddReadRegistryDword(Device, &MonitorNumber);
-    MonitorCursorRegsitryValue = IddReadRegistryDword(Device, &MonitorCursor);
+
+    MonitorTypeRegistryValue   = IddReadRegistryDword(Device, &MonitorTypeName);
+    MonitorNumberRegistryValue = IddReadRegistryDword(Device, &MonitorNumber);
+    MonitorCursorRegistryValue = IddReadRegistryDword(Device, &MonitorCursor);
 
     // Create device interface for this device.
     Status = WdfDeviceCreateDeviceInterface(
@@ -368,7 +372,6 @@ NTSTATUS IddSampleDeviceAdd(WDFDRIVER Driver, PWDFDEVICE_INIT pDeviceInit)
         &GUID_DEVINTERFACE_IDD_DEVICE,
         NULL // No Reference String. If you provide one it will appended to the
     );
-
     if (!NT_SUCCESS(Status))
     {
         return Status;
@@ -499,7 +502,6 @@ void SwapChainProcessor::RunCore()
     SetDevice.pDevice = DxgiDevice.Get();
 
     hr = IddCxSwapChainSetDevice(m_hSwapChain, &SetDevice);
-
     if (FAILED(hr))
     {
         return;
@@ -562,7 +564,7 @@ void SwapChainProcessor::RunCore()
             // surfaces being left around after swapchain is destroyed.
             // NOTE: Although in this sample we release reference to the surface here; the driver still
             // owns the Buffer.MetaData.pSurface surface until IddCxSwapChainReleaseAndAcquireBuffer returns
-            // S_OK and gives us a new frame, a driver may want to use the surface in future to re-encode the desktop 
+            // S_OK and gives us a new frame, a driver may want to use the surface in future to re-encode the desktop
             // for better quality if there is no new frame for a while
             AcquiredBuffer.Reset();
 
@@ -613,25 +615,25 @@ void IndirectDeviceContext::InitAdapter()
     // ==============================
 
     IDDCX_ADAPTER_CAPS AdapterCaps = {0};
+
     AdapterCaps.Size = sizeof(AdapterCaps);
 
-
     // Declare basic feature support for the adapter (required)
-    AdapterCaps.MaxMonitorsSupported = IDD_SAMPLE_MONITOR_COUNT;
-    AdapterCaps.EndPointDiagnostics.Size = sizeof(AdapterCaps.EndPointDiagnostics);
-    AdapterCaps.EndPointDiagnostics.GammaSupport = IDDCX_FEATURE_IMPLEMENTATION_NONE;
+    AdapterCaps.MaxMonitorsSupported                 = IDD_SAMPLE_MONITOR_COUNT;
+    AdapterCaps.EndPointDiagnostics.Size             = sizeof(AdapterCaps.EndPointDiagnostics);
+    AdapterCaps.EndPointDiagnostics.GammaSupport     = IDDCX_FEATURE_IMPLEMENTATION_NONE;
     AdapterCaps.EndPointDiagnostics.TransmissionType = IDDCX_TRANSMISSION_TYPE_WIRED_OTHER;
 
     // Declare your device strings for telemetry (required)
-    AdapterCaps.EndPointDiagnostics.pEndPointFriendlyName = L"Intel IddSample Device";
+    AdapterCaps.EndPointDiagnostics.pEndPointFriendlyName     = L"Intel IddSample Device";
     AdapterCaps.EndPointDiagnostics.pEndPointManufacturerName = L"Intel IddSample Device";
-    AdapterCaps.EndPointDiagnostics.pEndPointModelName = L"Intel IddSample Model";
+    AdapterCaps.EndPointDiagnostics.pEndPointModelName        = L"Intel IddSample Model";
     // AdapterCaps.Flags = IDDCX_ADAPTER_FLAGS_REMOTE_SESSION_DRIVER;
 
     // Declare your hardware and firmware versions (required)
-    IDDCX_ENDPOINT_VERSION Version = {};
-    Version.Size = sizeof(Version);
-    Version.MajorVer = 1;
+    IDDCX_ENDPOINT_VERSION Version                   = {};
+    Version.Size                                     = sizeof(Version);
+    Version.MajorVer                                 = 1;
     AdapterCaps.EndPointDiagnostics.pFirmwareVersion = &Version;
     AdapterCaps.EndPointDiagnostics.pHardwareVersion = &Version;
 
@@ -640,9 +642,9 @@ void IndirectDeviceContext::InitAdapter()
     WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&Attr, IndirectDeviceContextWrapper);
 
     IDARG_IN_ADAPTER_INIT AdapterInit = {};
-    AdapterInit.WdfDevice = m_WdfDevice;
-    AdapterInit.pCaps = &AdapterCaps;
-    AdapterInit.ObjectAttributes = &Attr;
+    AdapterInit.WdfDevice             = m_WdfDevice;
+    AdapterInit.pCaps                 = &AdapterCaps;
+    AdapterInit.ObjectAttributes      = &Attr;
 
     // Start the initialization of the adapter, which will trigger the AdapterFinishInit callback later
     IDARG_OUT_ADAPTER_INIT AdapterInitOut;
@@ -673,14 +675,14 @@ void IndirectDeviceContext::FinishInit(UINT ConnectorIndex)
     WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&Attr, IndirectMonitorContextWrapper);
 
     // In the sample driver, we report a monitor right away but a real driver would do this when a monitor connection event occurs
-    IDDCX_MONITOR_INFO MonitorInfo = {};
-    MonitorInfo.Size = sizeof(MonitorInfo);
+    IDDCX_MONITOR_INFO MonitorInfo      = {};
+    MonitorInfo.Size                    = sizeof(MonitorInfo);
     // Reporting as INDIRECT_WIRED for detecting IDD displays in QDC.
-    MonitorInfo.MonitorType = DISPLAYCONFIG_OUTPUT_TECHNOLOGY_INDIRECT_WIRED;
-    MonitorInfo.ConnectorIndex = ConnectorIndex;
-
+    MonitorInfo.MonitorType             = DISPLAYCONFIG_OUTPUT_TECHNOLOGY_INDIRECT_WIRED;
+    MonitorInfo.ConnectorIndex          = ConnectorIndex;
     MonitorInfo.MonitorDescription.Size = sizeof(MonitorInfo.MonitorDescription);
     MonitorInfo.MonitorDescription.Type = IDDCX_MONITOR_DESCRIPTION_TYPE_EDID;
+
     if (ConnectorIndex >= ARRAYSIZE(s_SampleMonitors))
     {
         MonitorInfo.MonitorDescription.DataSize = 0;
@@ -690,7 +692,7 @@ void IndirectDeviceContext::FinishInit(UINT ConnectorIndex)
     {
         MonitorInfo.MonitorDescription.DataSize = IndirectSampleMonitor::szEdidBlock;
         // MonitorInfo.MonitorDescription.pData = const_cast<BYTE*>(s_SampleMonitors[ConnectorIndex].pEdidBlock);
-        MonitorInfo.MonitorDescription.pData = const_cast<BYTE*>(s_SampleMonitors[GetMonitorIdx()].pEdidBlock);
+        MonitorInfo.MonitorDescription.pData    = const_cast<BYTE*>(s_SampleMonitors[GetMonitorIdx()].pEdidBlock);
 
     }
 
@@ -706,8 +708,8 @@ void IndirectDeviceContext::FinishInit(UINT ConnectorIndex)
     CoCreateGuid(&MonitorInfo.MonitorContainerId);
 
     IDARG_IN_MONITORCREATE MonitorCreate = {};
-    MonitorCreate.ObjectAttributes = &Attr;
-    MonitorCreate.pMonitorInfo = &MonitorInfo;
+    MonitorCreate.ObjectAttributes       = &Attr;
+    MonitorCreate.pMonitorInfo           = &MonitorInfo;
 
     // Create a monitor object with the specified monitor descriptor
     IDARG_OUT_MONITORCREATE MonitorCreateOut;
@@ -715,8 +717,8 @@ void IndirectDeviceContext::FinishInit(UINT ConnectorIndex)
     if (NT_SUCCESS(Status))
     {
         // Create a new monitor context object and attach it to the Idd monitor object
-        auto* pMonitorContextWrapper = WdfObjectGet_IndirectMonitorContextWrapper(MonitorCreateOut.MonitorObject);
-        pMonitorContextWrapper->pContext = new IndirectMonitorContext(MonitorCreateOut.MonitorObject);
+        auto* pMonitorContextWrapper                = WdfObjectGet_IndirectMonitorContextWrapper(MonitorCreateOut.MonitorObject);
+        pMonitorContextWrapper->pContext            = new IndirectMonitorContext(MonitorCreateOut.MonitorObject);
         pMonitorContextWrapper->pContext->m_Adapter = m_Adapter;
 
         // Tell the OS that the monitor has been plugged in
@@ -733,9 +735,10 @@ NTSTATUS IndirectDeviceContext::UpdateLUID(PIDD_UPDATE_LUID pUpdateLUID)
     if (AdapterLUIDLowPart != pUpdateLUID->luid.LowPart)
     {
         IDARG_IN_ADAPTERSETRENDERADAPTER PreferredAdapter;
-        AdapterLUIDLowPart = pUpdateLUID->luid.LowPart;
+        AdapterLUIDLowPart                               = pUpdateLUID->luid.LowPart;
         PreferredAdapter.PreferredRenderAdapter.HighPart = pUpdateLUID->luid.HighPart;
-        PreferredAdapter.PreferredRenderAdapter.LowPart = pUpdateLUID->luid.LowPart; 
+        PreferredAdapter.PreferredRenderAdapter.LowPart  = pUpdateLUID->luid.LowPart;
+
         IddCxAdapterSetRenderAdapter(m_Adapter, &PreferredAdapter);
         return STATUS_GRAPHICS_INDIRECT_DISPLAY_ABANDON_SWAPCHAIN;
     }
@@ -743,7 +746,7 @@ NTSTATUS IndirectDeviceContext::UpdateLUID(PIDD_UPDATE_LUID pUpdateLUID)
     return Status;
 }
 
-NTSTATUS IndirectDeviceContext::CheckandSetRenderAdapter(LUID RenderAdapter)
+NTSTATUS IndirectDeviceContext::CheckAndSetRenderAdapter(LUID RenderAdapter)
 {
     if (AdapterLUIDLowPart != RenderAdapter.LowPart)
     {
@@ -754,7 +757,6 @@ NTSTATUS IndirectDeviceContext::CheckandSetRenderAdapter(LUID RenderAdapter)
     }
     return STATUS_SUCCESS;
 }
-
 
 IndirectMonitorContext::IndirectMonitorContext(_In_ IDDCX_MONITOR Monitor) :
     m_Monitor(Monitor)
@@ -794,7 +796,8 @@ NTSTATUS IndirectMonitorContext::AssignSwapChain(IDDCX_MONITOR MonitorObject,IDD
         if (GetMonitorCursor() == CURSOR_HARDWARE)
         {
             HANDLE hCursorData = CreateEventA(NULL, FALSE, FALSE, NULL);
-            if (hCursorData == NULL) {
+            if (hCursorData == NULL)
+            {
                 DBG_PRINTF("IDD : CreateEventA return NULL\n");
                 return STATUS_UNSUCCESSFUL;
             }
@@ -802,16 +805,17 @@ NTSTATUS IndirectMonitorContext::AssignSwapChain(IDDCX_MONITOR MonitorObject,IDD
             // Setup Hardware cursor
             IDARG_IN_SETUP_HWCURSOR IdArgHwCursor;
             ZeroMemory(&IdArgHwCursor, sizeof(IdArgHwCursor));
-            IdArgHwCursor.CursorInfo.Size = sizeof(IDDCX_CURSOR_CAPS);
+            IdArgHwCursor.CursorInfo.Size                  = sizeof(IDDCX_CURSOR_CAPS);
             IdArgHwCursor.CursorInfo.ColorXorCursorSupport = IDDCX_XOR_CURSOR_SUPPORT_FULL;
-            IdArgHwCursor.CursorInfo.AlphaCursorSupport = TRUE;
-            IdArgHwCursor.CursorInfo.MaxX = 256;
-            IdArgHwCursor.CursorInfo.MaxY = 256;
-            IdArgHwCursor.hNewCursorDataAvailable = hCursorData;
+            IdArgHwCursor.CursorInfo.AlphaCursorSupport    = TRUE;
+            IdArgHwCursor.CursorInfo.MaxX                  = 256;
+            IdArgHwCursor.CursorInfo.MaxY                  = 256;
+            IdArgHwCursor.hNewCursorDataAvailable          = hCursorData;
 
             NTSTATUS Status = IddCxMonitorSetupHardwareCursor(MonitorObject, &IdArgHwCursor);
             DBG_PRINTF("IDD : IddCxMonitorSetupHardwareCursor Status (0x%x)\n", Status);
-            if (!NT_SUCCESS(Status)) {   
+            if (!NT_SUCCESS(Status))
+            {
                 return Status;
             }
         }
@@ -885,7 +889,9 @@ NTSTATUS IddSampleParseMonitorDescription(const IDARG_IN_PARSEMONITORDESCRIPTION
         // our known EDID blocks.
 
         if (pInArgs->MonitorDescription.DataSize != IndirectSampleMonitor::szEdidBlock)
+        {
             return STATUS_INVALID_PARAMETER;
+        }
 
         DWORD SampleMonitorIdx = 0;
         for (; SampleMonitorIdx < ARRAYSIZE(s_SampleMonitors); SampleMonitorIdx++)
@@ -961,47 +967,46 @@ NTSTATUS IddSampleMonitorQueryModes(IDDCX_MONITOR MonitorObject, const IDARG_IN_
     // monitor's descriptor and instead are based on the static processing capability of the device. The OS will
     // report the available set of modes for a given output as the intersection of monitor modes with target modes.
 
-   
-     TargetModes.push_back(CreateIddCxTargetMode(3840, 2160, 60));
-     TargetModes.push_back(CreateIddCxTargetMode(3200, 2400, 60));
-     TargetModes.push_back(CreateIddCxTargetMode(3200, 1800, 60));
-     TargetModes.push_back(CreateIddCxTargetMode(3008, 1692, 60));
-     TargetModes.push_back(CreateIddCxTargetMode(2880, 1800, 60));
-     TargetModes.push_back(CreateIddCxTargetMode(2880, 1620, 60));
+    TargetModes.push_back(CreateIddCxTargetMode(3840, 2160, 60));
+    TargetModes.push_back(CreateIddCxTargetMode(3200, 2400, 60));
+    TargetModes.push_back(CreateIddCxTargetMode(3200, 1800, 60));
+    TargetModes.push_back(CreateIddCxTargetMode(3008, 1692, 60));
+    TargetModes.push_back(CreateIddCxTargetMode(2880, 1800, 60));
+    TargetModes.push_back(CreateIddCxTargetMode(2880, 1620, 60));
 
-     TargetModes.push_back(CreateIddCxTargetMode(2560, 1440, 144));
-     TargetModes.push_back(CreateIddCxTargetMode(2560, 1440, 90));
-     TargetModes.push_back(CreateIddCxTargetMode(2560, 1600, 60));
+    TargetModes.push_back(CreateIddCxTargetMode(2560, 1440, 144));
+    TargetModes.push_back(CreateIddCxTargetMode(2560, 1440, 90));
+    TargetModes.push_back(CreateIddCxTargetMode(2560, 1600, 60));
 
-     TargetModes.push_back(CreateIddCxTargetMode(2560, 1440, 60));
-     TargetModes.push_back(CreateIddCxTargetMode(2048, 1536, 60));
-     TargetModes.push_back(CreateIddCxTargetMode(1920, 1440, 60));
-     TargetModes.push_back(CreateIddCxTargetMode(1920, 1200, 60));
+    TargetModes.push_back(CreateIddCxTargetMode(2560, 1440, 60));
+    TargetModes.push_back(CreateIddCxTargetMode(2048, 1536, 60));
+    TargetModes.push_back(CreateIddCxTargetMode(1920, 1440, 60));
+    TargetModes.push_back(CreateIddCxTargetMode(1920, 1200, 60));
 
-     TargetModes.push_back(CreateIddCxTargetMode(1920, 1080, 144));
-     TargetModes.push_back(CreateIddCxTargetMode(1920, 1080, 90));
-     TargetModes.push_back(CreateIddCxTargetMode(1920, 1080, 60));
-     
-     TargetModes.push_back(CreateIddCxTargetMode(1600, 1024, 60));
-     TargetModes.push_back(CreateIddCxTargetMode(1680, 1050, 60));
-     TargetModes.push_back(CreateIddCxTargetMode(1600, 900, 60));
-     TargetModes.push_back(CreateIddCxTargetMode(1440, 900, 60));
-     TargetModes.push_back(CreateIddCxTargetMode(1400, 1050,60));
-     TargetModes.push_back(CreateIddCxTargetMode(1366, 768, 60));
-     TargetModes.push_back(CreateIddCxTargetMode(1360, 768, 60));
-     TargetModes.push_back(CreateIddCxTargetMode(1280, 1024, 60));
-     TargetModes.push_back(CreateIddCxTargetMode(1280, 960, 60));
-     TargetModes.push_back(CreateIddCxTargetMode(1280, 800, 60));
-     TargetModes.push_back(CreateIddCxTargetMode(1280, 768, 60));
-     TargetModes.push_back(CreateIddCxTargetMode(1280, 720, 60));
-     TargetModes.push_back(CreateIddCxTargetMode(1280, 600, 60));
-     TargetModes.push_back(CreateIddCxTargetMode(1152, 864, 60));
-     
-     TargetModes.push_back(CreateIddCxTargetMode(1024, 768, 75));
-     TargetModes.push_back(CreateIddCxTargetMode(1024, 768, 60));
+    TargetModes.push_back(CreateIddCxTargetMode(1920, 1080, 144));
+    TargetModes.push_back(CreateIddCxTargetMode(1920, 1080, 90));
+    TargetModes.push_back(CreateIddCxTargetMode(1920, 1080, 60));
 
-     TargetModes.push_back(CreateIddCxTargetMode(800, 600, 60));
-     TargetModes.push_back(CreateIddCxTargetMode(640, 480, 60));
+    TargetModes.push_back(CreateIddCxTargetMode(1600, 1024, 60));
+    TargetModes.push_back(CreateIddCxTargetMode(1680, 1050, 60));
+    TargetModes.push_back(CreateIddCxTargetMode(1600, 900, 60));
+    TargetModes.push_back(CreateIddCxTargetMode(1440, 900, 60));
+    TargetModes.push_back(CreateIddCxTargetMode(1400, 1050,60));
+    TargetModes.push_back(CreateIddCxTargetMode(1366, 768, 60));
+    TargetModes.push_back(CreateIddCxTargetMode(1360, 768, 60));
+    TargetModes.push_back(CreateIddCxTargetMode(1280, 1024, 60));
+    TargetModes.push_back(CreateIddCxTargetMode(1280, 960, 60));
+    TargetModes.push_back(CreateIddCxTargetMode(1280, 800, 60));
+    TargetModes.push_back(CreateIddCxTargetMode(1280, 768, 60));
+    TargetModes.push_back(CreateIddCxTargetMode(1280, 720, 60));
+    TargetModes.push_back(CreateIddCxTargetMode(1280, 600, 60));
+    TargetModes.push_back(CreateIddCxTargetMode(1152, 864, 60));
+
+    TargetModes.push_back(CreateIddCxTargetMode(1024, 768, 75));
+    TargetModes.push_back(CreateIddCxTargetMode(1024, 768, 60));
+
+    TargetModes.push_back(CreateIddCxTargetMode(800, 600, 60));
+    TargetModes.push_back(CreateIddCxTargetMode(640, 480, 60));
 
     pOutArgs->TargetModeBufferOutputCount = (UINT)TargetModes.size();
 
@@ -1039,14 +1044,15 @@ IddSampleAdapterIoDeviceControl(WDFDEVICE Device, WDFREQUEST Request, size_t Out
     NTSTATUS Status = STATUS_SUCCESS;
     PVOID  Buffer;
     size_t BufSize;
-    int bytesRead = 0;
+    int bytesRead  = 0;
     auto* pContext = WdfObjectGet_IndirectDeviceContextWrapper(Device);
     switch (IoControlCode)
     {
     case IOCTL_IDD_UPDATE_LUID:
         PIDD_UPDATE_LUID pUpdateLUID;
         Status = WdfRequestRetrieveInputBuffer(Request, sizeof(IDD_UPDATE_LUID), &Buffer, &BufSize);
-        if (!NT_SUCCESS(Status)) {
+        if (!NT_SUCCESS(Status))
+        {
             break;
         }
         pUpdateLUID = (PIDD_UPDATE_LUID)Buffer;
