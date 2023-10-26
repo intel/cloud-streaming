@@ -166,6 +166,11 @@ ULONG IddReadRegistryDword(WDFDEVICE Device, PCUNICODE_STRING ValueName)
 
     // Read and update the registry values to select the type of monitor and preferred render adapter.
     Status = WdfDeviceOpenRegistryKey(Device, PLUGPLAY_REGKEY_DEVICE, PLUGPLAY_REGKEY_DEVICE, WDF_NO_OBJECT_ATTRIBUTES, &Regkey);
+    if (!NT_SUCCESS(Status))
+    {
+        return RegistryValue;
+    }
+
     Status = WdfRegistryQueryValue(
         Regkey,
         ValueName,
@@ -174,11 +179,13 @@ ULONG IddReadRegistryDword(WDFDEVICE Device, PCUNICODE_STRING ValueName)
         &Length,
         &ValueType
     );
-    if (NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
         WdfRegistryClose(Regkey);
+        return RegistryValue;
     }
 
+    WdfRegistryClose(Regkey);
     return RegistryValue;
 }
 
@@ -378,6 +385,10 @@ NTSTATUS IddSampleDeviceAdd(WDFDRIVER Driver, PWDFDEVICE_INIT pDeviceInit)
     }
 
     Status = IddCxDeviceInitialize(Device);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
 
     // Create a new device context object and attach it to the WDF device object
     auto* pContext = WdfObjectGet_IndirectDeviceContextWrapper(Device);
@@ -705,7 +716,11 @@ void IndirectDeviceContext::FinishInit(UINT ConnectorIndex)
     // ==============================
 
     // Create a container ID
-    CoCreateGuid(&MonitorInfo.MonitorContainerId);
+    HRESULT hr = CoCreateGuid(&MonitorInfo.MonitorContainerId);
+    if (FAILED(hr))
+    {
+        return;
+    }
 
     IDARG_IN_MONITORCREATE MonitorCreate = {};
     MonitorCreate.ObjectAttributes       = &Attr;
@@ -724,6 +739,10 @@ void IndirectDeviceContext::FinishInit(UINT ConnectorIndex)
         // Tell the OS that the monitor has been plugged in
         IDARG_OUT_MONITORARRIVAL ArrivalOut;
         Status = IddCxMonitorArrival(MonitorCreateOut.MonitorObject, &ArrivalOut);
+        if (!NT_SUCCESS(Status))
+        {
+            return;
+        }
     }
 }
 
