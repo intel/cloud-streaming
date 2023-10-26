@@ -14,12 +14,18 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+# Using declare_dependency() wrapped by meson.override_dependency() to make
+# sure that dependency is fetched explicitly with dependency() rather than
+# used via variable. So, the style we use is:
+#
+#   meson.override_dependency('...', declare_dependency(...))
+#
+
 if host_machine.system() == 'linux'
-  owt_dep = declare_dependency(
+  meson.override_dependency('owt', declare_dependency(
     include_directories : include_directories('owt/opt/include'),
     dependencies : [
       cc.find_library('owt', dirs : meson.current_source_dir() / 'owt/opt/lib'),
       ],
-  )
+    ))
 endif
-

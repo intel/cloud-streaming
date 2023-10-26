@@ -14,6 +14,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+libavcodec_dep = dependency('libavcodec', required : true)
+libdrm_dep = dependency('libdrm', required : true)
+libva_dep = dependency('libva', required : true)
+libvhal_dep = dependency('vhal-client', required : true)
+
 srcs = files(
   'cli.cpp',
   'display_server.cpp',
