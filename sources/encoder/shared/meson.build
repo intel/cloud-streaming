@@ -14,6 +14,15 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+libavcodec_dep = dependency('libavcodec', required : true)
+libavfilter_dep = dependency('libavfilter', required : true)
+libavformat_dep = dependency('libavformat', required : true)
+libavutil_dep = dependency('libavutil', required : true)
+libdrm_dep = dependency('libdrm', required : true)
+libva_dep = dependency('libva', required : true)
+libvhal_dep = dependency('vhal-client', required : true)
+libvpl_dep = dependency('vpl', required : true)
+
 srcs = files(
   'CCallbackMux.cpp',
   'CFFDecoder.cpp',

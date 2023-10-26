@@ -14,6 +14,14 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+owt_dep = dependency('owt', required : true)
+nlohmann_json_dep = dependency('nlohmann_json', required : true)
+sioclient_dep = dependency('sioclient', required : true)
+
+if host_machine.system() == 'linux'
+  libvhal_dep = dependency('vhal-client', required : true)
+endif
+
 srcs = files(
   'ga-cursor.cpp',
   'ga-qos.cpp',
