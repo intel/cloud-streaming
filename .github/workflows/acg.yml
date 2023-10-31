@@ -1,4 +1,4 @@
-name: CI
+name: acg
 
 on: [push, pull_request]
 
