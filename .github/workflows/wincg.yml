@@ -14,6 +14,25 @@ jobs:
     - name: 'msbuild rebuild'
       run: MSBuild.exe "sources\drivers\idd\IddSampleDriver.sln" -t:Rebuild "/p:Configuration=Release;Platform=x64" -v:normal -m
 
+  build:
+    runs-on: windows-2019
+    steps:
+    - uses: actions/checkout@v3
+    - run: docker build --file docker/build/windows/Dockerfile --tag build:latest .
+
+  # NOTE: this job generates partial build-deps. OWT is missing. It
+  # should be generated with other docker which uses build-deps produced
+  # here as an input. Unfortunately, due to disk space limitations for
+  # public github runners, we can't show OWT docker build here.
+  build-deps-linux:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - run: docker build --file docker/deps/windows/Dockerfile --tag build-deps-linux .
+    - run: |
+        docker run --rm -u $(id -u):$(id -g) -v $(pwd):/opt/dist2 build-deps-linux \
+          cp -rd /opt/dist/build-deps /opt/dist2/
+
   meson-ninja:
     runs-on: windows-2022
     steps:
