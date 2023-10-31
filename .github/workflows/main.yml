@@ -3,15 +3,16 @@ name: CI
 on: [push, pull_request]
 
 jobs:
-  verify:
+  m4-gen:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Verify dockefiles are up-to-date
-      run: |
+    - run: |
         sudo apt-get update
         sudo apt-get install -y --no-install-recommends \
           meson
+    - name: Verify dockefiles are up-to-date
+      run: |
         meson setup \
           --prefix=$(pwd)/_install \
           --wrap-mode=nofallback \
