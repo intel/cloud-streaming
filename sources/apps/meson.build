@@ -16,3 +16,6 @@
 
 subdir('idd-setup-tool')
 subdir('enum-adapters')
+if get_option('client').allowed()
+  subdir('webrtc-client')
+endif
