@@ -16,6 +16,12 @@ option('streamer',
   description : 'Build streamer service ingredients',
 )
 
+option('client',
+  type : 'feature',
+  value : 'auto',
+  description : 'Build (webrtc) client',
+)
+
 option('prebuilt-path',
   type : 'string',
   value : '',
