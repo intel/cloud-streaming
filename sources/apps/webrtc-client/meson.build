@@ -84,7 +84,7 @@ core_deps = [
   cpp.find_library('winmm'),
   ]
 
-executable('gawebrtcclient', srcs,
+executable('webrtc-client', srcs,
   cpp_args : cpp_args,
   win_subsystem : 'windows',
   dependencies : [ deps, core_deps],

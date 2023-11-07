@@ -691,7 +691,7 @@ than the bandwidth available from  the network / channel.
 **Client**
 
 Any client application that is capable of generating TCAE feedback
-may be used. Here, the client application `gawebrtcclient.exe`
+may be used. Here, the client application `webrtc-client.exe`
 provided with the Windows CG stack is leveraged.  
 
 This app uses Intel Graphics Hardware accelerated decoding capabilities
@@ -709,7 +709,7 @@ The client is launched after the server is launched with the below
 command line:
 
 <!-- -->
-    gawebrtcclient.exe --peer_server_url https://<IP_Address>:8096 --sessionid s0 --clientid c0
+    webrtc-client.exe --peer_server_url https://<IP_Address>:8096 --sessionid s0 --clientid c0
 
 **Server**
 
