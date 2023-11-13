@@ -33,8 +33,8 @@ RUN cd /opt/build && \
 
 # d3d11va AV1 decoder requires mingw >= 10.x (Ubuntu 22.10 and later)
 RUN cd /opt/build && \
-  wget -O FFmpeg-n6.0.zip https://github.com/FFmpeg/FFmpeg/archive/refs/tags/n6.0.zip && \
-  unzip FFmpeg-n6.0.zip && cd FFmpeg-n6.0 && \
+  wget -O FFmpeg-n6.1.zip https://github.com/FFmpeg/FFmpeg/archive/refs/tags/n6.1.zip && \
+  unzip FFmpeg-n6.1.zip && cd FFmpeg-n6.1 && \
   ./configure \
     --enable-cross-compile \
     --arch=x86_64 \
