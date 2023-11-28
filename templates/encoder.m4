@@ -35,14 +35,14 @@ DECLARE(`ENCODER_BUILD_SERVER',enabled)
 ifelse(ENCODER_BUILD_SERVER,enabled,`dnl
   define(`ENCODER_BUILD_DEPS',`dnl
     gcc g++ libdrm-dev dnl
-    ifdef(`BUILD_ONEVPL',,libvpl-dev) dnl
     ifdef(`BUILD_LIBVA2',,libva-dev) dnl
+    ifdef(`BUILD_LIBVPL',,libvpl-dev) dnl
     meson patch pkg-config')
 
   define(`ENCODER_INSTALL_DEPS',`dnl
-    ifdef(`BUILD_ONEVPL',,libvpl2) dnl
-    ifdef(`BUILD_ONEVPLGPU',,libmfxgen1) dnl
-    ifdef(`BUILD_LIBVA2',,libva2 libva-drm2)')
+    ifdef(`BUILD_LIBVA2',,libva2 libva-drm2) dnl
+    ifdef(`BUILD_LIBVPL',,libvpl2) dnl
+    ifdef(`BUILD_ONEVPLGPU',,libmfxgen1)')
 ')
 
 ifelse(ENCODER_BUILD_SERVER,disabled,`dnl

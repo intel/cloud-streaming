@@ -55,8 +55,8 @@ RUN apt-get update && \
     gcc \
     g++ \
     git \
-    libvpl-dev \
     libva-dev \
+    libvpl-dev \
     make \
     patch \
     pkg-config \
@@ -118,8 +118,8 @@ RUN apt-get update && \
     gcc \
     g++ \
     libdrm-dev \
-    libvpl-dev \
     libva-dev \
+    libvpl-dev \
     meson \
     patch \
     pkg-config && \
@@ -160,10 +160,10 @@ RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     intel-media-va-driver-non-free \
     libigfxcmrt7 \
+    libva-drm2 \
+    libvpl2 \
     libmfx1 \
     libmfxgen1 \
-    libvpl2 \
-    libva-drm2 \
     libyaml-cpp0.7 \
     libva2 \
     iproute2 \
