@@ -37,17 +37,17 @@ DECLARE(`FFMPEG_REPO_URL',https://github.com/FFmpeg/FFmpeg.git)
 DECLARE(`FFMPEG_ENABLE_MFX',`2.x')
 
 define(`FFMPEG_BUILD_DEPS',`ca-certificates gcc g++ git dnl
-  ifdef(`BUILD_MSDK',,ifelse(FFMPEG_ENABLE_MFX,1.x,libmfx-dev)) dnl
-  ifdef(`BUILD_ONEVPL',,ifelse(FFMPEG_ENABLE_MFX,2.x,libvpl-dev)) dnl
   ifdef(`BUILD_LIBVA2',,libva-dev) dnl
+  ifdef(`BUILD_LIBVPL',,ifelse(FFMPEG_ENABLE_MFX,2.x,libvpl-dev)) dnl
+  ifdef(`BUILD_MSDK',,ifelse(FFMPEG_ENABLE_MFX,1.x,libmfx-dev)) dnl
   make patch pkg-config xz-utils yasm')
 
 define(`FFMPEG_INSTALL_DEPS',`dnl
   ifdef(`BUILD_MEDIA_DRIVER',,intel-media-va-driver-non-free libigfxcmrt7) dnl
+  ifdef(`BUILD_LIBVA2',,libva-drm2) dnl
+  ifdef(`BUILD_LIBVPL',,ifelse(FFMPEG_ENABLE_MFX,2.x,libvpl2)) dnl
   ifdef(`BUILD_MSDK',,libmfx1) dnl
   ifdef(`BUILD_ONEVPLGPU',,ifelse(FFMPEG_ENABLE_MFX,2.x,libmfxgen1)) dnl
-  ifdef(`BUILD_ONEVPL',,ifelse(FFMPEG_ENABLE_MFX,2.x,libvpl2)) dnl
-  ifdef(`BUILD_LIBVA2',,libva-drm2) dnl
   ')
 
 define(`BUILD_FFMPEG',
