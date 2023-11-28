@@ -137,11 +137,11 @@ RUN apt-get update && \
     cmake \
     dh-autoreconf && \
   rm -rf /var/lib/apt/lists/*
-ARG ONEVPL_REPO=https://github.com/oneapi-src/oneVPL/archive/v2023.3.0.tar.gz
+ARG LIBVPL_REPO=https://github.com/intel/libvpl/archive/v2023.3.0.tar.gz
 RUN cd /opt/build && \
-  wget -O - ${ONEVPL_REPO} | tar xz
-# build oneVPL
-RUN cd /opt/build/oneVPL-2023.3.0 && \
+  wget -O - ${LIBVPL_REPO} | tar xz
+# build libvpl
+RUN cd /opt/build/libvpl-2023.3.0 && \
     mkdir build && cd build && \
     cmake \
       -DCMAKE_BUILD_TYPE=Release \
@@ -324,6 +324,9 @@ RUN apt-get update && \
 COPY --from=build /opt/dist /
 RUN echo "/opt/lib" >> /etc/ld.so.conf.d/all-libs.conf && ldconfig
 
+# While onevpl was renamed to libvpl, as of now this mostly concerns project
+# naming and repository location. Environment variable we define below still
+# follows onevpl naming convention.
 ENV ONEVPL_SEARCH_PATH=/opt/lib/
 # Installing entrypoint helper scripts
 COPY assets/demo-alive /usr/bin/
