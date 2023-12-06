@@ -29,6 +29,7 @@
 static const char* default_bitrate = "3000000";
 static const char* default_bitstream_frames_count = "-1";
 static const char* default_codec = "h264";
+static const char* default_profile = "unknown";
 static const char* default_display = ":0";
 static const char* default_fps = "60";
 static const char* default_gop = default_fps;
@@ -59,6 +60,19 @@ void usage(const char* app) {
     printf("          av1\n");
     printf("          h264 or avc\n");
     printf("          h265 or hevc\n");
+    printf("  --profile <profile>      Codec profile (default: %s)\n", default_profile);
+    printf("        For av1:\n");
+    printf("            main\n");
+    printf("        For avc:\n");
+    printf("            baseline\n");
+    printf("            main\n");
+    printf("            high\n");
+    printf("        For hevc:\n");
+    printf("            main\n");
+    printf("            main10\n");
+    printf("            mainsp\n");
+    printf("            rext\n");
+    printf("            scc\n");
     printf("  --bitrate <int>         Video bitrate (default: %s)\n", default_bitrate);
     printf("  --fps <int>             Video fps (default: %s)\n", default_fps);
     printf("  --gop <int>             Video GOP (default: %s)\n", default_gop);
@@ -102,6 +116,36 @@ static std::string to_string(DTCaptureParams::OutputFormat format) {
     return "unknown";
 }
 
+EncoderParams::Profile to_profile(const EncoderParams::Codec& codec, const std::string& profile) {
+    switch (codec) {
+    case EncoderParams::Codec::avc:
+        if (profile == "baseline")
+            return EncoderParams::Profile::avc_baseline;
+        else if (profile == "main")
+            return EncoderParams::Profile::avc_main;
+        else if (profile == "high")
+            return EncoderParams::Profile::avc_high;
+        break;
+    case EncoderParams::Codec::hevc:
+        if (profile == "main")
+            return EncoderParams::Profile::hevc_main;
+        else if (profile == "main10")
+            return EncoderParams::Profile::hevc_main10;
+        else if (profile == "mainsp")
+            return EncoderParams::Profile::hevc_mainsp;
+        else if (profile == "rext")
+            return EncoderParams::Profile::hevc_rext;
+        else if (profile == "scc")
+            return EncoderParams::Profile::hevc_scc;
+        break;
+    case EncoderParams::Codec::av1:
+        if (profile == "main")
+            return EncoderParams::Profile::av1_main;
+        break;
+    }
+    return EncoderParams::Profile::unknown;
+}
+
 static void log_capture_params(const DTCaptureParams& params) {
     const std::string prefix = "desktop-capture:";
 
@@ -119,6 +163,7 @@ static void log_encode_params(const EncoderParams& params) {
 
     fprintf(stdout, "%s --- encode config:\n", prefix.c_str());
     fprintf(stdout, "%s %s = %s\n", prefix.c_str(), "codec", to_string(params.codec).c_str());
+    fprintf(stdout, "%s %s = %s\n", prefix.c_str(), "profile", to_string(params.codec, params.profile).c_str());
     fprintf(stdout, "%s %s = %s\n", prefix.c_str(), "preset", to_string(params.preset).c_str());
     fprintf(stdout, "%s %s = %s\n", prefix.c_str(), "rate_control", to_string(params.rate_control).c_str());
     fprintf(stdout, "%s %s = %s\n", prefix.c_str(), "target_bitrate", std::to_string(params.target_bitrate).c_str());
@@ -129,6 +174,7 @@ static void log_encode_params(const EncoderParams& params) {
 
     ga_logger(Severity::INFO, "%s --- encode config:\n", prefix.c_str());
     ga_logger(Severity::INFO, "%s %s = %s\n", prefix.c_str(), "codec", to_string(params.codec).c_str());
+    ga_logger(Severity::INFO, "%s %s = %s\n", prefix.c_str(), "profile", to_string(params.codec, params.profile).c_str());
     ga_logger(Severity::INFO, "%s %s = %s\n", prefix.c_str(), "preset", to_string(params.preset).c_str());
     ga_logger(Severity::INFO, "%s %s = %s\n", prefix.c_str(), "rate_control", to_string(params.rate_control).c_str());
     ga_logger(Severity::INFO, "%s %s = %s\n", prefix.c_str(), "target_bitrate", std::to_string(params.target_bitrate).c_str());
@@ -157,6 +203,7 @@ int main(int argc, char* argv[]) {
     std::string bitrate = default_bitrate;
     std::string bitstream_frames_count = default_bitstream_frames_count;
     std::string codec = default_codec;
+    std::string profile = default_profile;
     std::string display = default_display;
     std::string fps = default_fps;
     std::string gop = default_gop;
@@ -175,6 +222,9 @@ int main(int argc, char* argv[]) {
         } else if (std::string("--codec") == argv[idx]) {
             if (++idx >= argc) break;
             codec = argv[idx];
+        } else if (std::string("--profile") == argv[idx]) {
+            if (++idx >= argc) break;
+            profile = argv[idx];
         } else if (std::string("--display") == argv[idx]) {
             if (++idx >= argc) break;
             display = argv[idx];
@@ -284,6 +334,15 @@ int main(int argc, char* argv[]) {
     else {
         fprintf(stderr, "fatal: unsupported codec: %s\n", codec.c_str());
         exit(1);
+    }
+
+    // profile
+    if (profile != "unknown") {
+        encode_params.profile = to_profile(encode_params.codec, profile);
+        if (encode_params.profile == EncoderParams::Profile::unknown) {
+            fprintf(stderr, "fatal: unsupported profile: %s\n", profile.c_str());
+            exit(1);
+        }
     }
 
     int target_bitrate = -1;

@@ -172,6 +172,10 @@ HRESULT AVQSVEncoder::init_av_context(uint32_t frame_width, uint32_t frame_heigh
     }
 
     // fill codec params
+    // profile
+    if (enc_params.profile != EncoderParams::Profile::unknown) {
+        av_opt_set(av_context->priv_data, "profile", to_string(enc_params.codec, enc_params.profile).c_str(), 0);
+    }
     // target bitrate
     av_context->bit_rate = enc_params.target_bitrate;
     // gop params
