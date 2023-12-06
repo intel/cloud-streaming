@@ -33,7 +33,14 @@ jobs:
         docker run --rm -u $(id -u):$(id -g) -v $(pwd):/opt/dist2 build-deps-linux \
           cp -rd /opt/dist/build-deps /opt/dist2/
 
-  meson-ninja:
+  # minimal-* builds correspond to project configuration with minimal
+  # dependencies. Only few tools will actually be built which depend only
+  # on Windows API (enum-adapters, idd-setup-tool).
+
+  minimal-meson:
+    strategy:
+      matrix:
+        backend: [ninja, vs]
     runs-on: windows-2022
     steps:
     - uses: actions/checkout@v3
@@ -44,16 +51,73 @@ jobs:
     - run: '.github\workflows\EnterDevShell.ps1 amd64'
       shell: pwsh
     - name: 'Configure'
-      run: meson setup _build --wrap-mode=forcefallback
+      run: meson setup _build --backend=${{ matrix.backend }}
     - name: 'Build'
       run: meson compile -C _build
     - name: 'Install'
       run: meson install -C _build
 
-  meson-msbuild:
+  # samples-* builds correspond to project configuration which exposes key project
+  # features covered by samples. This configuration requires dependencies which
+  # needs to be built or installed beforehand.
+
+  samples-meson:
+    strategy:
+      matrix:
+        backend: [ninja, vs]
     runs-on: windows-2022
     steps:
     - uses: actions/checkout@v3
+    - uses: actions/checkout@v3
+      with:
+        repository: intel/libvpl
+        ref: v2023.3.1
+        path: libvpl
+    - uses: actions/checkout@v3
+      with:
+        repository: FFmpeg/FFmpeg
+        ref: n6.1
+        path: ffmpeg
+    - uses: msys2/setup-msys2@v2
+      with:
+        msystem: mingw64
+        update: false
+        # NOTE: we need install msys/make and avoid make:p version of make
+        # since it has limitation on command line lenght which is critical
+        # for ffmpeg build
+        pacboy: >-
+          cmake:p
+          diffutils:p
+          gcc:p
+          msys/make
+          nasm:p
+          pkgconf:p
+    # Here we build dependencies (libvpl and ffmpeg) under msys2
+    - shell: msys2 {0}
+      working-directory: libvpl
+      run: |
+        cmake -B _build -G Ninja \
+          -DCMAKE_INSTALL_PREFIX=$(pwd)/../_install \
+          -DBUILD_TOOLS=OFF \
+          -DBUILD_PREVIEW=OFF \
+          -DINSTALL_EXAMPLE_CODE=OFF
+        ninja -C _build
+        ninja install -C _build
+        # copy runtime dependencies due to C++ compilation with gcc
+        cp $(where libgcc_s_seh-1.dll) ../_install/bin/
+        cp $(where libstdc++-6.dll) ../_install/bin/
+    - shell: msys2 {0}
+      working-directory: ffmpeg
+      run: |
+        export PKG_CONFIG_PATH=../_install/lib/pkgconfig
+        ./configure \
+          --disable-doc \
+          --enable-shared \
+          --enable-libvpl \
+          --prefix=$(pwd)/../_install
+        make -j$(nproc)
+        make install
+    # Below steps are executed under default shell (pwsh)
     - uses: actions/setup-python@v4
       with:
         python-version: '3.x'
@@ -61,9 +125,8 @@ jobs:
     - run: '.github\workflows\EnterDevShell.ps1 amd64'
       shell: pwsh
     - name: 'Configure'
-      run: meson setup _build --backend=vs --wrap-mode=forcefallback
+      run: meson setup _build --backend=${{ matrix.backend }} -Dprebuilt-path=_install
     - name: 'Build'
       run: meson compile -C _build
     - name: 'Install'
       run: meson install -C _build
-
