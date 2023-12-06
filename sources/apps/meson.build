@@ -16,6 +16,9 @@
 
 subdir('idd-setup-tool')
 subdir('enum-adapters')
+if get_option('capture').allowed()
+  subdir('screen-grab')
+endif
 if get_option('client').allowed()
   subdir('webrtc-client')
 endif

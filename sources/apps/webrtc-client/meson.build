@@ -42,7 +42,7 @@ deps = [
 # dependencies search above (due to 'required: true').
 foreach dep : deps
   if not dep.found()
-    warning('webrtc-client will NOT be built because some dependencies are missing')
+    warning('webrtc-client will NOT be built due to missing dependencies')
     summary({'webrtc-client' : false}, bool_yn : true, section: 'Targets')
     subdir_done()
   endif

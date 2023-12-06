@@ -69,75 +69,86 @@ if host_machine.system() == 'linux'
 endif
 
 if host_machine.system() == 'windows'
-  meson.override_dependency('owt', declare_dependency(
-    include_directories : include_directories(prebuilt_path / 'include'),
-    compile_args : ['-DWEBRTC_WIN'],
-    dependencies : cpp.find_library('owt', dirs : prebuilt_path_abs / 'lib'),
-    ))
-
-  if build_machine.cpu_family() == 'x86_64'
-    meson.override_dependency('owt-client', declare_dependency(
+  if cpp.find_library('owt', dirs : prebuilt_path_abs / 'lib', required: false).found()
+    meson.override_dependency('owt', declare_dependency(
       include_directories : include_directories(prebuilt_path / 'include'),
       compile_args : ['-DWEBRTC_WIN'],
-      dependencies : cpp.find_library('owt-client', dirs : prebuilt_path_abs / 'lib'),
+      dependencies : cpp.find_library('owt', dirs : prebuilt_path_abs / 'lib'),
       ))
+  endif
+
+  if build_machine.cpu_family() == 'x86_64'
+    if cpp.find_library('owt-client', dirs : prebuilt_path_abs / 'lib', required: false).found()
+      meson.override_dependency('owt-client', declare_dependency(
+        include_directories : include_directories(prebuilt_path / 'include'),
+        compile_args : ['-DWEBRTC_WIN'],
+        dependencies : cpp.find_library('owt-client', dirs : prebuilt_path_abs / 'lib'),
+        ))
+    endif
 
     # NOTE : cc.find_library('xxx.dll') searches for the static library named libxxx.dll.a
 
-    meson.override_dependency('libcrypto', declare_dependency(
-      include_directories : include_directories(prebuilt_path / 'include'),
-      dependencies : cc.find_library('crypto.dll', dirs : prebuilt_path_abs / 'lib'),
-      ))
+    install_files = []
 
-    meson.override_dependency('libssl', declare_dependency(
-      include_directories : include_directories(prebuilt_path / 'include'),
-      dependencies : cc.find_library('ssl.dll', dirs : prebuilt_path_abs / 'lib'),
-      ))
+    if (cpp.find_library('crypto.dll', dirs : prebuilt_path_abs / 'lib', required: false).found() and
+        cpp.find_library('ssl.dll', dirs : prebuilt_path_abs / 'lib', required: false).found())
+      meson.override_dependency('libcrypto', declare_dependency(
+        include_directories : include_directories(prebuilt_path / 'include'),
+        dependencies : cc.find_library('crypto.dll', dirs : prebuilt_path_abs / 'lib'),
+        ))
+      meson.override_dependency('libssl', declare_dependency(
+        include_directories : include_directories(prebuilt_path / 'include'),
+        dependencies : cc.find_library('ssl.dll', dirs : prebuilt_path_abs / 'lib'),
+        ))
+      meson.override_dependency('openssl', declare_dependency(
+        dependencies: [dependency('libcrypto'), dependency('libssl')],
+        ))
+      install_files += files(
+        prebuilt_path_abs / 'bin' / 'libcrypto-3-x64.dll',
+        prebuilt_path_abs / 'bin' / 'libssl-3-x64.dll',
+        )
+    endif
 
-    meson.override_dependency('openssl', declare_dependency(
-      dependencies: [dependency('libcrypto'), dependency('libssl')],
-      ))
+    if (cpp.find_library('avcodec.dll', dirs : prebuilt_path_abs / 'lib', required: false).found() and
+        cpp.find_library('avutil.dll', dirs : prebuilt_path_abs / 'lib', required: false).found())
+      meson.override_dependency('libavcodec', declare_dependency(
+        dependencies : cc.find_library('avcodec.dll', dirs : prebuilt_path_abs / 'lib'),
+        include_directories : include_directories(prebuilt_path / 'include'),
+        ))
+      meson.override_dependency('libavutil', declare_dependency(
+        dependencies : cc.find_library('avutil.dll', dirs : prebuilt_path_abs / 'lib'),
+        include_directories : include_directories(prebuilt_path / 'include'),
+        ))
+      install_files += files(
+        prebuilt_path_abs / 'bin' / 'avcodec-60.dll',
+        prebuilt_path_abs / 'bin' / 'avdevice-60.dll',
+        prebuilt_path_abs / 'bin' / 'avfilter-9.dll',
+        prebuilt_path_abs / 'bin' / 'avformat-60.dll',
+        prebuilt_path_abs / 'bin' / 'swresample-4.dll',
+        prebuilt_path_abs / 'bin' / 'swscale-7.dll',
+        prebuilt_path_abs / 'bin' / 'avutil-58.dll',
+        )
+    endif
 
-    meson.override_dependency('libavcodec', declare_dependency(
-      dependencies : cc.find_library('avcodec.dll', dirs : prebuilt_path_abs / 'lib'),
-      include_directories : include_directories(prebuilt_path / 'include'),
-      ))
-
-    meson.override_dependency('libavutil', declare_dependency(
-      dependencies : cc.find_library('avutil.dll', dirs : prebuilt_path_abs / 'lib'),
-      include_directories : include_directories(prebuilt_path / 'include'),
-      ))
-
-    meson.override_dependency('vpl', declare_dependency(
-      dependencies : cc.find_library('vpl.dll', dirs : prebuilt_path_abs / 'lib'),
-      include_directories : include_directories(
-        prebuilt_path / 'include',
-        prebuilt_path / 'include' / 'vpl',
-        ),
-      ))
+    if cpp.find_library('vpl.dll', dirs : prebuilt_path_abs / 'lib', required: false).found()
+      meson.override_dependency('vpl', declare_dependency(
+        dependencies : cc.find_library('vpl.dll', dirs : prebuilt_path_abs / 'lib'),
+        include_directories : include_directories(
+          prebuilt_path / 'include',
+          prebuilt_path / 'include' / 'vpl',
+          ),
+        ))
+      install_files += files(
+        prebuilt_path_abs / 'bin' / 'libvpl.dll',
+        # C++ deps
+        prebuilt_path_abs / 'bin' / 'libgcc_s_seh-1.dll',
+        prebuilt_path_abs / 'bin' / 'libstdc++-6.dll',
+        )
+    endif
 
     # Install required binaries to run project targets.
     if not fs.is_samepath(get_option('prefix') / get_option('bindir'), prebuilt_path_abs / 'bin')
-      install_data(
-        files(
-          # ffmpeg
-          prebuilt_path_abs / 'bin' / 'avcodec-60.dll',
-          prebuilt_path_abs / 'bin' / 'avdevice-60.dll',
-          prebuilt_path_abs / 'bin' / 'avfilter-9.dll',
-          prebuilt_path_abs / 'bin' / 'avformat-60.dll',
-          prebuilt_path_abs / 'bin' / 'avutil-58.dll',
-          prebuilt_path_abs / 'bin' / 'swresample-4.dll',
-          prebuilt_path_abs / 'bin' / 'swscale-7.dll',
-          # openssl
-          prebuilt_path_abs / 'bin' / 'libcrypto-3-x64.dll',
-          prebuilt_path_abs / 'bin' / 'libssl-3-x64.dll',
-          # vpl
-          prebuilt_path_abs / 'bin' / 'libvpl.dll',
-          # C++ deps
-          prebuilt_path_abs / 'bin' / 'libgcc_s_seh-1.dll',
-          prebuilt_path_abs / 'bin' / 'libstdc++-6.dll',
-          ),
-        install_dir : get_option('bindir'))
+      install_data(install_files, install_dir : get_option('bindir'))
     endif
   endif
 endif

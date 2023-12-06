@@ -14,6 +14,14 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+if not build_streamer
+  warning('ga-server-periodic will NOT be built due to missing dependencies')
+  summary({'ga-server-periodic' : false}, bool_yn : true, section: 'Targets')
+  subdir_done()
+endif
+
+summary({'ga-server-periodic' : true}, bool_yn : true, section: 'Targets')
+
 srcs = files('ga-server-periodic.cpp')
 
 if fs.is_absolute(get_option('libdir'))

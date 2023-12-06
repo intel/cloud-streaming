@@ -14,11 +14,34 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-subdir('config')
-subdir('core')
-subdir('module')
-subdir('server')
+if (get_option('streamer').allowed() or
+    get_option('capture').require(host_machine.system() == 'windows').allowed())
+  subdir('core')
+  if host_machine.system() == 'windows' and build_machine.cpu_family() != 'x86'
+    subdir('capture')
+  endif
+endif
 
-if host_machine.system() == 'linux'
-  subdir('tests')
+if get_option('streamer').allowed()
+  streamer_required = get_option('streamer').enabled() or host_machine.system() == 'linux'
+
+  build_streamer = dependency('owt', required : streamer_required).found()
+
+  # These are ingredients which we don't need to configure if we can't
+  # build any of them. These are not entrypoints, so we don't need to
+  # report them in a summary as well.
+  if (build_streamer)
+    subdir('config')
+    if host_machine.system() == 'windows'
+      subdir('hook')
+      subdir('titan')
+    endif
+    subdir('module')
+  endif
+
+  subdir('server')
+
+  if host_machine.system() == 'linux'
+    subdir('tests')
+  endif
 endif
