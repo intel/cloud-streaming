@@ -14,33 +14,29 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-cgvcs_tgt = vcs_tag(
-  command : [ 'git', 'rev-parse', '--short', 'HEAD'],
-  input : 'cg-vcs.h.in',
-  output : 'cg-vcs.h',
-  fallback : 'tarball',
+if not capture_dep.found()
+  warning('screen-grab will NOT be built due to missing dependencies')
+  summary({'screen-grab' : false}, bool_yn : true, section: 'Targets')
+  subdir_done()
+endif
+
+summary({'screen-grab' : true}, bool_yn : true, section: 'Targets')
+
+srcs = files(
+  'screen-grab.cpp',
   )
 
-ver = meson.project_version().split('.')
+srcs += windows.compile_resources(
+  files('screen-grab.rc'),
+  args : winres_args,
+  depend_files : [ cgver_file, files('resource.h') ],
+  depends : cgvcs_tgt,
+  )
 
-cgver_file = configure_file(
-  input : 'cg-version.h.in',
-  output : 'cg-version.h',
-  configuration : {
-    'VER_MAJOR' : ver[0],
-    'VER_MINOR' : ver[1],
-    'VER_MICRO' : ver[2],
-    'VER_REV'   : 0,
-    },
-)
+cpp_args = ['-DNOMINMAX']
 
-if host_machine.system() == 'linux'
-  subdir('encoder')
-endif
-
-subdir('streamer')
-
-if host_machine.system() == 'windows' and build_machine.cpu_family() != 'x86'
-  subdir('drivers')
-  subdir('apps')
-endif
+executable('screen-grab', srcs,
+  cpp_args : cpp_args,
+  dependencies: [ga_dep, capture_dep],
+  install : true,
+  )

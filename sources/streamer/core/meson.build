@@ -42,6 +42,13 @@ if host_machine.system() == 'windows'
     'QoSMgt.cpp',
     )
 
+  srcs += windows.compile_resources(
+    files('libga.rc'),
+    args : winres_args,
+    depend_files : [ cgver_file, files('resource.h') ],
+    depends : cgvcs_tgt,
+    )
+
   cpp_public_args += [
     '-DHAVE_STRUCT_TIMESPEC',
     '-DWIN32',

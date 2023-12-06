@@ -19,6 +19,8 @@ libdrm_dep = dependency('libdrm', required : true)
 libva_dep = dependency('libva', required : true)
 libvhal_dep = dependency('vhal-client', required : true)
 
+summary({'icr_encoder' : true}, bool_yn : true, section: 'Targets')
+
 srcs = files(
   'cli.cpp',
   'display_server.cpp',

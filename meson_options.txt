@@ -12,8 +12,14 @@ option('encoder',
 
 option('streamer',
   type : 'feature',
-  value : 'enabled',
+  value : 'auto',
   description : 'Build streamer service ingredients',
+)
+
+option('capture',
+  type : 'feature',
+  value : 'auto',
+  description : 'Build desktop capture ingredients',
 )
 
 option('client',

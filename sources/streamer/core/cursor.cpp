@@ -21,7 +21,7 @@
 #include "encoder-common.h"
 
 // Queue the cursor data into the server
-int queue_cursor(const CURSOR_INFO& info, uint8_t *pBuffer, uint32_t nLen)
+int queue_cursor(const CURSOR_INFO& info, const uint8_t *pBuffer, uint32_t nLen)
 {
     std::shared_ptr<CURSOR_DATA> cursorData = std::make_shared<CURSOR_DATA>();
     cursorData->cursorInfo = info;

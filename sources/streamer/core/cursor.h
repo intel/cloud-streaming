@@ -58,7 +58,7 @@ struct CURSOR_DATA {
 };
 
 #ifdef WIN32
-EXPORT int queue_cursor(const CURSOR_INFO& info, uint8_t *pBuffer, uint32_t nLen);
+EXPORT int queue_cursor(const CURSOR_INFO& info, const uint8_t *pBuffer, uint32_t nLen);
 #endif
 
 #endif

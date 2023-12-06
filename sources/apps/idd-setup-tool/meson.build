@@ -14,6 +14,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+summary({'idd-setup-tool' : true}, bool_yn : true, section: 'Targets')
+
 srcs = [cgver_file, cgvcs_tgt]
 srcs += files(
   'ChangeDisplaySettings.cpp',
