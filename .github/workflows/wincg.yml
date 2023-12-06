@@ -44,7 +44,7 @@ jobs:
     - run: '.github\workflows\EnterDevShell.ps1 amd64'
       shell: pwsh
     - name: 'Configure'
-      run: meson setup _build --wrap-mode=forcefallback -Dstreamer=disabled
+      run: meson setup _build --wrap-mode=forcefallback
     - name: 'Build'
       run: meson compile -C _build
     - name: 'Install'
@@ -61,7 +61,7 @@ jobs:
     - run: '.github\workflows\EnterDevShell.ps1 amd64'
       shell: pwsh
     - name: 'Configure'
-      run: meson setup _build --backend=vs --wrap-mode=forcefallback -Dstreamer=disabled
+      run: meson setup _build --backend=vs --wrap-mode=forcefallback
     - name: 'Build'
       run: meson compile -C _build
     - name: 'Install'
