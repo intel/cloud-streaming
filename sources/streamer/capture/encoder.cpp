@@ -29,6 +29,40 @@ std::string to_string(const EncoderParams::Codec& codec) {
     return "unknown";
 }
 
+std::string to_string(const EncoderParams::Codec& codec, const EncoderParams::Profile& profile) {
+    switch (codec) {
+    case EncoderParams::Codec::avc:
+        switch (profile) {
+        case EncoderParams::Profile::avc_baseline:
+            return "baseline";
+        case EncoderParams::Profile::avc_main:
+            return "main";
+        case EncoderParams::Profile::avc_high:
+            return "high";
+        }
+    case EncoderParams::Codec::hevc:
+        switch (profile) {
+        case EncoderParams::Profile::hevc_main:
+            return "main";
+        case EncoderParams::Profile::hevc_main10:
+            return "main10";
+        case EncoderParams::Profile::hevc_mainsp:
+            return "mainsp";
+        case EncoderParams::Profile::hevc_rext:
+            return "rext";
+        case EncoderParams::Profile::hevc_scc:
+            return "scc";
+        }
+    case EncoderParams::Codec::av1:
+        switch (profile) {
+        case EncoderParams::Profile::av1_main:
+            return "main";
+        }
+    }
+
+    return "unknown";
+}
+
 std::string to_string(const EncoderParams::QualityPreset& preset) {
     switch (preset) {
     case EncoderParams::QualityPreset::veryfast:

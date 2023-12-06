@@ -35,6 +35,23 @@ struct EncoderParams {
         av1,
     };
 
+    // codec profile
+    enum class Profile {
+        unknown,
+        // avc
+        avc_baseline,
+        avc_main,
+        avc_high,
+        // hevc
+        hevc_main,
+        hevc_main10,
+        hevc_mainsp,
+        hevc_rext,
+        hevc_scc,
+        // av1
+        av1_main,
+    };
+
     // quality preset
     enum class QualityPreset {
         veryfast, // best speed
@@ -60,6 +77,8 @@ struct EncoderParams {
 
     // codec id
     Codec codec = Codec::unknown;
+    // codec profile
+    Profile profile = Profile::unknown;
     // quality preset
     QualityPreset preset = QualityPreset::medium;
     // rate control method
@@ -77,6 +96,7 @@ struct EncoderParams {
 };
 
 std::string to_string(const EncoderParams::Codec& codec);
+std::string to_string(const EncoderParams::Codec& codec, const EncoderParams::Profile& profile);
 std::string to_string(const EncoderParams::QualityPreset& preset);
 std::string to_string(const EncoderParams::RateControl& rc);
 std::string to_string(const EncoderParams::OutputChromaFormat& format);
