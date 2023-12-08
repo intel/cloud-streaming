@@ -147,8 +147,7 @@ CalcuateMousePosition(
 ga::webrtc::SdlController::SdlController(
   uint32_t game_width, uint32_t game_height,
   uint32_t video_width, uint32_t video_height)
-    : enable_relative_position_(false),
-      game_width_(game_width),
+    : game_width_(game_width),
       game_height_(game_height),
       renderer_width_(1280),
       renderer_height_(720),
@@ -197,14 +196,8 @@ ga::webrtc::SdlController::ConvertToSdlMessage(const std::string &json_message, 
     json event_param = j["data"]["parameters"];
     int32_t x = event_param["x"];
     int32_t y = event_param["y"];
-    if (enable_relative_position_) {
-      int32_t mx = event_param["movementX"];
-      int32_t my = event_param["movementY"];
-      return sdlmsg_mousemotion(m, 0, 0, mx, my, 0, 1);
-    } else {
-        MousePosition p = CalcuateMousePosition(x, y, display_width_, display_height_);
-        return sdlmsg_mousemotion(m, p.x, p.y, 0, 0, 0, 0);
-    }
+    MousePosition p = CalcuateMousePosition(x, y, display_width_, display_height_);
+    return sdlmsg_mousemotion(m, p.x, p.y, 0, 0, 0, 0);
   } else if (event_type == "mouseup" || event_type == "mousedown") {
     // Mouse click.
     // sdlmsg_t m;
@@ -294,15 +287,6 @@ ga::webrtc::SdlController::ConvertToSdlMessage(const std::string &json_message, 
       mode_ = FitMode::Fit;
     }
     CalculatePaddings();
-    return nullptr;
-  } else if (event_type == "pointerlockchange") {
-    json event_param = j["data"]["parameters"];
-    bool locked = event_param["locked"];
-    if (locked) {
-      enable_relative_position_ = true;
-    } else {
-      enable_relative_position_ = false;
-    }
     return nullptr;
   } else if (event_type == "wheel") {
     json event_param = j["data"]["parameters"];

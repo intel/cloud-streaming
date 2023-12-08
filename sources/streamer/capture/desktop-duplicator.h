@@ -176,9 +176,9 @@ private:
      */
     HRESULT release_surface();
 
-    void update_cursor_visibility(const DXGI_OUTDUPL_FRAME_INFO& frame_info);
+    bool update_cursor_position(const DXGI_OUTDUPL_FRAME_INFO& frame_info);
 
-    void update_cursor_shape(const DXGI_OUTDUPL_FRAME_INFO& frame_info);
+    bool update_cursor_shape(const DXGI_OUTDUPL_FRAME_INFO& frame_info);
 
     HRESULT update_cursor_shape_monochrome(CursorState& desc,
         const DXGI_OUTDUPL_POINTER_SHAPE_INFO& shape_info, const std::vector<uint8_t>& shape_data);
@@ -217,7 +217,6 @@ private:
     CComPtr<ID3D11Texture2D> m_desktop_texture;
 
     // internal cursor state
-    std::atomic<POINT> m_cursor_position = {};
     CursorState m_cursor_state = {};
 
     std::vector<uint8_t> m_shape_buffer;
@@ -236,8 +235,7 @@ private:
     std::condition_variable m_acquire_cursor_cv;
 
     // latest captured cursor
-    bool m_cursor_visibility_updated = false;
-    bool m_cursor_shape_updated = false;
+    bool m_cursor_updated = false;
     CursorState m_output_cursor = {};
 
     // processing thread
