@@ -228,7 +228,6 @@ LRESULT CALLBACK WindowClass::InternalWndProc(HWND h_wnd, UINT msg, WPARAM w_par
         disp_count = ShowCursor(TRUE);
       }
       this->ChangeGameMode(h_wnd, false);
-    ga::remote::ChangeCursorReportMode(false);
     }
     else {
       disp_count = ShowCursor(FALSE);
@@ -238,7 +237,6 @@ LRESULT CALLBACK WindowClass::InternalWndProc(HWND h_wnd, UINT msg, WPARAM w_par
       if (!this->game_mode_toggle_) {
         this->ChangeGameMode(h_wnd, true);
       }
-    ga::remote::ChangeCursorReportMode(true);
     }
   default:
     result = DefWindowProc(h_wnd, msg, w_param, l_param);

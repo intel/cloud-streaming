@@ -272,8 +272,16 @@ HRESULT DesktopDuplicator::acquire_surface(UINT timeout_ms) {
     m_desktop_texture = texture;
 
     // update cursor
-    update_cursor_visibility(frame_info);
-    update_cursor_shape(frame_info);
+    const auto cursor_position_changed = update_cursor_position(frame_info);
+    const auto cursor_shape_changed = update_cursor_shape(frame_info);
+
+    if (cursor_position_changed || cursor_shape_changed) {
+        std::unique_lock lk(m_acquire_cursor_lock);
+        m_cursor_updated = true;
+        m_output_cursor = m_cursor_state;
+        lk.unlock();
+        m_acquire_cursor_cv.notify_one();
+    }
 
     return S_OK;
 }
@@ -391,27 +399,47 @@ HRESULT DesktopDuplicator::release_surface() {
     return S_OK;
 }
 
-void DesktopDuplicator::update_cursor_visibility(const DXGI_OUTDUPL_FRAME_INFO& frame_info) {
-    bool prev = m_cursor_state.visible;
-    bool next = frame_info.PointerPosition.Visible;
-    m_cursor_state.visible = next;
-    if (prev != next) {
-        std::unique_lock lk(m_acquire_cursor_lock);
-        m_cursor_visibility_updated = true;
-        lk.unlock();
-        m_acquire_cursor_cv.notify_one();
+bool DesktopDuplicator::update_cursor_position(const DXGI_OUTDUPL_FRAME_INFO& frame_info) {
+    if (frame_info.LastMouseUpdateTime.QuadPart == 0)
+        return false; // no update
+
+    const bool prev_visible = m_cursor_state.visible;
+    const POINT prev_position = { m_cursor_state.x, m_cursor_state.y };
+
+    const bool next_visible = frame_info.PointerPosition.Visible;
+    const auto& next_position = frame_info.PointerPosition.Position;
+
+    // visibility changed
+    if (prev_visible != next_visible) {
+        m_cursor_state.visible = next_visible;
+        if (next_visible) {
+            m_cursor_state.x = next_position.x;
+            m_cursor_state.y = next_position.y;
+        }
+        return true;
     }
+
+    // position changed
+    if (next_visible) {
+        if (prev_position.x != next_position.x || prev_position.y != next_position.y) {
+            m_cursor_state.x = next_position.x;
+            m_cursor_state.y = next_position.y;
+            return true;
+        }
+    }
+
+    return false; // no update
 }
 
-void DesktopDuplicator::update_cursor_shape(const DXGI_OUTDUPL_FRAME_INFO& frame_info) {
+bool DesktopDuplicator::update_cursor_shape(const DXGI_OUTDUPL_FRAME_INFO& frame_info) {
     if (m_duplication == nullptr) {
         ga_logger(Severity::ERR, __FUNCTION__ ": duplication object is nullptr\n");
-        return;
+        return false; // no update
     }
 
     const UINT buffer_size = frame_info.PointerShapeBufferSize;
     if (buffer_size == 0)
-        return; // no update
+        return false; // no update
 
     if (m_shape_buffer.size() < buffer_size) {
         m_shape_buffer.resize(buffer_size);
@@ -422,7 +450,7 @@ void DesktopDuplicator::update_cursor_shape(const DXGI_OUTDUPL_FRAME_INFO& frame
     HRESULT result = m_duplication->GetFramePointerShape(buffer_size, m_shape_buffer.data(), &required_size, &shape_info);
     if (FAILED(result)) {
         ga_logger(Severity::DBG, __FUNCTION__ ": IDXGIOutputDuplication->GetFramePointerShape failed, result = 0x%08x\n", result);
-        return;
+        return false;
     }
 
     switch (shape_info.Type) {
@@ -437,20 +465,10 @@ void DesktopDuplicator::update_cursor_shape(const DXGI_OUTDUPL_FRAME_INFO& frame
         break;
     default:
         ga_logger(Severity::ERR, __FUNCTION__ ": unexpected cursor shape type\n");
-        return;
+        return false;
     };
 
-    std::unique_lock lk(m_acquire_cursor_lock);
-    m_cursor_shape_updated =
-        m_cursor_state.shape_present != m_output_cursor.shape_present ||
-        m_cursor_state.shape_width != m_output_cursor.shape_width ||
-        m_cursor_state.shape_height != m_output_cursor.shape_height ||
-        m_cursor_state.shape_pitch != m_output_cursor.shape_pitch ||
-        m_cursor_state.shape_data != m_output_cursor.shape_data ||
-        m_cursor_state.shape_xor_data != m_output_cursor.shape_xor_data;
-    m_output_cursor = m_cursor_state;
-    lk.unlock();
-    m_acquire_cursor_cv.notify_one();
+    return true;
 }
 
 HRESULT DesktopDuplicator::update_cursor_shape_monochrome(CursorState& state,
@@ -469,6 +487,8 @@ HRESULT DesktopDuplicator::update_cursor_shape_monochrome(CursorState& state,
     state.shape_width = width;
     state.shape_height = height;
     state.shape_pitch = pitch;
+    state.shape_hotspot_x = shape_info.HotSpot.x;
+    state.shape_hotspot_y = shape_info.HotSpot.y;
 
     state.shape_data.resize(pitch * height);
     state.shape_xor_data.resize(pitch * height);
@@ -556,6 +576,8 @@ HRESULT DesktopDuplicator::update_cursor_shape_color(CursorState& state,
     state.shape_width = width;
     state.shape_height = height;
     state.shape_pitch = pitch;
+    state.shape_hotspot_x = shape_info.HotSpot.x;
+    state.shape_hotspot_y = shape_info.HotSpot.y;
 
     const uint32_t shape_size = pitch * height;
     state.shape_data.resize(shape_size);
@@ -580,6 +602,8 @@ HRESULT DesktopDuplicator::update_cursor_shape_masked_color(CursorState& state,
     state.shape_width = width;
     state.shape_height = height;
     state.shape_pitch = pitch;
+    state.shape_hotspot_x = shape_info.HotSpot.x;
+    state.shape_hotspot_y = shape_info.HotSpot.y;
 
     const uint32_t shape_size = pitch * height;
     state.shape_data.resize(shape_size);
@@ -624,12 +648,13 @@ HRESULT DesktopDuplicator::receive_cursor(CursorState& cursor_state, UINT timeou
 
     auto timeout = std::chrono::milliseconds(timeout_ms);
     auto signalled = m_acquire_cursor_cv.wait_for(lk, timeout, [&]() -> bool { 
-        return m_cursor_visibility_updated || m_cursor_shape_updated; 
+        return m_cursor_updated;
     });
     if (!signalled)
         return DXGI_ERROR_WAIT_TIMEOUT;
 
     // assign cursor state
     cursor_state = m_output_cursor;
+    m_cursor_updated = false;
     return S_OK;
 }

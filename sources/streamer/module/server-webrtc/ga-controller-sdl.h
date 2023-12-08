@@ -43,7 +43,6 @@ private:
   void CalculatePaddings();
   void UpdateMousePosition(const MousePosition& position);
 
-  bool enable_relative_position_;  // Determine whether mouse movement message send to SDL is in relative mode.
   bool mouse_is_pressed_;  // Record whether mouse is pressed since client only sends mouseup and mousedown.
   // Game resolution at server side.
   uint32_t game_width_;

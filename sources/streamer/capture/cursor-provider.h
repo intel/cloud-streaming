@@ -24,11 +24,16 @@
 struct CursorState {
     // cursor presence on the screen
     bool visible;
+    // cursor location on the screen
+    int32_t x;
+    int32_t y;
     // cursor shape is always R8G8B8A8
     bool shape_present;
     uint32_t shape_width;
     uint32_t shape_height;
     uint32_t shape_pitch;
+    int32_t shape_hotspot_x;
+    int32_t shape_hotspot_y;
     // shape data - size is (height * pitch)
     // shape data - normal color (use alpha blend for rendering)
     std::vector<unsigned char> shape_data;
