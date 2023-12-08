@@ -89,8 +89,6 @@ struct EncoderParams {
     uint32_t key_frame_interval = 0;
     // encoded bitstream frame rate
     uint16_t frame_rate = 0;
-    // chroma format for encoded bitstream
-    OutputChromaFormat output_chroma_format = OutputChromaFormat::chroma420;
     // display adapter to run encoder
     LUID adapter_luid = {};
 };
