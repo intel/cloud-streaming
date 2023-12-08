@@ -224,11 +224,7 @@ HRESULT utils::create_d3d11_device(IDXGIAdapter* adapter, ID3D11Device5** pp_dev
     CComPtr<ID3D11Device> device;
     CComPtr<ID3D11DeviceContext> context;
 
-#ifndef NDEBUG
-    UINT device_flags = D3D11_CREATE_DEVICE_DEBUG;
-#else
-    UINT device_flags = 0;
-#endif
+    UINT device_flags = 0; // D3D11_CREATE_DEVICE_DEBUG;
 
     // shared NT handles require feature level 11.1
     D3D_FEATURE_LEVEL feature_level = D3D_FEATURE_LEVEL_11_1;
