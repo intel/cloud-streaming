@@ -169,7 +169,6 @@ static void log_encode_params(const EncoderParams& params) {
     fprintf(stdout, "%s %s = %s\n", prefix.c_str(), "target_bitrate", std::to_string(params.target_bitrate).c_str());
     fprintf(stdout, "%s %s = %s\n", prefix.c_str(), "key_frame_interval", std::to_string(params.key_frame_interval).c_str());
     fprintf(stdout, "%s %s = %s\n", prefix.c_str(), "frame_rate", std::to_string(params.frame_rate).c_str());
-    fprintf(stdout, "%s %s = %s\n", prefix.c_str(), "output_chroma_format", to_string(params.output_chroma_format).c_str());
     fprintf(stdout, "%s %s = 0x%x:0x%x\n", prefix.c_str(), "adapter_luid", params.adapter_luid.HighPart, params.adapter_luid.LowPart);
 
     ga_logger(Severity::INFO, "%s --- encode config:\n", prefix.c_str());
@@ -180,7 +179,6 @@ static void log_encode_params(const EncoderParams& params) {
     ga_logger(Severity::INFO, "%s %s = %s\n", prefix.c_str(), "target_bitrate", std::to_string(params.target_bitrate).c_str());
     ga_logger(Severity::INFO, "%s %s = %s\n", prefix.c_str(), "key_frame_interval", std::to_string(params.key_frame_interval).c_str());
     ga_logger(Severity::INFO, "%s %s = %s\n", prefix.c_str(), "frame_rate", std::to_string(params.frame_rate).c_str());
-    ga_logger(Severity::INFO, "%s %s = %s\n", prefix.c_str(), "output_chroma_format", to_string(params.output_chroma_format).c_str());
     ga_logger(Severity::INFO, "%s %s = 0x%x:0x%x\n", prefix.c_str(), "adapter_luid", params.adapter_luid.HighPart, params.adapter_luid.LowPart);
 }
 
