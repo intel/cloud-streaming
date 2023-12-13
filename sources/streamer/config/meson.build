@@ -31,3 +31,24 @@ if host_machine.system() == 'linux'
       ),
     install_dir : get_option('sysconfdir') / 'ga' / 'common')
 endif
+
+if host_machine.system() == 'windows' and build_machine.cpu_family() != 'x86'
+  install_data(
+    files(
+      'server.desktop.webRTC.conf',
+      'server.desktop.webRTC.hevc.conf',
+      'server.desktop.webRTC.av1.conf',
+      ),
+    install_dir : get_option('prefix') / 'config')
+  install_data(
+    files(
+      'common/audio-lame.conf',
+      'common/audio-opus.conf',
+      'common/audio-pcm.conf',
+      'common/controller.conf',
+      'common/server-common.conf',
+      'common/video-x264.conf',
+      'common/video-x264-param.conf',
+      ),
+    install_dir : get_option('prefix') / 'config' / 'common')
+endif

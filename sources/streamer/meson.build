@@ -32,10 +32,6 @@ if get_option('streamer').allowed()
   # report them in a summary as well.
   if (build_streamer)
     subdir('config')
-    if host_machine.system() == 'windows'
-      subdir('hook')
-      subdir('titan')
-    endif
     subdir('module')
   endif
 

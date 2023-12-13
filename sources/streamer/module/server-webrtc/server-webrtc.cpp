@@ -63,10 +63,12 @@ static int webrtc_server_init(void* arg) {
 
   size_t logSize = 2000000; // writes to a single file until 'max_total_log_size/2' bytes
 
-  std::string logDir = "C:\\Temp\\";
-  ga_logger(Severity::INFO, "webrtc_server_init owtLogLevel %d, directory %s, file size %d\n",
-      static_cast<int>(owtLogLevel), logDir.c_str(), logSize);
-  owt::base::Logging::LogToFileRotate(owtLogLevel, logDir, logSize);
+  const std::string logDir = "C:\\Temp\\";
+  ULONGLONG pid = GetCurrentProcessId();
+  const std::string prefix = "webrtc_" + std::to_string(pid);
+  ga_logger(Severity::INFO, "webrtc_server_init owtLogLevel %d, directory %s, prefix %s, file size %d\n", 
+      static_cast<int>(owtLogLevel), logDir.c_str(), prefix.c_str(), logSize);
+  owt::base::Logging::LogToFileRotate(owtLogLevel, logDir, prefix, logSize);
 #else
   owt::base::Logging::Severity(owtLogLevel);
 #endif

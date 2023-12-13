@@ -14,22 +14,27 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-if host_machine.system() == 'windows'
-  modules_install_dir = get_option('bindir') / 'mod'
-else
-  modules_install_dir = get_option('libdir') / 'ga'
-endif
+srcs = files(
+  'asource-system.cpp',
+  'ga-win32-wasapi.cpp',
+  )
 
-if host_machine.system() == 'windows'
-  subdir('asource-system')
-  subdir('ctrl-sdl')
-  if build_machine.cpu_family() != 'x86'
-    subdir('desktop-capture')
-  endif
-endif
+srcs += windows.compile_resources(
+  files('asource-system.rc'),
+  args : winres_args,
+  depend_files : [ cgver_file, files('resource.h') ],
+  depends : cgvcs_tgt,
+  )
 
-if host_machine.system() == 'linux'
-  subdir('irrv-receiver')
-endif
+cpp_args = ['-DGA_MODULE']
 
-subdir('server-webrtc')
+core_deps = [
+  cpp.find_library('ole32'),
+  ]
+
+shared_library('asource-system', srcs,
+  cpp_args: cpp_args,
+  dependencies: [core_deps, ga_dep],
+  install: true,
+  install_dir : modules_install_dir,
+  )

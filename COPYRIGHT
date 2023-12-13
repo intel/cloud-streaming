@@ -41,8 +41,16 @@ Files: sources/streamer/core/asource.cpp
        sources/streamer/core/ga-common.h
        sources/streamer/core/ga-module.cpp
        sources/streamer/core/vsource.cpp
+       sources/streamer/module/asource-system/asource-system.cpp
+       sources/streamer/module/asource-system/asource-system.h
+       sources/streamer/module/asource-system/ga-win32-wasapi.cpp
+       sources/streamer/module/asource-system/ga-win32-wasapi.h
+       sources/streamer/module/ctrl-sdl/ctrl-sdl.cpp
+       sources/streamer/module/ctrl-sdl/ctrl-sdl.h
        sources/streamer/server/periodic/ga-server-periodic.cpp
+       sources/streamer/server/screen-capture/screen-capture.cpp
 Copyright: Copyright (C) 2013-2014 Chun-Ying Huang
+           Copyright (C) 2022-2023 Intel Corporation
 License: BSD-3-clause
 
 Files: sources/apps/idd-setup-tool/PairIdd.cpp
@@ -55,8 +63,6 @@ Copyright: Copyright (C) Microsoft Corporation
 License: MS-PL
 
 License: Apache-2.0
- Copyright (C) 2022 Intel Corporation
-
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
