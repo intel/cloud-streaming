@@ -147,7 +147,6 @@ GEN_KB_MATCH_FUNC_PROTO(int, sdlkey);
 int sdlmsg_key_blocked(sdlmsg_t *msg);
 ////
 
-#ifdef WIN32
 __declspec(dllexport) sdlmsg_t* sdlmsg_keyboard(sdlmsg_t* msg,
                                                 unsigned char pressed,
                                                 unsigned short scancode,
@@ -169,21 +168,10 @@ __declspec(dllexport) sdlmsg_t* sdlmsg_mousemotion(sdlmsg_t *msg,
                                                 LONG rely,
                                                 unsigned char state,
                                                 int relativeMouseMode);
-#else
-sdlmsg_t* sdlmsg_keyboard(sdlmsg_t *msg, unsigned char pressed, unsigned short scancode, SDL_Keycode key, unsigned short mod, unsigned int unicode);
-sdlmsg_t* sdlmsg_mousewheel(sdlmsg_t *msg, unsigned short mousex, unsigned short mousey);
-sdlmsg_t* sdlmsg_mousekey(sdlmsg_t *msg, unsigned char pressed, unsigned char button, unsigned short x, unsigned short y);
-sdlmsg_t* sdlmsg_mousemotion(sdlmsg_t *msg, unsigned short mousex, unsigned short mousey, unsigned short relx, unsigned short rely, unsigned char state, int relativeMouseMode);
-
-#endif
 
 int sdlmsg_replay_init(void *arg);
 int sdlmsg_replay_deinit(void *arg);
-#ifdef WIN32
 __declspec(dllexport) int sdlmsg_replay(sdlmsg_t *msg);
-#else
-int sdlmsg_replay(sdlmsg_t *msg);
-#endif
 void sdlmsg_replay_callback(void *msg, int msglen);
 
 #endif /* __CTRL_SDL_H__ */
