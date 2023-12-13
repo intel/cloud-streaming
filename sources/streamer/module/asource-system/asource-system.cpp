@@ -1,4 +1,4 @@
-// Copyright (C) 2022 Intel Corporation
+// Copyright (C) 2022-2023 Intel Corporation
 
 /*
  * Copyright (c) 2013-2014 Chun-Ying Huang
@@ -24,35 +24,22 @@
 
 #include "ga-common.h"
 #include "ga-conf.h"
+#include "ga-module.h"
 #include "rtspconf.h"
 #include "asource.h"
-#include "asource-system.h"
 
 #ifdef ENABLE_AUDIO
 
-#ifdef WIN32
 #include "ga-win32-wasapi.h"
-#else
-#include "ga-alsa.h"
-#endif
 
 static int asource_initialized = 0;
 static int asource_started = 0;
 static std::thread asource_th;
 
-#ifdef WIN32
 static struct ga_wasapi_param audioparam;
-#else
-static struct ga_alsa_param audioparam;
-#endif
 
-#ifdef WIN32
 static int
 asource_init(void *arg, void(*p)(struct timeval))
-#else
-static int
-asource_init(void *arg)
-#endif
 {
     int delay = 0;
     struct RTSPConf *rtspconf = rtspconf_global();
@@ -66,10 +53,6 @@ asource_init(void *arg)
     audioparam.channels = rtspconf->audio_channels;
     audioparam.samplerate = rtspconf->audio_samplerate;
     if(rtspconf->audio_device_format == ga_sample_format::GA_SAMPLE_FMT_S16) {
-#ifdef WIN32
-#else
-        audioparam.format = SND_PCM_FORMAT_S16_LE;
-#endif
         audioparam.bits_per_sample = 16;
     } else {
         ga_logger(Severity::ERR, "audio source: unsupported audio format (%d).\n",
@@ -81,37 +64,13 @@ asource_init(void *arg)
             rtspconf->audio_device_channel_layout);
         return -1;
     }
-#ifdef WIN32
     if(ga_wasapi_init(&audioparam) < 0) {
         ga_logger(Severity::ERR, "WASAPI: initialization failed.\n");
         return -1;
     }
-#else
-    if((audioparam.handle = ga_alsa_init(&audioparam.sndlog)) == NULL) {
-        ga_logger(Severity::ERR, "ALSA: initialization failed.\n");
-        return -1;
-    }
-    if(ga_alsa_set_param(&audioparam) < 0) {
-        ga_alsa_close(audioparam.handle, audioparam.sndlog);
-        ga_logger(Severity::ERR, "ALSA: cannot set parameters\n");
-        return -1;
-    }
-    do {
-        snd_pcm_sframes_t delay;
-        if(snd_pcm_delay(audioparam.handle, &delay) == 0) {
-            ga_logger(Severity::INFO, "ALSA init: pcm delay = %d\n", delay);
-        } else {
-            ga_logger(Severity::INFO, "ALSA init: unable to retrieve pcm delay\n");
-        }
-    } while(0);
-#endif
     if(audio_source_setup(audioparam.chunk_size, audioparam.samplerate, audioparam.bits_per_sample, audioparam.channels) < 0) {
         ga_logger(Severity::ERR, "audio source: setup failed.\n");
-#ifdef WIN32
         ga_wasapi_close(&audioparam);
-#else
-        ga_alsa_close(audioparam.handle, audioparam.sndlog);
-#endif
         return -1;
     }
     asource_initialized = 1;
@@ -128,15 +87,9 @@ asource_threadproc() {
     int r;
     unsigned char *fbuffer = NULL;
     //
-#ifdef WIN32
     if(asource_init(NULL, NULL) < 0) {
         exit(-1);
     }
-#else
-        if(asource_init(NULL) < 0) {
-        exit(-1);
-    }
-#endif
     if((fbuffer = (unsigned char*) malloc(audioparam.chunk_bytes)) == NULL) {
         ga_logger(Severity::ERR, "audio source: malloc failed %d bytes\n", audioparam.chunk_bytes);
         exit(-1);
@@ -145,23 +98,11 @@ asource_threadproc() {
     ga_logger(Severity::INFO, "audio source thread started: tid=%ld\n", ga_gettid());
     //
     while(asource_started != 0) {
-#ifdef WIN32
         r = ga_wasapi_read(&audioparam, fbuffer, audioparam.chunk_size);
         if(r < 0) {
             ga_logger(Severity::ERR, "audio source: WASAPI read failed.\n");
             break;
         }
-#else
-        r = snd_pcm_readi(audioparam.handle, fbuffer, audioparam.chunk_size);
-        if(r == -EAGAIN) {
-            snd_pcm_wait(audioparam.handle, 1000);
-            continue;
-        } else if(r < 0) {
-            ga_logger(Severity::ERR, "audio source: ALSA read failed - %s\n",
-                snd_strerror(r));
-            break;
-        }
-#endif
         audio_source_buffer_fill(fbuffer, r);
     }
     //
@@ -172,11 +113,7 @@ asource_threadproc() {
 
 static int
 asource_deinit(void *arg) {
-#ifdef WIN32
     ga_wasapi_close(&audioparam);
-#else
-    ga_alsa_close(audioparam.handle, audioparam.sndlog);
-#endif
     asource_initialized = 0;
     return 0;
 }

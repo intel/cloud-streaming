@@ -42,7 +42,6 @@ Files: sources/streamer/core/asource.cpp
        sources/streamer/core/ga-module.cpp
        sources/streamer/core/vsource.cpp
        sources/streamer/module/asource-system/asource-system.cpp
-       sources/streamer/module/asource-system/asource-system.h
        sources/streamer/module/asource-system/ga-win32-wasapi.cpp
        sources/streamer/module/asource-system/ga-win32-wasapi.h
        sources/streamer/module/ctrl-sdl/ctrl-sdl.cpp
