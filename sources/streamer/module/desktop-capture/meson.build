@@ -14,22 +14,24 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-if host_machine.system() == 'windows'
-  modules_install_dir = get_option('bindir') / 'mod'
-else
-  modules_install_dir = get_option('libdir') / 'ga'
-endif
+srcs = files(
+  'cursor-sender.cpp',
+  'cursor-sender.h',
+  'desktop-capture.cpp',
+  )
 
-if host_machine.system() == 'windows'
-  subdir('asource-system')
-  subdir('ctrl-sdl')
-  if build_machine.cpu_family() != 'x86'
-    subdir('desktop-capture')
-  endif
-endif
+srcs += windows.compile_resources(
+  files('desktop-capture.rc'),
+  args : winres_args,
+  depend_files : [ cgver_file, files('resource.h') ],
+  depends : cgvcs_tgt,
+  )
 
-if host_machine.system() == 'linux'
-  subdir('irrv-receiver')
-endif
+cpp_args = ['-DGA_MODULE', '-DNOMINMAX']
 
-subdir('server-webrtc')
+shared_library('desktop-capture', srcs,
+  cpp_args : cpp_args,
+  dependencies: [ga_dep, capture_dep],
+  install : true,
+  install_dir : modules_install_dir,
+  )

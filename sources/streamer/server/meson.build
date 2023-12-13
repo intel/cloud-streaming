@@ -17,3 +17,9 @@
 if host_machine.system() == 'linux'
   subdir('periodic')
 endif
+
+if host_machine.system() == 'windows'
+  if build_machine.cpu_family() != 'x86'
+    subdir('screen-capture')
+  endif
+endif

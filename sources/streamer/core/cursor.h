@@ -61,4 +61,15 @@ struct CURSOR_DATA {
 EXPORT int queue_cursor(const CURSOR_INFO& info, const uint8_t *pBuffer, uint32_t nLen);
 #endif
 
+#ifdef WIN32
+struct CursorDesc {
+    bool visible;
+    bool shape_present;
+    BITMAP mask = {};
+    BITMAP color = {};
+    std::vector<unsigned char> mask_data;
+    std::vector<unsigned char> color_data;
+};
+#endif // WIN32
+
 #endif

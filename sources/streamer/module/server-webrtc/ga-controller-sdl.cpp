@@ -237,42 +237,6 @@ ga::webrtc::SdlController::ConvertToSdlMessage(const std::string &json_message, 
                              key_code, 0, 0);
     }
     return nullptr;
-  } else if (event_type == "vjoykeydown" || event_type == "vjoykeyup") {
-      json event_param = j["data"]["parameters"];
-      unsigned int which = event_param["which"];//0-15
-      int status = (event_type == "vjoykeydown" ? 1 : 0);
-
-      return sdlmsg_vjoykey(m, (event_type == "vjoykeydown" ? 1 : 0), which);
-  } else if (event_type == "vjoylstick" || event_type == "vjoyrstick") {
-      double x, y;
-      json event_param = j["data"]["parameters"];
-      if (event_type == "vjoylstick")
-      {
-          x = event_param["lx"];
-          y = event_param["ly"];
-      }
-      else
-      {
-          x = event_param["rx"];
-          y = event_param["ry"];
-      }
-
-      return sdlmsg_vjoystick(m, (event_type == "vjoyrstick" ? 1 : 0), x, y);
-  } else if (event_type == "vjoyltrigger" || event_type == "vjoyrtrigger") {
-      double trigger;
-      json event_param = j["data"]["parameters"];
-      if (event_type == "vjoyltrigger")
-      {
-          trigger = event_param["trigger"];
-          //ga_logger(Severity::INFO, "vjoyltrigger: trigger = %.5f\n", trigger);
-      }
-      else
-      {
-          trigger = event_param["trigger"];
-          //ga_logger(Severity::INFO, "vjoyrtrigger: trigger = %.5f\n", trigger);
-      }
-
-      return sdlmsg_vjoytrigger(m, (event_type == "vjoyrtrigger" ? 1 : 0), trigger);
   }
   else if (event_type == "sizechange") {
     // Render target size changed. Update screen size for mouse position calculations.

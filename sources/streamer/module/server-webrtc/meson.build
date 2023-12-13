@@ -36,6 +36,13 @@ if host_machine.system() == 'windows'
     'ga-audio-input.cpp',
     'ga-controller-sdl.cpp',
     )
+
+  srcs += windows.compile_resources(
+    files('server-webrtc.rc'),
+    args : winres_args,
+    depend_files : [ cgver_file, files('resource.h') ],
+    depends : cgvcs_tgt,
+    )
 endif
 
 if host_machine.system() == 'linux'
@@ -64,6 +71,7 @@ cpp_args = ['-DGA_MODULE', '-DOWT_CG_SERVER']
 inc_dirs = []
 if host_machine.system() == 'windows'
   cpp_args += ['-DWEBRTC_WIN']
+  deps += ctrl_sdl_dep
   deps += cpp.find_library('iphlpapi')
 else
   cpp_args += ['-DWEBRTC_LINUX', '-DWEBRTC_POSIX']

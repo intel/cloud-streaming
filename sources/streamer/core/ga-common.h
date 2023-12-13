@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <cstdint>
 #include <string>
+#include <vector>
 
 #ifndef WIN32
 #include <sys/time.h>
@@ -74,17 +75,43 @@ struct gaRect {
     int size;
 };
 
-#define CURSOR_EVENT_SEND_CURSOR         1
-#define CURSOR_EVENT_CLIENT_CONNECT      2
-#define CURSOR_EVENT_CLIENT_DISCONNECT   3
-struct ServerConfig {
-    void *prect;
+struct CursorDesc; // forward decl
+
 #ifdef WIN32
-    HWND(*pHookInput)(INPUT in, int size);
-    void(*pHookClientStatus)(bool status);
-#endif
-    void(*pRequestKeyCursor)(int event);
+
+/**
+ * @brief      Return cursor state, if timeout is 0 return state immediately,
+ *             otherwise wait for a state change
+ *
+ * @param      cursor_desc  cursor state description
+ * @param[in]  timeout_ms   timeout interval in milliseconds
+ *
+ * @return     WAIT_OBJECT_0, on success
+ *             WAIT_TIMEOUT, if timeout interval elapsed, and changes to state
+ *             WAIT_FAILED, on failure
+ */
+typedef DWORD (WINAPI* PFN_callback_capture_cursor)(CursorDesc* cursor_desc, DWORD timeout_ms);
+
+/**
+ * @brief      Callback for received input event
+ *
+ * @param[in]  input      input desc
+ *
+ * @return     app window handle
+ */
+typedef HWND (WINAPI* PFN_callback_on_input_received)(INPUT* input);
+
+#endif // WIN32
+
+struct ServerConfig {
+    void *prect = nullptr;
+#ifdef WIN32
+    PFN_callback_capture_cursor capture_cursor = nullptr;
+    PFN_callback_on_input_received on_input_received = nullptr;
+    void(*pHookClientStatus)(bool status) = nullptr;
+#endif // WIN32
 };
+
 struct gaImage {
     int width;
     int height;
