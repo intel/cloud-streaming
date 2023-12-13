@@ -86,15 +86,13 @@ static int screenNumber = 0;
 
 static bool keymap_initialized = false;
 static void SDLKeyToKeySym_init();
-#if 1    // only support SDL2
+
 static map<int, KeySym> keymap;
 static KeySym SDLKeyToKeySym(int sdlkey);
-#endif
 
 static struct gaRect *prect = NULL;
 static struct gaRect croprect;
 
-#if 1
 // only support SDL2: remap key codes 1.2 -> 2.0
 #define    SDLK_KP0    SDLK_KP_0
 #define    SDLK_KP1    SDLK_KP_1
@@ -116,7 +114,6 @@ static struct gaRect croprect;
 //#define SDLK_COMPOSE
 //#define SDLK_PRINT
 #define SDLK_BREAK    SDLK_PRINTSCREEN
-#endif
 
 sdlmsg_t *
 sdlmsg_ntoh(sdlmsg_t *msg) {
@@ -151,18 +148,6 @@ sdlmsg_ntoh(sdlmsg_t *msg) {
         break;
 
     }
-#if 0
-#if 1    // only support SDL2
-    if(msg->scancode)    msg->scancode = ntohs(msg->scancode);
-    if(msg->sdlkey)        msg->sdlkey = (int) ntohl(msg->sdlkey);
-    if(msg->unicode)    msg->unicode = ntohl(msg->unicode);
-#endif
-    if(msg->sdlmod)        msg->sdlmod = ntohs(msg->sdlmod);
-    if(msg->mousex)        msg->mousex = ntohs(msg->mousex);
-    if(msg->mousey)        msg->mousey = ntohs(msg->mousey);
-    if(msg->mouseRelX)    msg->mouseRelX = ntohs(msg->mouseRelX);
-    if(msg->mouseRelY)    msg->mouseRelY = ntohs(msg->mouseRelY);
-#endif
     return msg;
 }
 
@@ -175,11 +160,9 @@ sdlmsg_keyboard(sdlmsg_t *msg, unsigned char pressed, unsigned short scancode, S
     msgk->msgsize = htons(sizeof(sdlmsg_keyboard_t));
     msgk->msgtype = SDL_EVENT_MSGTYPE_KEYBOARD;
     msgk->is_pressed = pressed;
-#if 1    // only support SDL2
     msgk->scancode = htons(scancode);
     msgk->sdlkey = htonl(key);
     msgk->unicode = htonl(unicode);
-#endif
     msgk->sdlmod = htons(mod);
     return msg;
 }
@@ -198,7 +181,6 @@ sdlmsg_mousekey(sdlmsg_t *msg, unsigned char pressed, unsigned char button, unsi
     return msg;
 }
 
-#if 1    // only support SDL2
 sdlmsg_t *
 sdlmsg_mousewheel(sdlmsg_t *msg, unsigned short mousex, unsigned short mousey) {
     sdlmsg_mouse_t *msgm = (sdlmsg_mouse_t*) msg;
@@ -210,7 +192,6 @@ sdlmsg_mousewheel(sdlmsg_t *msg, unsigned short mousex, unsigned short mousey) {
     msgm->mousey = htons(mousey);
     return msg;
 }
-#endif
 
 #ifdef WIN32
 sdlmsg_t*
@@ -900,11 +881,6 @@ sdlmsg_replay_native(sdlmsg_t *msg) {
             XSync(display, True);
             XTestGrabControl(display, False);
         }
-#if 0
-        ga_logger(Severity::INFO, "sdl replayer: received key scan=%u(%04x) key=%u(%04x) mod=%u(%04x) pressed=%d\n",
-            msg->scancode, msg->scancode, msg->sdlkey, msg->sdlkey, msg->sdlmod, msg->sdlmod,
-            msg->is_pressed);
-#endif
         //////////////////
         } else {
         ////////////////
@@ -1191,10 +1167,6 @@ SDLKeyToKeySym_init() {
     //keymap[SDLK_SYSREQ]    = XK_Sys_Req;    //        = 317,
     //keymap[SDLK_PRINTSCREEN]    = VK_CANCEL;    //        = 318,
     keymap[SDLK_MENU]    = VK_MENU;    //        = 319,
-#if 0
-    SDLK_POWER        = 320,        /**< Power Macintosh power key */
-    SDLK_EURO        = 321,        /**< Some european keyboards */
-#endif
     //keymap[SDLK_UNDO]    = XK_Undo;    //        = 322,        /**< Atari keyboard has Undo */
     //
     keymap_initialized = true;
@@ -1362,10 +1334,6 @@ SDLKeyToKeySym_init() {
     //keymap[SDLK_SYSREQ]    = XK_Sys_Req;    //        = 317,
     //keymap[SDLK_BREAK]    = VK_CANCEL;    //        = 318,
     //keymap[SDLK_MENU]    = VK_MENU;    //        = 319,
-#if 0
-    SDLK_POWER        = 320,        /**< Power Macintosh power key */
-    SDLK_EURO        = 321,        /**< Some european keyboards */
-#endif
     //keymap[SDLK_UNDO]    = XK_Undo;    //        = 322,        /**< Atari keyboard has Undo */
     //
     keymap_initialized = true;
@@ -1465,10 +1433,6 @@ SDLKeyToKeySym_init() {
     keymap[SDLK_SYSREQ]    = XK_Sys_Req;    //        = 317,
     keymap[SDLK_BREAK]    = XK_Break;    //        = 318,
     keymap[SDLK_MENU]    = XK_Menu;    //        = 319,
-#if 0
-    SDLK_POWER        = 320,        /**< Power Macintosh power key */
-    SDLK_EURO        = 321,        /**< Some european keyboards */
-#endif
     keymap[SDLK_UNDO]    = XK_Undo;    //        = 322,        /**< Atari keyboard has Undo */
     //
     keymap_initialized = true;

@@ -50,31 +50,6 @@ struct sdlmsg_s {
     uint64_t latency_msg; // E2ELatency message
     unsigned char reserved[8];
 #endif
-#if 0
-    unsigned char is_pressed;    // for keyboard/mousekey
-    unsigned char mousebutton;    // mouse button
-    unsigned char mousestate;    // mouse state - key combinations for motion
-#if 1    // only support SDL2
-    unsigned char unused1;        // padding - 3+1 chars
-    unsigned short scancode;    // keyboard scan code
-    int sdlkey;            // SDLKey value
-    unsigned int unicode;        // unicode or ASCII value
-#endif
-    unsigned short sdlmod;        // SDLMod value
-#ifdef WIN32
-    LONG mousex;        // mouse position (big-endian)
-    LONG mousey;        // mouse position (big-endian)
-    LONG mouseRelX;    // mouse relative position (big-endian)
-    LONG mouseRelY;    // mouse relative position (big-endian)
-#else
-    unsigned short mousex;        // mouse position (big-endian)
-    unsigned short mousey;        // mouse position (big-endian)
-    unsigned short mouseRelX;    // mouse relative position (big-endian)
-    unsigned short mouseRelY;    // mouse relative position (big-endian)
-#endif
-    unsigned char relativeMouseMode;// relative mouse mode?
-    unsigned char padding[8];    // reserved padding
-#endif
 }
 #if defined(WIN32) && !defined(MSYS)
 #pragma pack(pop)
@@ -173,7 +148,6 @@ int sdlmsg_key_blocked(sdlmsg_t *msg);
 ////
 
 #ifdef WIN32
-#if 1    // only support SDL2
 __declspec(dllexport) sdlmsg_t* sdlmsg_keyboard(sdlmsg_t* msg,
                                                 unsigned char pressed,
                                                 unsigned short scancode,
@@ -183,7 +157,6 @@ __declspec(dllexport) sdlmsg_t* sdlmsg_keyboard(sdlmsg_t* msg,
 __declspec(dllexport) sdlmsg_t* sdlmsg_mousewheel(sdlmsg_t* msg,
                                                   unsigned short mousex,
                                                   unsigned short mousey);
-#endif
 __declspec(dllexport) sdlmsg_t* sdlmsg_mousekey(sdlmsg_t* msg,
                                                 unsigned char pressed,
                                                 unsigned char button,
@@ -197,22 +170,15 @@ __declspec(dllexport) sdlmsg_t* sdlmsg_mousemotion(sdlmsg_t *msg,
                                                 unsigned char state,
                                                 int relativeMouseMode);
 #else
-#if 1    // only support SDL2
 sdlmsg_t* sdlmsg_keyboard(sdlmsg_t *msg, unsigned char pressed, unsigned short scancode, SDL_Keycode key, unsigned short mod, unsigned int unicode);
 sdlmsg_t* sdlmsg_mousewheel(sdlmsg_t *msg, unsigned short mousex, unsigned short mousey);
-#endif
 sdlmsg_t* sdlmsg_mousekey(sdlmsg_t *msg, unsigned char pressed, unsigned char button, unsigned short x, unsigned short y);
 sdlmsg_t* sdlmsg_mousemotion(sdlmsg_t *msg, unsigned short mousex, unsigned short mousey, unsigned short relx, unsigned short rely, unsigned char state, int relativeMouseMode);
 
 #endif
 
-#if 0
-MODULE MODULE_EXPORT int sdlmsg_replay_init(void *arg);
-MODULE MODULE_EXPORT void sdlmsg_replay_deinit(void *arg);
-#else
 int sdlmsg_replay_init(void *arg);
 int sdlmsg_replay_deinit(void *arg);
-#endif
 #ifdef WIN32
 __declspec(dllexport) int sdlmsg_replay(sdlmsg_t *msg);
 #else
