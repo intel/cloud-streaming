@@ -65,6 +65,8 @@ srcs = files(
   'frame.h',
   'surface-pool.h',
   'surface.h',
+  'telemetry-manager.cpp',
+  'telemetry-manager.h',
   'video-processor.cpp',
   'video-processor.h',
   )

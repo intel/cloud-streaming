@@ -26,6 +26,7 @@
 
 #include "dt-capture.h"
 #include "cursor-sender.h"
+#include "telemetry-manager.h"
 
 class BitstreamWriter; // forward decl
 
@@ -33,6 +34,7 @@ namespace {
     std::unique_ptr<DTCapture> capture_object;
     std::unique_ptr<CursorSender> cursor_sender;
     std::unique_ptr<BitstreamWriter> bitstream_writer;
+    std::unique_ptr<TelemetryManager> telemetry_object;
 } // namespace
 
 static HRESULT convert_utf8_to_utf16(const std::string& src, std::wstring& dst) {
@@ -96,6 +98,9 @@ private:
 };
 
 static void send_packet(const Packet& packet) {
+    using namespace std::chrono;
+    using namespace std::chrono_literals;
+
     if (packet.data.empty())
         return; // no data to send - return
 
@@ -115,6 +120,13 @@ static void send_packet(const Packet& packet) {
         ? GA_PKT_FLAG_KEY
         : 0;
 
+    // update frame stats
+    TelemetryManager::FrameStatistics frame_stats = {};
+    if (telemetry_object) {
+        telemetry_object->update_frame_statistics(packet);
+        telemetry_object->frame_statistics(frame_stats);
+    }
+
     // allocate side data
     uint8_t* pkt_side_data = ga_packet_new_side_data(&pkt, ga_packet_side_data_type::GA_PACKET_DATA_NEW_EXTRADATA, sizeof(FrameMetaData));
     if (pkt_side_data == nullptr) {
@@ -124,18 +136,16 @@ static void send_packet(const Packet& packet) {
 
     FrameMetaData* pkt_meta_data = reinterpret_cast<FrameMetaData*>(pkt_side_data);
 
-    // [todo] telemetry support
+    *pkt_meta_data = {};
     pkt_meta_data->last_slice = true;
-    pkt_meta_data->capture_time_ms = 0;
-    pkt_meta_data->encode_start_ms = 0;
-    pkt_meta_data->encode_end_ms = 0;
-#ifdef E2ELATENCY_TELEMETRY_ENABLED
-    pkt_meta_data->latency_msg_size = 0;
-    pkt_meta_data->latency_msg_data = nullptr;
-#endif
+
+    if (telemetry_object) {
+        pkt_meta_data->capture_time_ms = duration_cast<milliseconds>(frame_stats.capture_start_ts.time_since_epoch()).count();
+        pkt_meta_data->encode_start_ms = duration_cast<milliseconds>(frame_stats.encode_start_ts.time_since_epoch()).count();
+        pkt_meta_data->encode_end_ms = duration_cast<milliseconds>(frame_stats.encode_end_ts.time_since_epoch()).count();
+    }
 
     // packet timestamp
-    // [fixme] should be encoder timestamp
     struct timeval pkttv;
     gettimeofday(&pkttv, nullptr);
 
@@ -149,6 +159,24 @@ static void send_packet(const Packet& packet) {
     if (send_result < 0) {
         ga_logger(Severity::ERR, __FUNCTION__ ": encoder_send_packet failed\n");
         return;
+    }
+
+    // send qos
+    if (telemetry_object) {
+        QosInfo qos_info = {};
+        qos_info.frameno = static_cast<unsigned int>(frame_stats.frame_num);
+        auto client_ts = telemetry_object->client_timestamp();
+        const int64_t client_ts_sec = duration_cast<seconds>(client_ts.time_since_epoch()).count();
+        const int64_t client_ts_usec = duration_cast<microseconds>(client_ts.time_since_epoch()).count();
+        const int64_t client_ts_rem = client_ts_usec - duration_cast<microseconds>(seconds(client_ts_sec)).count();
+        qos_info.eventime.tv_sec = client_ts_sec;
+        qos_info.eventime.tv_usec = client_ts_rem;
+        qos_info.framesize = static_cast<unsigned int>(frame_stats.frame_size);
+        auto frame_delay = frame_stats.encode_end_ts - frame_stats.capture_start_ts;
+        auto encode_time = frame_stats.encode_end_ts - frame_stats.encode_start_ts;
+        qos_info.capturetime = static_cast<double>(duration_cast<microseconds>(frame_delay).count());
+        qos_info.encodetime = static_cast<double>(duration_cast<microseconds>(encode_time).count());
+        queue_qos(qos_info);
     }
 }
 
@@ -311,6 +339,38 @@ static HRESULT setup_bitstream_dump_config(BitstreamWriterParams& params) {
     return S_OK;
 }
 
+static HRESULT setup_server_telemetry_config(TelemetryManagerParams& params) {
+    params = {};
+
+    std::string frame_stats_filename_utf8 = ga_conf_readstr("video-stats-file");
+    if (!frame_stats_filename_utf8.empty()) {
+        // replace 'PID' with current process id
+        frame_stats_filename_utf8 = ga_compose_logname(frame_stats_filename_utf8);
+        std::wstring filename_utf16;
+        HRESULT result = convert_utf8_to_utf16(frame_stats_filename_utf8, filename_utf16);
+        if (FAILED(result)) {
+            ga_logger(Severity::ERR, __FUNCTION__ ": convert_utf8_to_utf16 failed for video stats filename\n");
+            return E_FAIL;
+        }
+        params.frame_statistics_filename = filename_utf16;
+    }
+
+    std::string client_stats_filename_utf8 = ga_conf_readstr("client-stats-file");
+    if (!client_stats_filename_utf8.empty()) {
+        // replace 'PID' with current process id
+        client_stats_filename_utf8 = ga_compose_logname(client_stats_filename_utf8);
+        std::wstring filename_utf16;
+        HRESULT result = convert_utf8_to_utf16(client_stats_filename_utf8, filename_utf16);
+        if (FAILED(result)) {
+            ga_logger(Severity::ERR, __FUNCTION__ ": convert_utf8_to_utf16 failed for video stats filename\n");
+            return E_FAIL;
+        }
+        params.client_statistics_filename = filename_utf16;
+    }
+
+    return S_OK;
+}
+
 static std::string to_string(DTCaptureParams::OutputFormat format) {
     switch (format) {
     case DTCaptureParams::OutputFormat::rgb:
@@ -373,6 +433,29 @@ static void log_bitstream_dump_config(const BitstreamWriterParams& params) {
         ga_logger(Severity::INFO, "%s %s = %s\n", prefix.c_str(), "bitstream_filename", params.bitstream_filename.string().c_str());
 }
 
+static void log_server_telemetry_config(const TelemetryManagerParams& params) {
+    const std::string prefix = "desktop-capture:";
+
+    bool frame_stats_enabled = telemetry_object != nullptr && !params.frame_statistics_filename.empty();
+    bool client_stats_enabled = telemetry_object != nullptr && !params.client_statistics_filename.empty();
+
+    fprintf(stdout, "%s --- server telemetry config:\n", prefix.c_str());
+    fprintf(stdout, "%s %s = %s\n", prefix.c_str(), "dump_server_frame_statistics", (frame_stats_enabled ? "yes" : "no"));
+    if (!params.frame_statistics_filename.empty())
+        fprintf(stdout, "%s %s = %s\n", prefix.c_str(), "server_frame_statistics_filename", params.frame_statistics_filename.string().c_str());
+    fprintf(stdout, "%s %s = %s\n", prefix.c_str(), "dump_client_statistics", (client_stats_enabled ? "yes" : "no"));
+    if (!params.client_statistics_filename.empty())
+        fprintf(stdout, "%s %s = %s\n", prefix.c_str(), "client_statistics_filename", params.client_statistics_filename.string().c_str());
+
+    ga_logger(Severity::INFO, "%s --- server telemetry config:\n", prefix.c_str());
+    ga_logger(Severity::INFO, "%s %s = %s\n", prefix.c_str(), "dump_server_frame_statistics", (frame_stats_enabled ? "yes" : "no"));
+    if (!params.frame_statistics_filename.empty())
+        ga_logger(Severity::INFO, "%s %s = %s\n", prefix.c_str(), "server_frame_statistics_filename", params.frame_statistics_filename.string().c_str());
+    ga_logger(Severity::INFO, "%s %s = %s\n", prefix.c_str(), "dump_client_statistics", (client_stats_enabled ? "yes" : "no"));
+    if (!params.client_statistics_filename.empty())
+        ga_logger(Severity::INFO, "%s %s = %s\n", prefix.c_str(), "client_statistics_filename", params.client_statistics_filename.string().c_str());
+}
+
 static int desktop_capture_init(void *arg, void(*p)(struct timeval)) {
     ga_logger(Severity::INFO, "desktop-capture : module init\n");
 
@@ -429,6 +512,22 @@ static int desktop_capture_init(void *arg, void(*p)(struct timeval)) {
 
     log_bitstream_dump_config(bitstream_writer_params);
 
+    // server-side telemetry
+    TelemetryManagerParams telemetry_params = {};
+    result = setup_server_telemetry_config(telemetry_params);
+    if (FAILED(result)) {
+        ga_logger(Severity::ERR, __FUNCTION__ ": setup_server_telemetry_config failed, result = 0x%08x\n", result);
+        return -1;
+    }
+
+    telemetry_object = TelemetryManager::create(telemetry_params);
+    if (telemetry_object == nullptr) {
+        ga_logger(Severity::ERR, __FUNCTION__ ": TelemetryManager->create() failed\n");
+        return -1;
+    }
+
+    log_server_telemetry_config(telemetry_params);
+
     return 0;
 }
 
@@ -483,8 +582,36 @@ static int desktop_capture_ioctl(int command, int argsize, void *arg) {
         if (cursor_sender)
             cursor_sender->on_resend_cursor();
         break;
-    case GA_IOCTL_UPDATE_CLIENT_EVENT:
-    case GA_IOCTL_UPDATE_FRAME_STATS:
+    case GA_IOCTL_UPDATE_CLIENT_EVENT: {
+        if (argsize != sizeof(ga_ioctl_clevent_t))
+            return GA_IOCTL_ERR_INVALID_ARGUMENT;
+
+        ga_ioctl_clevent_t* e = reinterpret_cast<ga_ioctl_clevent_t*>(arg);
+        if (e != nullptr && telemetry_object != nullptr) {
+            using namespace std::chrono;
+            using namespace std::chrono_literals;
+            using time_point_t = TelemetryManager::time_point_t;
+            using duration_t = TelemetryManager::duration_t;
+            const time_point_t client_timestamp(seconds(e->timeevent.tv_sec)
+                + microseconds(e->timeevent.tv_usec));
+            telemetry_object->update_client_timestamp(client_timestamp);
+        }
+    } break;
+    case GA_IOCTL_UPDATE_FRAME_STATS: {
+        if (argsize != sizeof(ga_ioctl_framestats_t))
+            return GA_IOCTL_ERR_INVALID_ARGUMENT;
+
+        ga_ioctl_framestats_t* s = reinterpret_cast<ga_ioctl_framestats_t*>(arg);
+        if (s != nullptr && telemetry_object != nullptr) {
+            TelemetryManager::ClientStatistics stats = {};
+            stats.frame_ts = s->frame_ts;
+            stats.frame_size = s->frame_size;
+            stats.frame_delay = s->frame_delay;
+            stats.frame_start_delay = s->frame_start_delay;
+            stats.packet_loss = s->packet_loss;
+            telemetry_object->update_client_statistics(stats);
+        }
+    } break;
     case GA_IOCTL_SET_MAX_BPS:
         /* do nothing */
         break;
@@ -501,6 +628,7 @@ static int desktop_capture_release(void *arg) {
     capture_object.reset();
     cursor_sender.reset();
     bitstream_writer.reset();
+    telemetry_object.reset();
 
     ga_logger(Severity::INFO, "desktop-capture : module release\n");
     return 0;
