@@ -190,6 +190,11 @@ private:
         const DXGI_OUTDUPL_POINTER_SHAPE_INFO& shape_info, const std::vector<uint8_t>& shape_data);
 
 private:
+    // frame event timescale
+    using clock_t = FrameTimingInfo::clock_t;
+    using duration_t = FrameTimingInfo::duration_t;
+    using time_point_t = FrameTimingInfo::time_point_t;
+
     // selected output display device and desc
     std::wstring m_device_name;
     CComPtr<IDXGIAdapter> m_adapter;

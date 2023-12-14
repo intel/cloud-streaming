@@ -183,7 +183,7 @@ HRESULT AVQSVEncoder::init_av_context(uint32_t frame_width, uint32_t frame_heigh
     av_context->gop_size = enc_params.key_frame_interval;
     av_context->max_b_frames = 0;
     // frame rate
-    av_context->time_base = { 1, enc_params.frame_rate };
+    av_context->time_base = { time_base_tick_t::period::num, time_base_tick_t::period::den };
     av_context->framerate = { enc_params.frame_rate, 1 };
     // quality preset
     av_opt_set(av_context->priv_data, "preset", "medium", 0);
@@ -644,11 +644,16 @@ HRESULT AVQSVEncoder::copy_src_surface_to_encode(ID3D11Texture2D* dst, ID3D11Tex
 }
 
 HRESULT AVQSVEncoder::encode_frame(Frame* frame) {
+    using namespace std::chrono;
+
     // check input args
     if (frame == nullptr) {
         ga_logger(Severity::ERR, __FUNCTION__ ": frame is nullptr\n");
         return E_INVALIDARG;
     }
+
+    // encode submit start timestamp
+    auto encode_start_ts = clock_t::now();
 
     Surface* src_surface = frame->get_surface();
     if (src_surface == nullptr) {
@@ -779,6 +784,18 @@ HRESULT AVQSVEncoder::encode_frame(Frame* frame) {
         av_frame->pict_type = AV_PICTURE_TYPE_P;
     }
 
+    // encode submit end timestamp
+    auto encode_end_ts = clock_t::now();
+
+    // update frame timing info
+    {
+        auto& timing_info = frame->get_timing_info();
+        timing_info.encode_start_ts = encode_start_ts;
+        timing_info.encode_end_ts = encode_end_ts;
+        // set presentation timestamp for AVFrame
+        av_frame->pts = duration_cast<time_base_tick_t>(timing_info.presentation_ts.time_since_epoch()).count();
+    }
+
     // encode frame
     av_error = avcodec_send_frame(m_av_context.get(), av_frame.get());
     if (av_error < 0) {
@@ -802,9 +819,23 @@ HRESULT AVQSVEncoder::encode_frame(Frame* frame) {
 
             // push packet to queue
             Packet packet = {};
+            // set encoded frame data
             packet.data.assign(av_packet->data, av_packet->data + av_packet->size);
             if (av_packet->flags & AV_PKT_FLAG_KEY)
                 packet.flags = Packet::flag_keyframe;
+            /**
+             * NOTE: async_depth shall be equal to 1, otherwise encoded frame timings will be invalid.
+             * To support correct timings for async_depth > 1, qsv encoder plugin must have
+             * AV_CODEC_CAP_ENCODER_REORDERED_OPAQUE capability which is currently not supported (as of v6.1).
+             * If this cap is supported timing info shall be passed in AVFrame->opaque_ref so
+             * output packet will have AVPacket->opaque_ref set.
+             */
+            // set encoded frame timings
+            auto& timing_info = frame->get_timing_info();
+            // update encode end timestamp to encode finish time
+            timing_info.encode_end_ts = clock_t::now();
+            // copy input frame timings to encoded frame packet
+            packet.timing_info = timing_info;
             m_packet_queue.push_back(packet);
         }
     }

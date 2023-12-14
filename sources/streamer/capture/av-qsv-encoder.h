@@ -191,6 +191,13 @@ private:
     HRESULT copy_src_surface_to_encode(ID3D11Texture2D* dst, ID3D11Texture2D* src);
 
 private:
+    // frame event timescale
+    using clock_t = FrameTimingInfo::clock_t;
+    using duration_t = FrameTimingInfo::duration_t;
+    using time_point_t = FrameTimingInfo::time_point_t;
+    // use RTP clock rate of 90khz for bitstream timestamps
+    using time_base_tick_t = std::chrono::duration<duration_t::rep, std::ratio<1, 90000>>;
+
     // encoder parameters
     EncoderParams m_desc = {};
 
