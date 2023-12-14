@@ -1080,6 +1080,9 @@ HRESULT VideoProcessor::process_frame() {
     if (src_frame == nullptr)
         return S_OK; // nothing to process - return
 
+    // save timing info to pass to output frame
+    auto src_timing_info = src_frame->get_timing_info();
+
     // get source surface
     Surface* src_surface = src_frame->get_surface();
     if (src_surface == nullptr)
@@ -1318,6 +1321,12 @@ HRESULT VideoProcessor::process_frame() {
 
     // update processed frame
     m_processed_frame = Frame::create(std::move(dst_surface), m_output_surface_pool);
+    if (m_processed_frame) {
+        // copy timings for output frame
+        auto& dst_timing_info = m_processed_frame->get_timing_info();
+        dst_timing_info = src_timing_info;
+    }
+
     return S_OK;
 }
 

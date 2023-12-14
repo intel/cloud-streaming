@@ -249,6 +249,13 @@ HRESULT DTCapture::capture_thread_proc(DTCapture* context) {
             continue;
         }
 
+        // update presentation timestamp
+        if (captured_frame) {
+            using clock_t = FrameTimingInfo::clock_t;
+            auto& timing_info = captured_frame->get_timing_info();
+            timing_info.presentation_ts = clock_t::now();
+        }
+
         // encode frame
         auto encode_result = encoder->encode_frame(captured_frame.get());
         if (FAILED(encode_result)) {

@@ -21,7 +21,24 @@
 #include "surface.h"
 #include "surface-pool.h"
 
+#include <chrono>
 #include <memory>
+
+struct FrameTimingInfo {
+    using clock_t = std::chrono::system_clock;
+    using duration_t = clock_t::duration;
+    using time_point_t = clock_t::time_point;
+
+    // timestamps are recorded using clock_t::now()
+    // video capture timestamps
+    time_point_t capture_start_ts;
+    time_point_t capture_end_ts;
+    // encode timestamps
+    time_point_t encode_start_ts;
+    time_point_t encode_end_ts;
+    // presentation timestamp
+    time_point_t presentation_ts;
+};
 
 /**
  * @brief      This class describes a frame object which encapsulates a surface.
@@ -48,9 +65,14 @@ public:
      */
     Surface* get_surface() { return m_surface.get(); }
 
+    FrameTimingInfo& get_timing_info() { return m_timing_info; }
+    const FrameTimingInfo& get_timing_info() const { return m_timing_info; }
+
 private:
     Frame() = default;
 
     std::unique_ptr<Surface> m_surface;
     std::weak_ptr<SurfacePool> m_pool;
+
+    FrameTimingInfo m_timing_info = {};
 };

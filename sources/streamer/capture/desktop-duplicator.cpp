@@ -306,6 +306,10 @@ HRESULT DesktopDuplicator::copy_surface() {
         return E_FAIL;
     }
 
+    // capture submit start time
+    using namespace std::chrono;
+    auto capture_start_ts = clock_t::now();
+
     HRESULT result = S_OK;
 
     D3D11_TEXTURE2D_DESC src_desc = {};
@@ -376,9 +380,19 @@ HRESULT DesktopDuplicator::copy_surface() {
         return E_FAIL;
     }
 
+    // capture submit end time
+    auto capture_end_ts = clock_t::now();
+
     // update capture surface
     std::unique_lock lk(m_acquire_frame_lock);
     m_output_frame = Frame::create(std::move(dst_surface), m_surface_pool);
+    if (m_output_frame) {
+        auto& timing_info = m_output_frame->get_timing_info();
+        timing_info.capture_start_ts = capture_start_ts;
+        timing_info.capture_end_ts = capture_end_ts;
+        // use capture timestamp for presentation
+        timing_info.presentation_ts = timing_info.capture_start_ts;
+    }
     lk.unlock();
     m_acquire_frame_cv.notify_one();
 

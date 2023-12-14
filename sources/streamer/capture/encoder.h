@@ -107,6 +107,8 @@ struct Packet {
 
     std::vector<uint8_t> data;
     uint32_t flags = 0;
+
+    FrameTimingInfo timing_info = {};
 };
 
 /**
