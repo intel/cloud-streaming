@@ -15,7 +15,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 project('cloud-gaming', 'c', 'cpp',
-  version : '0.4.0',
+  version : '0.4.1',
   default_options : [
     'cpp_std=c++17',
     'b_ndebug=if-release',
