@@ -2,6 +2,8 @@ name: wincg
 
 on: [push, pull_request]
 
+permissions: read-all
+
 jobs:
   idd:
     runs-on: windows-2022

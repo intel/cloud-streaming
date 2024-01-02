@@ -2,6 +2,8 @@ name: acg
 
 on: [push, pull_request]
 
+permissions: read-all
+
 jobs:
   m4-gen:
     runs-on: ubuntu-latest
