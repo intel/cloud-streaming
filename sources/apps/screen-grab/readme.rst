@@ -45,7 +45,7 @@ Options:
     * For HEVC: ``main``, ``main10``, ``mainsp``, ``rext``, ``scc``
     * For AV1: ``main``
 
---bitrate
+--bitrate <bitrate>
     Encoding bitrate (default: ``3000000``).
 
 --fps
