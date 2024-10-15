@@ -8,7 +8,7 @@ jobs:
   idd:
     runs-on: windows-2022
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - run: '.github\workflows\EnterDevShell.ps1 amd64'
       shell: pwsh
     - name: 'msbuild clean'
@@ -19,7 +19,7 @@ jobs:
   build:
     runs-on: windows-2019
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - run: docker build --file docker/build/windows/Dockerfile --tag build:latest .
 
   # NOTE: this job generates partial build-deps. OWT is missing. It
@@ -29,7 +29,7 @@ jobs:
   build-deps-linux:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - run: docker build --file docker/deps/windows/Dockerfile --tag build-deps-linux .
     - run: |
         docker run --rm -u $(id -u):$(id -g) -v $(pwd):/opt/dist2 build-deps-linux \
@@ -45,8 +45,8 @@ jobs:
         backend: [ninja, vs]
     runs-on: windows-2022
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
       with:
         python-version: '3.x'
     - run: pip install meson
@@ -69,13 +69,13 @@ jobs:
         backend: [ninja, vs]
     runs-on: windows-2022
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
       with:
         repository: intel/libvpl
         ref: v2023.3.1
         path: libvpl
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         repository: FFmpeg/FFmpeg
         ref: n6.1
@@ -120,7 +120,7 @@ jobs:
         make -j$(nproc)
         make install
     # Below steps are executed under default shell (pwsh)
-    - uses: actions/setup-python@v4
+    - uses: actions/setup-python@v5
       with:
         python-version: '3.x'
     - run: pip install meson

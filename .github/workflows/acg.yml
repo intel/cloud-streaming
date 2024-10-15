@@ -8,7 +8,7 @@ jobs:
   m4-gen:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - run: |
         sudo apt-get update
         sudo apt-get install -y --no-install-recommends \
@@ -29,7 +29,7 @@ jobs:
   rst-lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - run: |
         sudo apt-get update
         sudo apt-get install -y --no-install-recommends \
@@ -40,30 +40,30 @@ jobs:
   encoder-selfbuild-prodkmd:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - run: docker build --file docker/encoder/ubuntu22.04/selfbuild-prodkmd/Dockerfile --tag cloud-encoder .
 
   encoder-intel-gfx:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - run: docker build --file docker/encoder/ubuntu22.04/intel-gfx/Dockerfile --tag cloud-encoder .
 
   streamer:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - run: docker build --file docker/streamer/ubuntu22.04/Dockerfile --tag cloud-streamer .
 
   p2p:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - run: docker build --file docker/p2p/ubuntu22.04/Dockerfile --tag p2p .
 
   jstest:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - run: docker build --file docker/jstest/ubuntu22.04/Dockerfile --tag jstest .
 
