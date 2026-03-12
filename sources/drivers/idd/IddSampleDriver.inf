@@ -36,7 +36,6 @@ AddReg = IddDevice_HardwareDeviceSettings
 [IddDevice_HardwareDeviceSettings]
 HKR,, "UpperFilters",  %REG_MULTI_SZ%, "IndirectKmd"
 HKR, "WUDF", "DeviceGroupId", %REG_SZ%, "IddSampleDriverGroup" ; TODO: edit driver group name, see README.md for more info
-HKR,,"IddCustomControl",0x00010001,1 ; 1 - 1080p Monitor, 2 - 1440p Monitor, 4 - 2160p Monitor
 HKR,,"IddMonitorNumber",0x00010001,1 ; 1 - 1 monitor, 2 - 2 monitors
 HKR,,"IddCursorControl",0x00010001,0 ; 0 - Software Cursor, 1 - Hardware Cursor
 HKR,,Security,,"D:P(A;;GA;;;BA)(A;;GA;;;SY)(A;;GA;;;UD)(A;;GA;;;AU)"

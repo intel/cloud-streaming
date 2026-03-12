@@ -97,10 +97,6 @@ IDD driver support the following registry keys which control its behavior:
 +------------------+-----------+---------------+---------------------------+-------------------------------------+
 | Key              | Type      | Default value | Supported values          | Description                         |
 +==================+===========+===============+===========================+=====================================+
-| IddCustomControl | REG_DWORD | 1             | * ``1`` : 1080p Monitor   | Controls maximum resolution         |
-|                  |           |               | * ``2`` : 1440p Monitor   | available on IDD device             |
-|                  |           |               | * ``4`` : 2160p Monitor   |                                     |
-+------------------+-----------+---------------+---------------------------+-------------------------------------+
 | IddMonitorNumber | REG_DWORD | 1             | * ``1`` : 1 monitor       | Controls number of exposed monitors |
 |                  |           |               | * ``2`` : 2 monitors      |                                     |
 +------------------+-----------+---------------+---------------------------+-------------------------------------+
@@ -119,16 +115,97 @@ location in the registry:
 You can change registry settings from the command shell::
 
   reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Enum\ROOT\DISPLAY\0000\Device Parameters" ^
-    /v IddCustomControl /t REG_DWORD /d 2 /f
+    /v IddMonitorNumber /t REG_DWORD /d 2 /f
 
-Above example will change maximum resolution available on IDD device ``0000``
-to 1440p. In order for the change to take effect you need to disable and
-enable back this device to trigger IDD driver reload. You can do that either
-from the Windows Device Manager (targeting specific device) or from command
-line using `devcon`_ (targeting all IDD devices)::
+Above example will change number of exposed monitors on IDD device ``0000``.
+In order for the change to take effect you need to disable and enable back this
+device to trigger IDD driver reload. You can do that either from the Windows
+Device Manager (targeting specific device) or from command line using
+`devcon`_ (targeting all IDD devices)::
 
   devcon.exe disable "root\iddsampledriver"
   devcon.exe enable "root\iddsampledriver"
+
+Supported modes
+---------------
+
+Current implementation of IDD driver supports following modes:
+
++-------+--------+--------------+
+| Width | Height | Refresh Rate |
++=======+========+==============+
+| 3840  |  2160  |  60          |
++-------+--------+--------------+
+| 3200  |  2400  |  60          |
++-------+--------+--------------+
+| 3200  |  1800  |  60          |
++-------+--------+--------------+
+| 3008  |  1692  |  60          |
++-------+--------+--------------+
+| 2880  |  1800  |  60          |
++-------+--------+--------------+
+| 2880  |  1620  |  60          |
++-------+--------+--------------+
+| 2560  |  1440  |  144         |
++-------+--------+--------------+
+| 2560  |  1440  |  90          |
++-------+--------+--------------+
+| 2048  |  1536  |  60          |
++-------+--------+--------------+
+| 2560  |  1440  |  60          |
++-------+--------+--------------+
+| 2560  |  1600  |  60          |
++-------+--------+--------------+
+| 2048  |  1536  |  60          |
++-------+--------+--------------+
+| 1920  |  1440  |  60          |
++-------+--------+--------------+
+| 1920  |  1200  |  60          |
++-------+--------+--------------+
+| 1920  |  1080  |  144         |
++-------+--------+--------------+
+| 1920  |  1080  |  90          |
++-------+--------+--------------+
+| 1920  |  1080  |  60          |
++-------+--------+--------------+
+| 1680  |  1050  |  60          |
++-------+--------+--------------+
+| 1600  |  1024  |  60          |
++-------+--------+--------------+
+| 1600  |  900   |  60          |
++-------+--------+--------------+
+| 1400  |  1050  |  60          |
++-------+--------+--------------+
+| 1440  |  900   |  60          |
++-------+--------+--------------+
+| 1366  |  768   |  60          |
++-------+--------+--------------+
+| 1360  |  768   |  60          |
++-------+--------+--------------+
+| 1280  |  1024  |  60          |
++-------+--------+--------------+
+| 1280  |  960   |  60          |
++-------+--------+--------------+
+| 1280  |  800   |  60          |
++-------+--------+--------------+
+| 1024  |  768   |  75          |
++-------+--------+--------------+
+| 1280  |  768   |  60          |
++-------+--------+--------------+
+| 1280  |  720   |  60          |
++-------+--------+--------------+
+| 1280  |  600   |  60          |
++-------+--------+--------------+
+| 1152  |  864   |  60          |
++-------+--------+--------------+
+| 800   |  600   |  60          |
++-------+--------+--------------+
+| 640   |  480   |  60          |
++-------+--------+--------------+
+
+Technically IDD driver can support other modes limited by maximum resolution
+supported by adapter it's paired with. If you miss a mode, please, open an
+issue on our Github projec or Pull Request adding required mode.
 
 Known issues
 ------------
